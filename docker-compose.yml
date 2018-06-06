@@ -2,7 +2,7 @@ version: '2'
 services:
   main:
     build: .
-    image: opuscapita/earchive
+    image: opuscapita/earchive:dev
     depends_on:
       - mysql
       - consul
