@@ -1,0 +1,9 @@
+version: '2'
+services:
+  main:
+    build: .
+    volumes:
+      - ./src:/home/node/earchive/src
+      - ./config:/home/node/earchive/config
+      - ./wiki:/home/node/earchive/wiki
+    command: 'npm run dev'

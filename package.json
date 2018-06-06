@@ -1,0 +1,48 @@
+{
+  "name": "earchive",
+  "version": "0.0.1",
+  "description": "Archiving service for binary data.",
+  "author": "Dennis Bücker",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpusCapita/earchive"
+  },
+  "bugs": {
+    "url": "https://github.com/OpusCapita/earchive/issues"
+  },
+  "homepage": "https://github.com/OpusCapita/earchive",
+  "nyc": {
+    "exclude": [
+      "test"
+    ]
+  },
+  "dependencies": {
+    "@opuscapita/config": "^3.0.2",
+    "@opuscapita/db-init": "^2.0.14",
+    "@opuscapita/web-init": "^3.0.38",
+    "ocbesbn-logger": "^1.0.5",
+    "sequelize": "^4.0.0"
+  },
+  "devDependencies": {
+    "jsdoc-to-markdown": "^4.0.1",
+    "mocha": "^3.2.0",
+    "mocha-junit-reporter": "^1.12.1",
+    "nodemon": "^1.11.0",
+    "nyc": "^10.2.2",
+    "raml-to-markdown": "^1.1.9",
+    "rimraf": "^2.6.0",
+    "sequelize-to-markdown": "^1.2.1"
+  },
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "npm run setup-consul ; npx nodemon --watch src src/server/index.js",
+    "test": "npm run clean ; npm run setup-consul ; npx nyc mocha --recursive -R mocha-junit-reporter",
+    "clean": "npx rimraf .nyc_output coverage test-results.xml",
+    "setup-consul": "sh setup-consul.sh",
+    "rest-doc": "mkdir -p wiki/rest-doc ; npx raml2md -o file-per-resource -p wiki/rest-doc --output-ext=.endpoint.md rest-doc/main.raml",
+    "domain-doc": "mkdir -p wiki/domain-doc ; npx sq2md -o file-per-src -p wiki/domain-doc --init=init --field-bl=createdAt,updatedAt --output-ext=.model.md src/server/db/models",
+    "api-doc": "mkdir -p wiki/api-doc ; npx jsdoc2md -f $(find src/server) > wiki/api-doc/Home.md",
+    "doc": "npm run rest-doc ; npm run domain-doc ; npm run api-doc"
+  }
+}
