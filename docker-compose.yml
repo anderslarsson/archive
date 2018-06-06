@@ -1,6 +1,7 @@
 version: '2'
 services:
   main:
+    build: .
     image: opuscapita/earchive
     depends_on:
       - mysql
