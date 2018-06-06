@@ -5,15 +5,14 @@ MAINTAINER denic
 
 WORKDIR /home/node/earchive
 
-COPY . tmp
-
 # Change owner since COPY/ADD assignes UID/GID 0 to all copied content.
 RUN apk add --no-cache rsync curl git
-RUN chown -Rf node:node tmp; rsync -a tmp/ ./ && rm -rf tmp
+COPY . .
+RUN chown -R node:node . 
 
 # Set the user name or UID to use when running the image and for any RUN, CMD and ENTRYPOINT instructions that follow
-RUN yarn
 USER node
+RUN npm install
 
 # A container must expose a port if it wants to be registered in Consul by Registrator.
 # The port is fed both to node express server and Consul => DRY principle is observed with ENV VAR.
