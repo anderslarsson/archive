@@ -28,7 +28,7 @@ async function init()
     server : {
       port : process.env.port || 3031,
 
-      enableBouncer : false,
+      enableBouncer : true,
       enableEventClient : isProduction,
 
       events : {
@@ -39,7 +39,7 @@ async function init()
 
       staticFilePath : process.cwd() + '/src/server/static/',
       webpack : {
-        useWebpack : true,
+        useWebpack : !isProduction,
         configFilePath : process.cwd() + '/webpack.development.config.js'
       }
 

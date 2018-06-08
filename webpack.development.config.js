@@ -9,7 +9,8 @@ module.exports = {
   ],
 
   output: {
-    path: process.cwd() + '/src/server/static', // with 'webpack-dev-middleware' this value is ignored.
+    // path: process.cwd() + '/src/server/static',
+    path: path.resolve(__dirname, './src/server/static'),
     filename: 'bundle.js',
     publicPath: '/static'
   },
@@ -30,7 +31,11 @@ module.exports = {
         options: {
           compact: false,
           presets: [
-            ['env', { 'targets': { 'node': 8, 'uglify': true }, 'modules': false }],
+            [
+              'env', {
+                'targets': { 'node': 8, 'uglify': true }, 'modules': false 
+              }
+            ],
             'stage-0',
             'react'
           ],

@@ -8,10 +8,19 @@
             "en": "Please change this to fit your security configuration.",
             "de": ""
         },
-        "resources": [{
+        "resources": [
+          {
             "type": "rest",
             "resourceId": "^/.*",
             "actions": ["view"]
-        }]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/hello",
+            "actions": [
+              "view"
+            ]
+          }
+        ]
     }
 }
