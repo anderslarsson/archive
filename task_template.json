@@ -15,7 +15,9 @@
            ],
     "oc-db-init":{"populate-test-data":"true"},
     "oc-consul-injection":{
-      "redis/password": "${SECRET_:env_REDIS}"
+      "redis/password": "${SECRET_:env_REDIS}",
+      "mq/user": "${SECRET_:env_RABBITMQUSER}",
+      "mq/password": "${SECRET_:env_RABBITMQPASS}"
     }
   }
 }
