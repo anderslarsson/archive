@@ -57,14 +57,15 @@
     "webpack": "^3.8.1"
   },
   "scripts": {
-    "start": "node src/server/index.js",
-    "dev": "npm run setup-consul ; npx nodemon --watch src src/server/index.js",
-    "test": "npm run clean ; npm run setup-consul ; npx nyc mocha --recursive -R mocha-junit-reporter",
-    "clean": "npx rimraf .nyc_output coverage test-results.xml",
-    "setup-consul": "sh setup-consul.sh",
-    "rest-doc": "mkdir -p wiki/rest-doc ; npx raml2md -o file-per-resource -p wiki/rest-doc --output-ext=.endpoint.md rest-doc/main.raml",
-    "domain-doc": "mkdir -p wiki/domain-doc ; npx sq2md -o file-per-src -p wiki/domain-doc --init=init --field-bl=createdAt,updatedAt --output-ext=.model.md src/server/db/models",
     "api-doc": "mkdir -p wiki/api-doc ; npx jsdoc2md -f $(find src/server) > wiki/api-doc/Home.md",
-    "doc": "npm run rest-doc ; npm run domain-doc ; npm run api-doc"
+    "build:client": "NODE_ENV=production webpack -p --config ./webpack.production.config.js --profile --colors --bail",
+    "clean": "npx rimraf .nyc_output coverage test-results.xml",
+    "dev": "npm run setup-consul ; npx nodemon --watch src src/server/index.js",
+    "doc": "npm run rest-doc ; npm run domain-doc ; npm run api-doc",
+    "domain-doc": "mkdir -p wiki/domain-doc ; npx sq2md -o file-per-src -p wiki/domain-doc --init=init --field-bl=createdAt,updatedAt --output-ext=.model.md src/server/db/models",
+    "rest-doc": "mkdir -p wiki/rest-doc ; npx raml2md -o file-per-resource -p wiki/rest-doc --output-ext=.endpoint.md rest-doc/main.raml",
+    "setup-consul": "sh setup-consul.sh",
+    "start": "node src/server/index.js",
+    "test": "npm run clean ; npm run setup-consul ; npx nyc mocha --recursive -R mocha-junit-reporter"
   }
 }

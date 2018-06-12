@@ -10,9 +10,14 @@ RUN chown -R node:node .
 RUN apk add --no-cache rsync curl
 COPY --chown=node:node . .
 
+ENV NODE_ENV=development
+
 # Set the user name or UID to use when running the image and for any RUN, CMD and ENTRYPOINT instructions that follow
 USER node
 RUN npm install
+
+# Build client components
+RUN if $CI -eq "true"; then npm run build:client ; fi
 
 # A container must expose a port if it wants to be registered in Consul by Registrator.
 # The port is fed both to node express server and Consul => DRY principle is observed with ENV VAR.

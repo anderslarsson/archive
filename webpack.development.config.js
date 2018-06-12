@@ -1,15 +1,12 @@
 const path = require('path');
 const webpack = require('webpack');
-// const Config = require('webpack-config').default;
 
-// module.exports = new Config().extend('webpack.base.config.js').merge({
 module.exports = {
   entry: [
     './src/client/index.js'
   ],
 
   output: {
-    // path: process.cwd() + '/src/server/static',
     path: path.resolve(__dirname, './src/server/static'),
     filename: 'bundle.js',
     publicPath: '/static'
