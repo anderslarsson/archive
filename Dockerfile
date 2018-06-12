@@ -4,11 +4,11 @@ MAINTAINER denic
 # NOTE: "node" user and corresponding "/home/node" dir are created by "node:6-alpine" image.
 
 WORKDIR /home/node/archive
+RUN chown -R node:node . 
 
 # Change owner since COPY/ADD assignes UID/GID 0 to all copied content.
-RUN apk add --no-cache rsync curl git
-COPY . .
-RUN chown -R node:node . 
+RUN apk add --no-cache rsync curl
+COPY --chown=node:node . .
 
 # Set the user name or UID to use when running the image and for any RUN, CMD and ENTRYPOINT instructions that follow
 USER node
