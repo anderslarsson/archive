@@ -58,7 +58,7 @@
   },
   "scripts": {
     "api-doc": "mkdir -p wiki/api-doc ; npx jsdoc2md -f $(find src/server) > wiki/api-doc/Home.md",
-    "build:client": "NODE_ENV=production webpack -p --config ./webpack.production.config.js --profile --colors --bail",
+    "build:client": "NODE_ENV=production npx webpack -p --config ./webpack.production.config.js --profile --colors --bail",
     "clean": "npx rimraf .nyc_output coverage test-results.xml",
     "dev": "npm run setup-consul ; npx nodemon --watch src src/server/index.js",
     "doc": "npm run rest-doc ; npm run domain-doc ; npm run api-doc",
