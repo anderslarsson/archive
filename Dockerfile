@@ -17,6 +17,7 @@ USER node
 RUN npm install
 
 # Build client components
+ARG CI="false"
 RUN if $CI -eq "true"; then npm run build:client ; fi
 
 # A container must expose a port if it wants to be registered in Consul by Registrator.
