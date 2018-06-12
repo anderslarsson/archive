@@ -1,17 +1,17 @@
 {
-  "name": "earchive",
+  "name": "archive",
   "version": "0.0.1",
   "description": "Archiving service for binary data.",
   "author": "Dennis Bücker",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OpusCapita/earchive"
+    "url": "git+https://github.com/OpusCapita/archive"
   },
   "bugs": {
-    "url": "https://github.com/OpusCapita/earchive/issues"
+    "url": "https://github.com/OpusCapita/archive/issues"
   },
-  "homepage": "https://github.com/OpusCapita/earchive",
+  "homepage": "https://github.com/OpusCapita/archive",
   "nyc": {
     "exclude": [
       "test"

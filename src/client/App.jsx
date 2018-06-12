@@ -9,7 +9,7 @@ const Index = () => (
 );
 
 const App = () => (
-  <Containers.ServiceLayout serviceName="earchive">
+  <Containers.ServiceLayout serviceName="archive">
     <Route path={"/"} component={Index}/>
   </Containers.ServiceLayout>
 );

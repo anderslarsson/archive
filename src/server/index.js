@@ -8,7 +8,7 @@ const isProduction = (process.env.NODE_ENV === 'production');
 
 const logger = new Logger({
   context: {
-    serviceName: 'earchive'
+    serviceName: 'archive'
   }
 });
 

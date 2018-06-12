@@ -3,7 +3,7 @@ MAINTAINER denic
 
 # NOTE: "node" user and corresponding "/home/node" dir are created by "node:6-alpine" image.
 
-WORKDIR /home/node/earchive
+WORKDIR /home/node/archive
 
 # Change owner since COPY/ADD assignes UID/GID 0 to all copied content.
 RUN apk add --no-cache rsync curl git
