@@ -54,7 +54,8 @@
     "rimraf": "^2.6.2",
     "style-loader": "^0.19.0",
     "superagent": "^3.8.2",
-    "webpack": "^3.8.1"
+    "webpack": "^3.8.1",
+    "webpack-cli": "^3.0.4"
   },
   "scripts": {
     "api-doc": "mkdir -p wiki/api-doc ; npx jsdoc2md -f $(find src/server) > wiki/api-doc/Home.md",
