@@ -1,12 +1,12 @@
 {
     "archive": {
         "name": {
-            "en": "Service Template example configuration.",
-            "de": ""
+            "en": "Archive",
+            "de": "Archiv"
         },
         "description": {
-            "en": "Please change this to fit your security configuration.",
-            "de": ""
+            "en": "Business Network Portal archiving service.",
+            "de": "Business Network Portal Achiv Service."
         },
         "resources": [
           {
