@@ -24,6 +24,7 @@ RUN if $CI -eq "true"; then npm run build:client ; fi
 # The port is fed both to node express server and Consul => DRY principle is observed with ENV VAR.
 # NOTE: a port can be any, not necessarily different from exposed ports of other containers.
 EXPOSE 3031 
+
 CMD [ "npm", "start" ]
 HEALTHCHECK --interval=15s --timeout=3s --retries=12 \
   CMD curl --silent --fail http://localhost:3031/api/health/check || exit 1

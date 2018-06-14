@@ -7,3 +7,8 @@ services:
       - ./config:/home/node/archive/config
       - ./wiki:/home/node/archive/wiki
     command: 'npm run dev'
+    ports:
+      - 9229:9229
+      - '${PORT}:${PORT}'
+    expose:
+        - 9229
