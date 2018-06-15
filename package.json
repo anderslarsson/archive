@@ -26,6 +26,8 @@
     "@opuscapita/useridentity-middleware": "~3.0.7",
     "@opuscapita/web-init": "^3.0.38",
     "accept-language-parser": "^1.5.0",
+    "bee-queue": "^1.2.2",
+    "elasticsearch": "^15.0.0",
     "ocbesbn-logger": "^1.0.5",
     "sequelize": "^4.0.0",
     "webpack-config": "^7.5.0"
