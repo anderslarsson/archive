@@ -4,6 +4,7 @@ services:
     build: .
     image: opuscapita/archive:dev
     depends_on:
+      - elasticsearch
       - mysql
       - consul
       - registrator
@@ -76,6 +77,23 @@ services:
     ports:
       - '3000:3000'
     command: 'npm run dev'
+
+  elasticsearch:
+    image: opuscapita/elasticsearch:dev
+    environment:
+      # This helps ES out with memory usage
+      - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
+      - SERVICE_9200_NAME=elasticsearch
+      - SERVICE_9300_NAME=elasticsearch-TCP
+      - SERVICE_9200_CHECK_HTTP=/
+      - SERVICE_9200_CHECK_INTERVAL=15s
+      - SERVICE_9200_CHECK_TIMEOUT=3s
+      - ES_NO_CLUSTER=${ES_NO_CLUSTER}
+    depends_on:
+      - registrator
+    ports:
+      - "9200:9200"
+      - "9300:9300"
 
   user:
     image: opuscapita/user:dev
