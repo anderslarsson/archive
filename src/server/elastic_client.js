@@ -1,11 +1,13 @@
 const elasticsearch = require('elasticsearch');
+const moment = require('moment');
 
 const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 
 class ElasticClient {
 
-  constructor () {
+  constructor() {
     this.conn = new elasticsearch.Client({
+      apiVersion: '5.5',
       hosts: [
         ES_HOST
       ]
@@ -36,12 +38,8 @@ class ElasticClient {
     });
   }
 
-  info() {
-    return 'Yo';
-  }
-
-  async createRepository (name) {
-     return this.conn.snapshot.createRepository({
+  async createRepository(name) {
+    return this.conn.snapshot.createRepository({
       repository: name,
       body: {
         type: 'fs',
@@ -52,7 +50,7 @@ class ElasticClient {
     });
   }
 
-  async createSnapshot (repositoryName, index) {
+  async createSnapshot(repositoryName, index) {
     let snapshotName = `${index}_${Date.now()}`;
 
     return this.conn.snapshot.create({
@@ -80,8 +78,32 @@ class ElasticClient {
     }
   }
 
-  reindexGlobalDaily() {
-    return 'ok';
+  /**
+   * Triggers a reindex job on ES to copy all archivable
+   * entries from the daily transaction index to the global
+   * daily archive index.
+   *
+   * @returns {Promise}
+   */
+  async reindexGlobalDaily() {
+    let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
+
+    return this.conn.reindex({
+      waitForCompletion: true,
+      body: {
+        source: {
+          index: `bn_tx_logs-${yesterday}`,
+          // TODO copy only those entries with archive flag set
+          // query: {
+          //   term: {
+          //     archive: true
+          //   }
+        },
+        dest: {
+          index: `archive_global_daily-${yesterday}`
+        }
+      }
+    });
   }
 
   async restoreSnapshot(repo, index, dryRun = false) {
@@ -105,15 +127,15 @@ class ElasticClient {
     return Promise.resolve();
   }
 
-  async deleteSnapshot (repositoryName, index) {
+  async deleteSnapshot(repositoryName, index) {
     return this.conn.snapshot.delete({
       repository: repositoryName,
       snapshot: index
-    })
+    });
   }
 
   search(query) {
-    return this.client.search(query);
+    return this.conn.search(query);
   }
 
 }

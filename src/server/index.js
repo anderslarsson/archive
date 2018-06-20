@@ -12,7 +12,7 @@ const logger = new Logger({
   }
 });
 
-if(isProduction) {
+if (isProduction) {
   logger.redirectConsoleOut(); // Force anyone using console.* outputs into Logger format.
 }
 
@@ -20,33 +20,32 @@ if(isProduction) {
 // See database : https://github.com/OpusCapita/db-init
 // See web server: https://github.com/OpusCapita/web-init
 // See logger: https://github.com/OpusCapita/logger
-async function init()
-{
+async function init() {
   const db = await dbInit.init();
 
   await server.init({
-    server : {
-      port : process.env.port || 3031,
+    server: {
+      port: process.env.port || 3031,
 
-      enableBouncer : isProduction || false,
-      enableEventClient : isProduction,
+      enableBouncer: isProduction || false,
+      enableEventClient: isProduction,
 
-      events : {
+      events: {
         onStart: () => logger.info('Server ready. Allons-y!')
       },
 
       indexFilePath: process.cwd() + '/src/server/static/index.html',
 
-      staticFilePath : process.cwd() + '/src/server/static/',
+      staticFilePath: process.cwd() + '/src/server/static/',
 
-      webpack : {
-        useWebpack : !isProduction,
-        configFilePath : process.cwd() + '/webpack.development.config.js'
+      webpack: {
+        useWebpack: !isProduction,
+        configFilePath: process.cwd() + '/webpack.development.config.js'
       }
     },
 
-    routes : {
-      dbInstance : db
+    routes: {
+      dbInstance: db
     }
   });
 }

@@ -27,7 +27,6 @@
 const EventClient = require('@opuscapita/event-client');
 const Logger = require('ocbesbn-logger');
 
-const moment = require('moment');
 const esClient = require('../server/elastic_client');
 
 const events = new EventClient({
@@ -53,13 +52,29 @@ events.subscribe('archive.wait', waitDispatcher);
  * Triggers the reindexing from eg.: bn_tx_logs-2018.05.* to archive_global_daily-2018.05.*
  *
  */
-function handleGlobalDaily() {
-  let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
-  let result = esClient.reindexGlobalDaily();
+async function handleGlobalDaily() {
+  let result;
+  let returnValue = false;
 
-  wait(5000);
+  try {
+    result = await esClient.reindexGlobalDaily();
 
-  return true;
+    if (result) {
+      if (result.failures && result.failures >= 1) {
+        returnValue = false;
+        logger.error('Successfully created archive_global_daily WITH errors: ' + result.failures);
+      } else {
+        returnValue = true;
+        logger.error('Successfully created archive_global_daily');
+      }
+    }
+  } catch (e) {
+    returnValue = false;
+    logger.error('Failed to create archive_global_daily index.');
+    logger.error(e);
+  }
+
+  return returnValue;
 }
 
 /**
@@ -78,19 +93,8 @@ function waitDispatcher(msg) {
       break;
     default:
       logger.error('CuratorWorker: No handle for msg.type ' + msg.type);
-      result = null;
+      result = null; // Dismiss message from the MQ as the given type is not implemented.
   }
-
-  console.log('Event result: ' + result);
 
   return result;
-}
-
-function wait(ms) {
-  let start = Date.now();
-  let now = start;
-
-  while (now - start < ms) {
-    now = Date.now();
-  }
 }
