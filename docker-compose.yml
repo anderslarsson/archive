@@ -95,6 +95,19 @@ services:
       - "9200:9200"
       - "9300:9300"
 
+  kibana:
+    image: opuscapita/kibana:dev
+    environment:
+      ELASTICSEARCH_IP: elasticsearch
+      SERVICE_5601_NAME: kibana
+      SERVICE_5601_CHECK_HTTP: /
+      SERVICE_5601_CHECK_INTERVAL: 15s
+      SERVICE_5601_CHECK_TIMEOUT: 3s
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+
   user:
     image: opuscapita/user:dev
     depends_on:
