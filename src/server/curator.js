@@ -7,8 +7,9 @@
  * events will be consumed by the worker pool.
  */
 
-const Logger = require('ocbesbn-logger'); // Logger
+const Logger      = require('ocbesbn-logger');
 const EventClient = require('@opuscapita/event-client');
+const MsgTypes    = require('../shared/msg_types');
 
 const events = new EventClient({
   consul: {
@@ -23,44 +24,45 @@ const logger = new Logger({
 });
 
 /**
+ * @function rotateTenantsDaily
+ *
  * Trigger the daily rotation of tenant transaction logs from TX logs to archive.
  *
  * @param {Sequelize} db - Sequelize db object
  */
-module.exports.rotateDaily = async function (db) {
-  logger.info('Starting curator jobs: daily');
-
-  let result = 'all done';
+module.exports.rotateTenantsDaily = async function (db) {
+  let results = [];
 
   try {
 
+    // Fetch all configured tenant configurations
     let tenantConfigModel = await db.modelManager.getModel('TenantConfig');
     let configs           = await tenantConfigModel.findAll();
 
-    result = configs.map(async (config) => {
+    // Enqueue a job for every tenant who has archive activated
+    for (let config of configs) {
       try {
-        let bla = await events.emit('archive.wait', {
-          type: 'daily',
+        let result = await events.emit('archive.curator.wait', {
+          type: MsgTypes.TENANT_DAILY,
           tenantConfig: config
         });
 
-        return bla;
+        results.push(result);
       } catch (e) {
-        logger.error('Unable to emit archive event.');
-        return Promise.resolve(false);
+        logger.error('Could to emit archive event tenants_daily for tenant.' + (config.supplierId || config.customerId));
+        results.push(Promise.resolve(false));
       }
-    });
+    }
 
   } catch (e) {
     let msg = 'Exception caught in' + __filename;
 
-    result = Promise.resolve(msg);
-
+    results = [];
     logger.error(msg);
     logger.error(e);
   }
 
-  let emittedEvents = await Promise.all(result);
+  let emittedEvents = await Promise.all(results);
 
   return emittedEvents.length;
 };
@@ -70,8 +72,8 @@ module.exports.rotateDaily = async function (db) {
  *
  */
 module.exports.rotateGlobalDaily = async function () {
-  await events.emit('archive.wait', {
-    type: 'global_daily'
+  await events.emit('archive.curator.wait', {
+    type: MsgTypes.GLOBAL_DAILY
   });
 
   return 'Job created successfully.';

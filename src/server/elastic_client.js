@@ -79,6 +79,8 @@ class ElasticClient {
   }
 
   /**
+   * @function reindexGlobalDaily
+   *
    * Triggers a reindex job on ES to copy all archivable
    * entries from the daily transaction index to the global
    * daily archive index.
@@ -86,7 +88,7 @@ class ElasticClient {
    * @returns {Promise}
    */
   async reindexGlobalDaily() {
-    let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
+    let yesterday = moment().subtract(2, 'days').format('YYYY.MM.DD');
 
     return this.conn.reindex({
       waitForCompletion: true,
@@ -101,6 +103,39 @@ class ElasticClient {
         },
         dest: {
           index: `archive_global_daily-${yesterday}`
+        }
+      }
+    });
+  }
+
+  /**
+   * @function reindexTenantDaily
+   *
+   * Trigers the reindex operation for a single tenant to extract the
+   * entries from yesterday's archive_global_daily to the archive_tenant_monthly
+   * index.
+   *
+   * @param {String} tenantId
+   * @param {Object} query
+   *
+   */
+  async reindexTenantDaily(tenantId, query) {
+    let yesterday       = moment().subtract(2, 'days').format('YYYY.MM.DD');
+    let yesterdaysmonth = moment().subtract(2, 'days').format('YYYY.MM');
+
+    // ES only allows lower case index names and tenantId
+    // are persisted in a case-insensitive manner -> convert to lower.
+    let lowerTenantId = tenantId.toLowerCase();
+
+    return this.conn.reindex({
+      waitForCompletion: true,
+      body: {
+        source: {
+          index: `archive_global_daily-${yesterday}`,
+          query: query
+        },
+        dest: {
+          index: `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`
         }
       }
     });

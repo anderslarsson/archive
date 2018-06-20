@@ -25,7 +25,8 @@
  */
 
 const EventClient = require('@opuscapita/event-client');
-const Logger = require('ocbesbn-logger');
+const Logger      = require('ocbesbn-logger');
+const MsgTypes    = require('../shared/msg_types');
 
 const esClient = require('../server/elastic_client');
 
@@ -44,9 +45,12 @@ const logger = new Logger({
     serviceName: 'archive'
   }
 });
-events.subscribe('archive.wait', waitDispatcher);
+
+events.subscribe('archive.curator.wait', waitDispatcher);
 
 /**
+ * @function handleGlobalDaily
+ *
  * Handler for msg.type = "daily"
  *
  * Triggers the reindexing from eg.: bn_tx_logs-2018.05.* to archive_global_daily-2018.05.*
@@ -78,6 +82,47 @@ async function handleGlobalDaily() {
 }
 
 /**
+ * @function handleTenantDaily
+ *
+ * Handler for msg.type = "daily"
+ *
+ * Triggers the reindexing from eg.: bn_tx_logs-2018.05.*
+ * to archive_global_daily-2018.05.*
+ *
+ * @params {Object} tenantConfig - JSON representation of TenantConfig Sequelize model
+ * @returns {Promise}
+ *
+ */
+async function handleTenantDaily(tenantConfig) {
+  let returnValue = false;
+
+  let tenantId = tenantConfig.customerId || tenantConfig.supplierId;
+
+  try {
+    let query = await buildTenantQueryParam(tenantConfig);
+    let result = await esClient.reindexTenantDaily(tenantId, query);
+
+    if (result) {
+      if (result.failures && result.failures >= 1) {
+        returnValue = false;
+        logger.error('Could not create archive_tenant_monthly WITH errors: ' + result.failures);
+      } else {
+        returnValue = true;
+        logger.error('Successfully created archive_global_daily');
+      }
+    }
+  } catch (e) {
+    // TODO handle "Index not found" Exception - happens when we
+    // try to run this, before the archive_global_daily is available.
+    returnValue = false;
+    logger.error('Failed to create archive_global_daily index.');
+    logger.error(e);
+  }
+
+  return returnValue;
+}
+
+/**
  * Callback method for @see EventClient.subscribe method.
  *
  * @param {Object} msg - Message received from MQ
@@ -88,8 +133,11 @@ function waitDispatcher(msg) {
   let result = false;
 
   switch (msg.type) {
-    case 'global_daily':
+    case MsgTypes.GLOBAL_DAILY:
       result = handleGlobalDaily();
+      break;
+    case MsgTypes.TENANT_DAILY:
+      result = handleTenantDaily(msg.tenantConfig);
       break;
     default:
       logger.error('CuratorWorker: No handle for msg.type ' + msg.type);
@@ -97,4 +145,39 @@ function waitDispatcher(msg) {
   }
 
   return result;
+}
+
+/**
+ * @function buildTenantQueryParam
+ *
+ * Takes a tenantConfig Object and creates an ES query out of it.
+ *
+ * @params {Object} tenantConfig - JSON representation of TenantConfig Sequelize model
+ * @returns {Promise}
+ *
+ */
+async function buildTenantQueryParam({customerId, supplierId}) {
+  if (customerId === null && supplierId === null) {
+    throw new Error('TenantConfig does not contain a supplier or customer ID.');
+  }
+
+  let queryParam = {
+    match: {}
+  };
+
+  if (customerId) {
+    queryParam.match['event.customerId'] = {
+      query: customerId,
+      type: 'phrase'
+    };
+  }
+
+  if (supplierId) {
+    queryParam.match['event.supplierId'] = {
+      query: supplierId,
+      type: 'phrase'
+    };
+  }
+
+  return queryParam;
 }

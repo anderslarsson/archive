@@ -5,6 +5,7 @@
  */
 
 const curatorContext = require('../../../curator');
+const MsgTypes = require('../../../../shared/msg_types');
 
 /**
  * Handles
@@ -19,19 +20,16 @@ module.exports.curate = async function (req, res, app, db) {
 
   try {
     switch (period) {
-      case 'global_daily':
-        res.status(200).send(await curatorContext.rotateGlobalDaily());
-        break;
-      case 'daily':
-        res.send(await curatorContext.rotateDaily(db));
+      case MsgTypes.TENANT_DAILY:
+        res.send(await curatorContext.rotateTenantsDaily(db));
         break;
 
-      case 'yearly':
-        res.send(await curatorContext.rotateYearly(db));
+      case MsgTypes.GLOBAL_DAILY:
+        res.status(200).send(await curatorContext.rotateGlobalDaily());
         break;
 
       default:
-        res.send(`Handler working: ${period}`);
+        res.status(400).send(`Do not know what to do: ${period}`);
     }
   } catch (e) {
     res.status(500).send(e);
