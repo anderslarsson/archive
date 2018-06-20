@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
 
+const TenantConfig = require('./TenantConfig');
+
 /**
  * Initializes all required database models using Sequelize.
  *
@@ -10,9 +12,8 @@ const Sequelize = require('sequelize');
  */
 module.exports.init = async function(db, config)
 {
-    // Register Sequelize database models here.
-    // Use require in order to separate models into multiple js files.
-    // http://docs.sequelizejs.com/en/latest/api/model/
-    //
-    // db.define(...);
+    // Register Sequelize database models
+    return Promise.all([
+        TenantConfig.init(db, config)
+    ]);
 }

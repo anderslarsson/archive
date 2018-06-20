@@ -1,3 +1,8 @@
+'use strict';
+
+const curatorHandler = require('./api/curator/index.js');
+const infoHandler = require('./api/info/index.js');
+
 /**
  * Initializes all routes for RESTful access.
  *
@@ -14,7 +19,8 @@ module.exports.init = async function(app, db, config)
   // Use require in order to separate routes into multiple js files.
   app.get('/hello', (req, res) => res.send('Hello world!'));
 
-  // const indexFilePath = process.cwd() + '/src/server/static/index.html';
-  // app.get('*', (req, res) => res.sendFile(indexFilePath));
+  app.get('/api/curator/:period', (req, res) => curatorHandler.curate(req, res, app, db));
+
+  app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
   
 }

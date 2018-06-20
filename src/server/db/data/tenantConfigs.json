@@ -1,0 +1,10 @@
+[
+  {
+    "customerId": "OC001",
+    "retentionPeriodHot": 30
+  },
+  {
+    "customerId": "OC002",
+    "retentionPeriodHot": 30
+  }
+]
