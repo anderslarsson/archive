@@ -78,6 +78,35 @@ class ElasticClient {
     }
   }
 
+  async restoreSnapshot(repo, index, dryRun = false) {
+    let snapshotName = await this.getLatestSnapshotName(repo);
+
+    console.log(`Restoring snapshot ${snapshotName} in repo ${repo}`);
+
+    if (dryRun) {
+      console.log('Dry run done.');
+    } else {
+      return this.conn.snapshot.restore({
+        repository: repo,
+        snapshot: snapshotName,
+        waitForCompletion: true,
+        body: {
+          indices: index
+        }
+      });
+    }
+
+    return Promise.resolve();
+  }
+
+
+  async deleteSnapshot(repositoryName, index) {
+    return this.conn.snapshot.delete({
+      repository: repositoryName,
+      snapshot: index
+    });
+  }
+
   /**
    * @function reindexGlobalDaily
    *
@@ -109,7 +138,7 @@ class ElasticClient {
   }
 
   /**
-   * @function reindexTenantDaily
+   * @function reindexGlobalDailyToTenantMonthly
    *
    * Trigers the reindex operation for a single tenant to extract the
    * entries from yesterday's archive_global_daily to the archive_tenant_monthly
@@ -119,7 +148,7 @@ class ElasticClient {
    * @param {Object} query
    *
    */
-  async reindexTenantDaily(tenantId, query) {
+  async reindexGlobalDailyToTenantMonthly(tenantId, query) {
     let yesterday       = moment().subtract(1, 'days').format('YYYY.MM.DD');
     let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
 
@@ -149,7 +178,7 @@ class ElasticClient {
             query: query
           },
           dest: {
-            index: dstIndexName 
+            index: dstIndexName
           }
         }
       });
@@ -207,35 +236,6 @@ class ElasticClient {
 
       throw error;
     }
-  }
-
-  async restoreSnapshot(repo, index, dryRun = false) {
-    let snapshotName = await this.getLatestSnapshotName(repo);
-
-    console.log(`Restoring snapshot ${snapshotName} in repo ${repo}`);
-
-    if (dryRun) {
-      console.log('Dry run done.');
-    } else {
-      return this.conn.snapshot.restore({
-        repository: repo,
-        snapshot: snapshotName,
-        waitForCompletion: true,
-        body: {
-          indices: index
-        }
-      });
-    }
-
-    return Promise.resolve();
-  }
-
-
-  async deleteSnapshot(repositoryName, index) {
-    return this.conn.snapshot.delete({
-      repository: repositoryName,
-      snapshot: index
-    });
   }
 
   search(query) {

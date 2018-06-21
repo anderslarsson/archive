@@ -47,17 +47,18 @@ const logger = new Logger({
   }
 });
 
+// Subscribe to archive.curator.wait topic
 events.subscribe('archive.curator.wait', waitDispatcher);
 
 /**
- * @function handleGlobalDaily
+ * @function handleCreateGlobalDaily
  *
  * Handler for msg.type = "daily"
  *
  * Triggers the reindexing from eg.: bn_tx_logs-2018.05.* to archive_global_daily-2018.05.*
  *
  */
-async function handleGlobalDaily() {
+async function handleCreateGlobalDaily() {
   let result;
   let returnValue = false;
 
@@ -67,10 +68,10 @@ async function handleGlobalDaily() {
     if (result) {
       if (result.failures && result.failures >= 1) {
         returnValue = false;
-        logger.error('Successfully created archive_global_daily WITH errors: ' + result.failures);
+        logger.error('Failed to create archive_global_daily index. Response contained failures.');
       } else {
         returnValue = true;
-        logger.error('Successfully created archive_global_daily');
+        logger.log('Successfully created archive_global_daily');
       }
     }
   } catch (e) {
@@ -144,7 +145,7 @@ async function handleUpdateTenantMonthly(tenantConfig) {
 
   try {
     let query = await buildTenantQueryParam(tenantConfig);
-    let result = await esClient.reindexTenantDaily(tenantId, query);
+    let result = await esClient.reindexGlobalDailyToTenantMonthly(tenantId, query);
 
     if (result) {
       if (result.failures && result.failures >= 1) {
@@ -180,7 +181,7 @@ function waitDispatcher(msg) {
 
   switch (msg.type) {
     case MsgTypes.CREATE_GLOBAL_DAILY:
-      result = handleGlobalDaily();
+      result = handleCreateGlobalDaily();
       break;
     case MsgTypes.UPDATE_TENANT_MONTHLY:
       result = handleUpdateTenantMonthly(msg.tenantConfig);
