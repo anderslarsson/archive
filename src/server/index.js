@@ -27,15 +27,14 @@ async function init() {
     server: {
       port: process.env.port || 3031,
 
-      enableBouncer: isProduction || false,
-      enableEventClient: isProduction,
+      enableBouncer: true,
+      enableEventClient: true,
 
       events: {
         onStart: () => logger.info('Server ready. Allons-y!')
       },
 
       indexFilePath: process.cwd() + '/src/server/static/index.html',
-
       staticFilePath: process.cwd() + '/src/server/static/',
 
       webpack: {

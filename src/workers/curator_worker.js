@@ -9,6 +9,7 @@
  *    - Copies entries from daily TnT to daily Archive
  *      - eg.: bn_tx_logs-2018.05.13 to archive_global_daily-2018.05.13
  *    - Kept for 60 days
+ *    - @event {MsgTypes.CREATE_GLOBAL_DAILY]
  *  1.1 Delete archive_global_daily indices older than 60 days *
  *    - Runs daily
  *  2. Copy entries from daily archive index to tenant specific, monthly archive index
@@ -73,7 +74,9 @@ async function handleGlobalDaily() {
       }
     }
   } catch (e) {
-    returnValue = false;
+    // Dismiss event incase the source index does not exist.
+    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+
     logger.error('Failed to create archive_global_daily index.');
     logger.error(e);
   }
@@ -82,7 +85,7 @@ async function handleGlobalDaily() {
 }
 
 /**
- * @function handleTenantDaily
+ * @function handleUpdateTenantYearly
  *
  * Handler for msg.type = "daily"
  *
@@ -93,7 +96,48 @@ async function handleGlobalDaily() {
  * @returns {Promise}
  *
  */
-async function handleTenantDaily(tenantConfig) {
+async function handleUpdateTenantYearly(tenantConfig) {
+  let returnValue = false;
+
+  let tenantId = tenantConfig.customerId || tenantConfig.supplierId;
+
+  try {
+    let result = await esClient.reindexTenantMonthlyToYearly(tenantId);
+
+    if (result) {
+      if (result.failures && result.failures >= 1) {
+        returnValue = false;
+        logger.error('Could not update archive_tenant_yearly : ' + result.failures);
+      } else {
+        returnValue = true;
+        logger.error('Successfully created archive_global_daily');
+      }
+    }
+  } catch (e) {
+    // Dismiss event incase the source index does not exist.
+    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+
+    logger.error('Failed to create archive_global_daily index.');
+    logger.error(e);
+  }
+
+  // TODO create/update tenant record in RDB pointing to the ES index
+
+  return returnValue;
+}
+/**
+ * @function handleUpdateTenantMonthly
+ *
+ * Handler for msg.type = "daily"
+ *
+ * Triggers the reindexing from eg.: bn_tx_logs-2018.05.*
+ * to archive_global_daily-2018.05.*
+ *
+ * @params {Object} tenantConfig - JSON representation of TenantConfig Sequelize model
+ * @returns {Promise}
+ *
+ */
+async function handleUpdateTenantMonthly(tenantConfig) {
   let returnValue = false;
 
   let tenantId = tenantConfig.customerId || tenantConfig.supplierId;
@@ -139,7 +183,10 @@ function waitDispatcher(msg) {
       result = handleGlobalDaily();
       break;
     case MsgTypes.UPDATE_TENANT_MONTHLY:
-      result = handleTenantDaily(msg.tenantConfig);
+      result = handleUpdateTenantMonthly(msg.tenantConfig);
+      break;
+    case MsgTypes.UPDATE_TENANT_YEARLY:
+      result = handleUpdateTenantYearly(msg.tenantConfig);
       break;
     default:
       logger.error('CuratorWorker: No handle for msg.type ' + msg.type);

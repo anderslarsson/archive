@@ -8,7 +8,8 @@ const curatorContext = require('../../../curator');
 const MsgTypes = require('../../../../shared/msg_types');
 
 /**
- * Handles
+ * Handles requests to /archive/api/curate/:period and
+ * dispatches the request to the curator context.
  *
  * @param {express.Request} req
  * @param {express.Response} res
@@ -20,12 +21,16 @@ module.exports.curate = async function (req, res, app, db) {
 
   try {
     switch (period) {
-      case MsgTypes.CREATE_TENANT_DAILY:
+      case MsgTypes.CREATE_GLOBAL_DAILY:
+        res.status(200).send(await curatorContext.rotateGlobalDaily());
+        break;
+
+      case MsgTypes.UPDATE_TENANT_MONTHLY:
         res.send(await curatorContext.rotateTenantsDaily(db));
         break;
 
-      case MsgTypes.CREATE_GLOBAL_DAILY:
-        res.status(200).send(await curatorContext.rotateGlobalDaily());
+      case MsgTypes.UPDATE_TENANT_YEARLY:
+        res.send(await curatorContext.rotateTenantsMonthly(db));
         break;
 
       default:

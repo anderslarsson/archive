@@ -88,7 +88,7 @@ class ElasticClient {
    * @returns {Promise}
    */
   async reindexGlobalDaily() {
-    let yesterday = moment().subtract(2, 'days').format('YYYY.MM.DD');
+    let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
 
     return this.conn.reindex({
       waitForCompletion: true,
@@ -120,25 +120,93 @@ class ElasticClient {
    *
    */
   async reindexTenantDaily(tenantId, query) {
-    let yesterday       = moment().subtract(2, 'days').format('YYYY.MM.DD');
-    let yesterdaysmonth = moment().subtract(2, 'days').format('YYYY.MM');
+    let yesterday       = moment().subtract(1, 'days').format('YYYY.MM.DD');
+    let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
 
     // ES only allows lower case index names and tenantId
     // are persisted in a case-insensitive manner -> convert to lower.
     let lowerTenantId = tenantId.toLowerCase();
 
-    return this.conn.reindex({
-      waitForCompletion: true,
-      body: {
-        source: {
-          index: `archive_global_daily-${yesterday}`,
-          query: query
-        },
-        dest: {
-          index: `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`
+    let srcIndexName = `archive_global_daily-${yesterday}`;
+    let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
+
+    let exists;
+
+    try {
+      exists = await this.conn.indices.exists({
+        index: srcIndexName
+      });
+    } catch (e) {
+      exists = false;
+    }
+
+    if (exists) {
+      return this.conn.reindex({
+        waitForCompletion: true,
+        body: {
+          source: {
+            index: srcIndexName,
+            query: query
+          },
+          dest: {
+            index: dstIndexName 
+          }
         }
-      }
-    });
+      });
+    } else {
+      let error = new Error(`Source index ${srcIndexName} does not exist`);
+      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
+
+      throw error;
+    }
+  }
+
+  /**
+   * @function reindexTenantMonthlyToYearly
+   *
+   * Trigers the reindex operation for a single tenant's  monthly
+   * archive index to the tenant's yearly archive.
+   *
+   * @param {String} tenantId
+   */
+  async reindexTenantMonthlyToYearly(tenantId) {
+    let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
+    let yesterdaysyear  = moment().subtract(1, 'days').format('YYYY');
+
+    // ES only allows lower case index names and tenantId
+    // are persisted in a case-insensitive manner -> convert to lower.
+    let lowerTenantId = tenantId.toLowerCase();
+
+    let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
+    let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
+
+    let exists;
+    try {
+      exists = await this.conn.indices.exists({
+        index: srcIndexName
+      });
+    } catch (e) {
+      exists = false;
+    }
+
+    if (exists) {
+      return this.conn.reindex({
+        waitForCompletion: true,
+        body: {
+          source: {
+            index: srcIndexName
+          },
+          dest: {
+            index: dstIndexName
+          }
+        }
+      });
+    } else {
+      let error = new Error(`Source index ${srcIndexName} does not exist`);
+      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
+
+      throw error;
+    }
   }
 
   async restoreSnapshot(repo, index, dryRun = false) {
@@ -161,6 +229,7 @@ class ElasticClient {
 
     return Promise.resolve();
   }
+
 
   async deleteSnapshot(repositoryName, index) {
     return this.conn.snapshot.delete({
