@@ -212,21 +212,15 @@ async function buildTenantQueryParam({customerId, supplierId}) {
   }
 
   let queryParam = {
-    match: {}
+    term: {}
   };
 
   if (customerId) {
-    queryParam.match['event.customerId'] = {
-      query: customerId,
-      type: 'phrase'
-    };
+    queryParam.term['event.customerId.keyword'] = customerId;
   }
 
   if (supplierId) {
-    queryParam.match['event.supplierId'] = {
-      query: supplierId,
-      type: 'phrase'
-    };
+    queryParam.term['event.supplierId.keyword'] = supplierId;
   }
 
   return queryParam;
