@@ -1,7 +1,8 @@
 'use strict';
 
-const curatorHandler = require('./api/curator/index.js');
-const infoHandler = require('./api/info/index.js');
+const curatorHandler = require('./api/curator/');
+const infoHandler = require('./api/info/');
+const indicesHander = require('./api/indices/');
 
 /**
  * Initializes all routes for RESTful access.
@@ -12,8 +13,7 @@ const infoHandler = require('./api/info/index.js');
  * @returns {Promise} JavaScript Promise object.
  * @see [Minimum setup]{@link https://github.com/OpusCapita/web-init#minimum-setup}
  */
-module.exports.init = async function(app, db, config)
-{
+module.exports.init = async function (app, db, config) {
   // Register routes here.
   // Use the passed db parameter in order to use Epilogue auto-routes.
   // Use require in order to separate routes into multiple js files.
@@ -22,5 +22,8 @@ module.exports.init = async function(app, db, config)
   app.get('/api/curator/:period', (req, res) => curatorHandler.curate(req, res, app, db));
 
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
-  
-}
+
+  app.get('/api/indices', (req, res) => indicesHander.get(req, res));
+  app.get('/api/indices/:id', (req, res) => indicesHander.get(req, res));
+
+};

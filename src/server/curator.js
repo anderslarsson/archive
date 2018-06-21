@@ -18,6 +18,8 @@ const events = new EventClient({
   }
 });
 
+events.subscribe('archive.curator.logrotation.job.finished', (msg) => console.log(msg));
+
 const logger = new Logger({
   context: {
     serviceName: 'archive'

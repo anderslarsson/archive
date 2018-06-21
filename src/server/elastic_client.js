@@ -38,6 +38,8 @@ class ElasticClient {
     });
   }
 
+  // --- Snapshot stuff ---
+
   async createRepository(name) {
     return this.conn.snapshot.createRepository({
       repository: name,
@@ -107,6 +109,8 @@ class ElasticClient {
     });
   }
 
+  // --- Reindexing
+
   /**
    * @function reindexGlobalDaily
    *
@@ -152,9 +156,7 @@ class ElasticClient {
     let yesterday       = moment().subtract(1, 'days').format('YYYY.MM.DD');
     let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
 
-    // ES only allows lower case index names and tenantId
-    // are persisted in a case-insensitive manner -> convert to lower.
-    let lowerTenantId = tenantId.toLowerCase();
+    let lowerTenantId = this.normalizeTenantId(tenantId);
 
     let srcIndexName = `archive_global_daily-${yesterday}`;
     let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
@@ -202,9 +204,7 @@ class ElasticClient {
     let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
     let yesterdaysyear  = moment().subtract(1, 'days').format('YYYY');
 
-    // ES only allows lower case index names and tenantId
-    // are persisted in a case-insensitive manner -> convert to lower.
-    let lowerTenantId = tenantId.toLowerCase();
+    let lowerTenantId = this.normalizeTenantId(tenantId);
 
     let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
     let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
@@ -238,8 +238,62 @@ class ElasticClient {
     }
   }
 
+  /**
+   * @function getTenantIndices
+   *
+   * description
+   *
+   * @param {String} tenantId
+   * @param {String} type - Type of the indices to list (monthly, yearly). Defaulst to all.
+   *
+   */
+  async getTenantIndices(tenantId, type, isAdmin) {
+    if (!tenantId && isAdmin) {
+      tenantId = '*';
+    }
+
+    if (!tenantId) {
+      let error = new Error('Can not query w/o tenantId.');
+      throw error;
+    }
+
+    let normalizedTenantId = this.normalizeTenantId(tenantId);
+
+    let indicesPattern = 'archive_tenant_';
+
+    if (type === 'monthly' || type === 'yearly') {
+      indicesPattern = `${indicesPattern}${type}-${normalizedTenantId}-*`;
+    } else {
+      indicesPattern = `${indicesPattern}*-${normalizedTenantId}-*`;
+    }
+
+    return this.conn.indices.get({
+      expandWildcards: 'all',
+      index: indicesPattern
+    });
+  }
+
   search(query) {
     return this.conn.search(query);
+  }
+
+  /**
+   * Normalize a tenantId (to lower case) so we can use
+   * it as part of the ES index name.
+   *
+   * ES only allows lower case index names and tenantId
+   * are persisted in a case-insensitive manner -> convert to lower.
+   *
+   *
+   */
+  normalizeTenantId(tenantId) {
+    let normalizedTenantId = tenantId;
+
+    if (tenantId && tenantId.toLowerCase) {
+      normalizedTenantId = tenantId.toLowerCase();
+    }
+
+    return normalizedTenantId;
   }
 
 }

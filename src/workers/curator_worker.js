@@ -32,6 +32,8 @@ const MsgTypes    = require('../shared/msg_types');
 const esClient = require('../server/elastic_client');
 
 const events = new EventClient({
+  exchangeName: 'archive',
+
   // Override needed for non-containerized testing
   consulOverride: {
     host: 'localhost',
@@ -72,6 +74,10 @@ async function handleCreateGlobalDaily() {
       } else {
         returnValue = true;
         logger.log('Successfully created archive_global_daily');
+
+        events.emit('archive.curator.logrotation.job.finished', {
+          type: MsgTypes.UPDATE_TENANT_MONTHLY
+        }).catch((e) => logger.error(e));
       }
     }
   } catch (e) {
@@ -111,14 +117,19 @@ async function handleUpdateTenantYearly(tenantConfig) {
         logger.error('Could not update archive_tenant_yearly : ' + result.failures);
       } else {
         returnValue = true;
-        logger.error('Successfully created archive_global_daily');
+        logger.error(`Successfully created archive_tenant_yearly for tenantId ${tenantId}`);
+
+        events.emit('archive.curator.logrotation.job.finished', {
+          type: MsgTypes.UPDATE_TENANT_YEARLY,
+          tenantConfig: tenantConfig
+        }).catch((e) => logger.error(e));
       }
     }
   } catch (e) {
     // Dismiss event incase the source index does not exist.
     returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
 
-    logger.error('Failed to create archive_global_daily index.');
+    logger.error('Failed to update archive_tenant_yearly index.');
     logger.error(e);
   }
 
@@ -154,13 +165,18 @@ async function handleUpdateTenantMonthly(tenantConfig) {
       } else {
         returnValue = true;
         logger.error('Successfully created archive_global_daily');
+
+        events.emit('archive.curator.logrotation.job.finished', {
+          type: MsgTypes.UPDATE_TENANT_MONTHLY,
+          tenantConfig: tenantConfig
+        }).catch((e) => logger.error(e));
       }
     }
   } catch (e) {
-    // TODO handle "Index not found" Exception - happens when we
-    // try to run this, before the archive_global_daily is available.
-    returnValue = false;
-    logger.error('Failed to create archive_global_daily index.');
+    // Dismiss event incase the source index does not exist.
+    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+
+    logger.error('Failed to update archive_tenant_monthly index.');
     logger.error(e);
   }
 
