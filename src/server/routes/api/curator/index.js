@@ -20,11 +20,11 @@ module.exports.curate = async function (req, res, app, db) {
 
   try {
     switch (period) {
-      case MsgTypes.TENANT_DAILY:
+      case MsgTypes.CREATE_TENANT_DAILY:
         res.send(await curatorContext.rotateTenantsDaily(db));
         break;
 
-      case MsgTypes.GLOBAL_DAILY:
+      case MsgTypes.CREATE_GLOBAL_DAILY:
         res.status(200).send(await curatorContext.rotateGlobalDaily());
         break;
 

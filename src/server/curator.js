@@ -43,7 +43,7 @@ module.exports.rotateTenantsDaily = async function (db) {
     for (let config of configs) {
       try {
         let result = await events.emit('archive.curator.wait', {
-          type: MsgTypes.TENANT_DAILY,
+          type: MsgTypes.CREATE_TENANT_DAILY,
           tenantConfig: config
         });
 
@@ -73,7 +73,7 @@ module.exports.rotateTenantsDaily = async function (db) {
  */
 module.exports.rotateGlobalDaily = async function () {
   await events.emit('archive.curator.wait', {
-    type: MsgTypes.GLOBAL_DAILY
+    type: MsgTypes.CREATE_GLOBAL_DAILY
   });
 
   return 'Job created successfully.';

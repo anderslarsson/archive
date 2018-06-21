@@ -119,6 +119,8 @@ async function handleTenantDaily(tenantConfig) {
     logger.error(e);
   }
 
+  // TODO create/update tenant record in RDB pointing to the ES index
+
   return returnValue;
 }
 
@@ -133,10 +135,10 @@ function waitDispatcher(msg) {
   let result = false;
 
   switch (msg.type) {
-    case MsgTypes.GLOBAL_DAILY:
+    case MsgTypes.CREATE_GLOBAL_DAILY:
       result = handleGlobalDaily();
       break;
-    case MsgTypes.TENANT_DAILY:
+    case MsgTypes.UPDATE_TENANT_MONTHLY:
       result = handleTenantDaily(msg.tenantConfig);
       break;
     default:
