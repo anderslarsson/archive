@@ -47,8 +47,8 @@ const logger = new Logger({
   }
 });
 
-// Subscribe to archive.curator.wait topic
-events.subscribe('archive.curator.wait', waitDispatcher);
+// Subscribe to archive.curator.logrotation.job.created topic
+events.subscribe('archive.curator.logrotation.job.created', waitDispatcher);
 
 /**
  * @function handleCreateGlobalDaily

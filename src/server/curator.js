@@ -12,6 +12,7 @@ const EventClient = require('@opuscapita/event-client');
 const MsgTypes    = require('../shared/msg_types');
 
 const events = new EventClient({
+  exchangeName: 'archive',
   consul: {
     host: 'consul'
   }
@@ -43,7 +44,7 @@ module.exports.rotateTenantsDaily = async function (db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.curator.wait', {
+        let result = await events.emit('archive.curator.logrotation.job.created', {
           type: MsgTypes.UPDATE_TENANT_MONTHLY,
           tenantConfig: config
         });
@@ -89,7 +90,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.curator.wait', {
+        let result = await events.emit('archive.curator.logrotation.job.created', {
           type: MsgTypes.UPDATE_TENANT_YEARLY,
           tenantConfig: config
         });
@@ -119,7 +120,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
  *
  */
 module.exports.rotateGlobalDaily = async function () {
-  await events.emit('archive.curator.wait', {
+  await events.emit('archive.curator.logrotation.job.created', {
     type: MsgTypes.CREATE_GLOBAL_DAILY
   });
 
