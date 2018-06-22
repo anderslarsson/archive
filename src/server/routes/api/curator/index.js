@@ -37,6 +37,7 @@ module.exports.curate = async function (req, res, app, db) {
         res.status(400).send(`Do not know what to do: ${period}`);
     }
   } catch (e) {
+    req.opuscapita.logger.error('Failure in archive curator.');
     res.status(500).send(e);
   }
 };

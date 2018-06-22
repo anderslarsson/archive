@@ -13,7 +13,7 @@ const indicesHander = require('./api/indices/');
  * @returns {Promise} JavaScript Promise object.
  * @see [Minimum setup]{@link https://github.com/OpusCapita/web-init#minimum-setup}
  */
-module.exports.init = async function (app, db, config) {
+module.exports.init = async function (app, db) {
   // Register routes here.
   // Use the passed db parameter in order to use Epilogue auto-routes.
   // Use require in order to separate routes into multiple js files.

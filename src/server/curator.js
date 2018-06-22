@@ -18,8 +18,6 @@ const events = new EventClient({
   }
 });
 
-events.subscribe('archive.curator.logrotation.job.finished', (msg) => console.log(msg));
-
 const logger = new Logger({
   context: {
     serviceName: 'archive'
@@ -34,7 +32,7 @@ const logger = new Logger({
  *
  * @param {Sequelize} db - Sequelize db object
  */
-module.exports.rotateTenantsDaily = async function (db) {
+module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
   let results = [];
 
   try {
@@ -126,5 +124,13 @@ module.exports.rotateGlobalDaily = async function () {
     type: MsgTypes.CREATE_GLOBAL_DAILY
   });
 
-  return 'Job created successfully.';
+  return 'ok';
 };
+
+module.exports.initEventSubscriptions = function initEventSubscriptions() {
+  return events.subscribe('archive.curator.logrotation.job.finished', jobFinishedHandler.bind(this));
+};
+
+async function jobFinishedHandler(msg) {
+  console.log(msg);
+}

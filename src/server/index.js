@@ -4,7 +4,9 @@ const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const isProduction = (process.env.NODE_ENV === 'production');
+const curatorContext = require('./curator');
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const logger = new Logger({
   context: {
@@ -47,6 +49,8 @@ async function init() {
       dbInstance: db
     }
   });
+
+  await curatorContext.initEventSubscriptions();
 }
 
 (() => init().catch(console.error))();
