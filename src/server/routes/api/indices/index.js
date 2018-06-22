@@ -1,6 +1,6 @@
 'use strict';
 
-const elasticClient = require('../../../elastic_client');
+const elasticContext = require('../../../elasticsearch');
 
 async function get(req, res) {
   if (req.params.id) {
@@ -16,7 +16,7 @@ async function getAll(req, res) {
     .roles
     .some(r => r === 'admin');
 
-  let indices = await elasticClient.getTenantIndices(req.opuscapita.getTenantId(), null, isAdmin);
+  let indices = await elasticContext.getTenantIndices(req.opuscapita.getTenantId(), null, isAdmin);
 
   let result = [];
 

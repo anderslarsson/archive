@@ -1,8 +1,8 @@
 'use strict';
 
-const ElasticClient = require('../../../elastic_client');
+const elasticContext = require('../../../elasticsearch');
 
 module.exports.getClusterHealth = async function (req, res) {
-  let result = await ElasticClient.printClusterHealth();
+  let result = await elasticContext.printClusterHealth();
   res.send(result);
-}
+};

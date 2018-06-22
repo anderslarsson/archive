@@ -1,12 +1,12 @@
-const elasticsearch = require('elasticsearch');
+const {Client} = require('elasticsearch');
 const moment = require('moment');
 
 const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 
-class ElasticClient {
+class Elasticsearch {
 
   constructor() {
-    this.conn = new elasticsearch.Client({
+    this.conn = new Client({
       apiVersion: '5.5',
       hosts: [
         ES_HOST
@@ -298,4 +298,4 @@ class ElasticClient {
 
 }
 
-module.exports = new ElasticClient();
+module.exports = new Elasticsearch();
