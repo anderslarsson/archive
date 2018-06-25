@@ -2,43 +2,53 @@
 
 const elasticContext = require('../../../elasticsearch');
 
-async function get(req, res) {
-  if (req.params.id) {
-    return getById(req.params.id, req, res);
-  } else {
-    return getAll(req, res);
+const validTypes = [
+  'monthly',
+  'yearly'
+];
+
+module.exports.listByType =  async function listByType(req, res) {
+  let tenantId = req.params.tenantId;
+  // TODO check that user is allowed to list tenant's indices
+
+  let type = req.params.type;
+  if (!validTypes.includes(type)) {
+    return sendErrorResponse(400, 'Wrong parameters.');
   }
+
+  try {
+    let indicesList = await fetchIndicesFromEs(tenantId, type);
+    return res.status(200).json(indicesList);
+  } catch (e) {
+    return sendErrorResponse(500, 'Unable to fetch indices from Elasticsearch.');
+  }
+
+};
+
+async function fetchIndicesFromEs(tenantId, type = '*') {
+  let indices = await elasticContext.getTenantIndices(tenantId, type);
+
+  // Build the list of available indices
+  let result = [];
+  for (let index in indices) {
+    result.push(index);
+  }
+
+  return result;
 }
 
-async function getAll(req, res) {
-  let isAdmin = req
+function isAdmin(req) {
+  return req
     .opuscapita.userData()
     .roles
     .some(r => r === 'admin');
+}
 
-  try {
-    let indices = await elasticContext.getTenantIndices(req.opuscapita.getTenantId(), null, isAdmin);
-
-    // Build the list of available indices
-    let result = [];
-    for (let index in indices) {
-      result.push(index);
+function sendErrorResponse(req, res, status = 400, msg = '') {
+  return res.status(status).json({
+    error: {
+      message: msg
     }
-
-    return res.status(200).json(result);
-  } catch (e) {
-    return res.status(500).json({
-      error: {
-        message: 'Unable to fetch indices from Elasticsearch.'
-      }
-    });
-  }
+  });
 }
 
-async function getById(id, req, res) {
-  return res.status(500).send('Not implemented');
-}
-
-module.exports = {
-  get: get
-};

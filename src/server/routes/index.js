@@ -23,7 +23,8 @@ module.exports.init = async function (app, db) {
 
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
 
-  app.get('/api/indices', (req, res) => indicesHander.get(req, res));
-  app.get('/api/indices/:id', (req, res) => indicesHander.get(req, res));
+  app.get('/api/indices/:tenantId/:type', (req, res) => indicesHander.listByType(req, res));
+
+  app.get('/api/entries/:tenantId/:year/:month', (req, res) => res.status(500).send('Not implemented.'));
 
 };

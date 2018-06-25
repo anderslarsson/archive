@@ -261,11 +261,7 @@ class Elasticsearch {
    * @param {String} type - Type of the indices to list (monthly, yearly). Defaulst to all.
    *
    */
-  async getTenantIndices(tenantId, type, isAdmin) {
-    if (!tenantId && isAdmin) {
-      tenantId = '*';
-    }
-
+  async getTenantIndices(tenantId, type) {
     if (!tenantId) {
       throw new Error('Can not query w/o tenantId.');
     }
