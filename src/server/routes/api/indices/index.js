@@ -16,15 +16,23 @@ async function getAll(req, res) {
     .roles
     .some(r => r === 'admin');
 
-  let indices = await elasticContext.getTenantIndices(req.opuscapita.getTenantId(), null, isAdmin);
+  try {
+    let indices = await elasticContext.getTenantIndices(req.opuscapita.getTenantId(), null, isAdmin);
 
-  let result = [];
+    // Build the list of available indices
+    let result = [];
+    for (let index in indices) {
+      result.push(index);
+    }
 
-  for (let index in indices) {
-    result.push(index);
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({
+      error: {
+        message: 'Unable to fetch indices from Elasticsearch.'
+      }
+    });
   }
-
-  return res.status(200).send(result);
 }
 
 async function getById(id, req, res) {

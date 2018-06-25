@@ -29,7 +29,7 @@ const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 const MsgTypes    = require('../shared/msg_types');
 
-const esClient = require('../server/elastic_client');
+const elasticContext = require('../server/elasticsearch');
 
 const events = new EventClient({
   exchangeName: 'archive',
@@ -65,7 +65,7 @@ async function handleCreateGlobalDaily() {
   let returnValue = false;
 
   try {
-    result = await esClient.reindexGlobalDaily();
+    result = await elasticContext.reindexGlobalDaily();
 
     if (result) {
       if (result.failures && result.failures >= 1) {
@@ -109,7 +109,7 @@ async function handleUpdateTenantYearly(tenantConfig) {
   let tenantId = tenantConfig.customerId || tenantConfig.supplierId;
 
   try {
-    let result = await esClient.reindexTenantMonthlyToYearly(tenantId);
+    let result = await elasticContext.reindexTenantMonthlyToYearly(tenantId);
 
     if (result) {
       if (result.failures && result.failures >= 1) {
@@ -156,7 +156,7 @@ async function handleUpdateTenantMonthly(tenantConfig) {
 
   try {
     let query = await buildTenantQueryParam(tenantConfig);
-    let result = await esClient.reindexGlobalDailyToTenantMonthly(tenantId, query);
+    let result = await elasticContext.reindexGlobalDailyToTenantMonthly(tenantId, query);
 
     if (result) {
       if (result.failures && result.failures >= 1) {

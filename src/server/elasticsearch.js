@@ -201,6 +201,8 @@ class Elasticsearch {
    * @param {String} tenantId
    */
   async reindexTenantMonthlyToYearly(tenantId) {
+    let error;
+
     let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
     let yesterdaysyear  = moment().subtract(1, 'days').format('YYYY');
 
@@ -215,10 +217,22 @@ class Elasticsearch {
         index: srcIndexName
       });
     } catch (e) {
-      exists = false;
+      error = new Error(`Source index ${srcIndexName} does not exist`);
+      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
     }
 
     if (exists) {
+      try {
+        await this.conn.indices.open({
+          index: dstIndexName
+        });
+      } catch (e) {
+        error = new Error(`Can not open destination index ${dstIndexName}.`);
+        error.code = 'ERR_CAN_NOT_OPEN_DST_INDEX';
+      }
+    }
+
+    if (exists && !error) {
       return this.conn.reindex({
         waitForCompletion: true,
         body: {
@@ -231,10 +245,7 @@ class Elasticsearch {
         }
       });
     } else {
-      let error = new Error(`Source index ${srcIndexName} does not exist`);
-      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
-
-      throw error;
+      return Promise.reject(error);
     }
   }
 
