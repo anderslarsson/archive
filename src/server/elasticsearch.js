@@ -123,22 +123,36 @@ class Elasticsearch {
   async reindexGlobalDaily() {
     let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
 
-    return this.conn.reindex({
-      waitForCompletion: true,
-      body: {
-        source: {
-          index: `bn_tx_logs-${yesterday}`,
-          // TODO copy only those entries with archive flag set
-          // query: {
-          //   term: {
-          //     archive: true
-          //   }
-        },
-        dest: {
-          index: `archive_global_daily-${yesterday}`
+    let dstIndexName = `archive_global_daily-${yesterday}`;
+
+    let error, statusDstIndex;
+    try {
+      // TODO also check the existence of the source index.
+      statusDstIndex = await this.openIndex(dstIndexName, true);
+    } catch (e) {
+      error = e;
+    }
+
+    if (statusDstIndex && !error) {
+      return this.conn.reindex({
+        waitForCompletion: true,
+        body: {
+          source: {
+            index: `bn_tx_logs-${yesterday}`,
+            // TODO copy only those entries with archive flag set
+            // query: {
+            //   term: {
+            //     archive: true
+            //   }
+          },
+          dest: {
+            index: dstIndexName // Will be created if it not exists
+          }
         }
-      }
-    });
+      });
+    } else {
+      throw error;
+    }
   }
 
   /**
@@ -161,18 +175,16 @@ class Elasticsearch {
     let srcIndexName = `archive_global_daily-${yesterday}`;
     let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
 
-    let exists;
-
+    let error, statusSrcIndex, statusDstIndex;
     try {
-      exists = await this.conn.indices.exists({
-        index: srcIndexName
-      });
+      statusSrcIndex = await this.openIndex(srcIndexName, false);
+      statusDstIndex = await this.openIndex(dstIndexName, true);
     } catch (e) {
-      exists = false;
+      error = e;
     }
 
-    if (exists) {
-      return this.conn.reindex({
+    if (statusSrcIndex && statusDstIndex && !error) {
+      let reindexResult = await this.conn.reindex({
         waitForCompletion: true,
         body: {
           source: {
@@ -180,14 +192,15 @@ class Elasticsearch {
             query: query
           },
           dest: {
-            index: dstIndexName
+            index: dstIndexName // Will be created if it not exists
           }
         }
       });
-    } else {
-      let error = new Error(`Source index ${srcIndexName} does not exist`);
-      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
 
+      await this.conn.indices.close({index: dstIndexName});
+
+      return reindexResult;
+    } else {
       throw error;
     }
   }
@@ -201,8 +214,6 @@ class Elasticsearch {
    * @param {String} tenantId
    */
   async reindexTenantMonthlyToYearly(tenantId) {
-    let error;
-
     let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
     let yesterdaysyear  = moment().subtract(1, 'days').format('YYYY');
 
@@ -211,41 +222,33 @@ class Elasticsearch {
     let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
     let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
 
-    let exists;
+    let error, statusSrcIndex, statusDstIndex;
     try {
-      exists = await this.conn.indices.exists({
-        index: srcIndexName
-      });
+      statusSrcIndex = await this.openIndex(srcIndexName, false);
+      statusDstIndex = await this.openIndex(dstIndexName, true);
     } catch (e) {
-      error = new Error(`Source index ${srcIndexName} does not exist`);
-      error.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST';
+      error = e;
     }
 
-    if (exists) {
-      try {
-        await this.conn.indices.open({
-          index: dstIndexName
-        });
-      } catch (e) {
-        error = new Error(`Can not open destination index ${dstIndexName}.`);
-        error.code = 'ERR_CAN_NOT_OPEN_DST_INDEX';
-      }
-    }
-
-    if (exists && !error) {
-      return this.conn.reindex({
+    if (statusSrcIndex && statusDstIndex && !error) {
+      await this.conn.reindex({
         waitForCompletion: true,
         body: {
           source: {
             index: srcIndexName
           },
           dest: {
-            index: dstIndexName
+            index: dstIndexName // Will be created if it not exists
           }
         }
       });
+
+      // await this.conn.indices.close({index: srcIndexName});
+      await this.conn.indices.close({index: dstIndexName});
+
+      return true;
     } else {
-      return Promise.reject(error);
+      throw error;
     }
   }
 
@@ -264,8 +267,7 @@ class Elasticsearch {
     }
 
     if (!tenantId) {
-      let error = new Error('Can not query w/o tenantId.');
-      throw error;
+      throw new Error('Can not query w/o tenantId.');
     }
 
     let normalizedTenantId = this.normalizeTenantId(tenantId);
@@ -282,6 +284,59 @@ class Elasticsearch {
       expandWildcards: 'all',
       index: indicesPattern
     });
+  }
+
+  /**
+   * @function openIndex
+   *
+   * Opens an existing index.
+   * Will @throws if index does not exist or opening does not work.
+   *
+   * @params {String} indexName
+   * @params {Boolean} create=true - Create the index if it does not yeat exist.
+   * @returns {Boolean}
+   *
+   */
+  async openIndex(indexName, create = true) {
+    let exists = false;
+    let error = null;
+
+    try {
+      exists = await this.conn.indices.exists({index: indexName});
+    } catch (e) {
+      error = new Error(`Index ${indexName} does not exist`);
+      error.code = 'ERR_INDEX_DOES_NOT_EXIST';
+    }
+
+    if (exists === true && error === null) {
+      // Open the index if it exists.
+
+      try {
+        let openResult = await this.conn.indices.open({
+          index: indexName
+        });
+
+        return openResult;
+      } catch (e) {
+        // Throw error if index can not be opened
+
+        error = new Error(`Can not open index ${indexName}.`);
+        error.code = 'ERR_INDEX_OPEN_FAILED';
+        error.indexName = indexName;
+
+        throw error;
+      }
+
+    } else {
+      // Create index or throw
+
+      if (create) {
+        return await this.conn.indices.create({index: indexName});
+      } else {
+        return false;
+      }
+    }
+
   }
 
   search(query) {

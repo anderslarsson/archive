@@ -117,7 +117,7 @@ async function handleUpdateTenantYearly(tenantConfig) {
         logger.error('Could not update archive_tenant_yearly : ' + result.failures);
       } else {
         returnValue = true;
-        logger.error(`Successfully created archive_tenant_yearly for tenantId ${tenantId}`);
+        logger.log(`Successfully created archive_tenant_yearly for tenantId ${tenantId}`);
 
         events.emit('archive.curator.logrotation.job.finished', {
           type: MsgTypes.UPDATE_TENANT_YEARLY,
@@ -126,10 +126,15 @@ async function handleUpdateTenantYearly(tenantConfig) {
       }
     }
   } catch (e) {
-    // Dismiss event incase the source index does not exist.
-    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+    let errCodes = [
+      'ERR_INDEX_DOES_NOT_EXIST',
+      'ERR_INDEX_OPEN_FAILED'
+    ];
 
-    logger.error('Failed to update archive_tenant_yearly index.');
+    // Dismiss event incase the source index does not exist.
+    returnValue = errCodes.includes(e.code) ? null : false;
+
+    logger.error('Failed to update archive_tenant_yearly index for tenant ' + tenantId);
     logger.error(e);
   }
 
@@ -161,10 +166,10 @@ async function handleUpdateTenantMonthly(tenantConfig) {
     if (result) {
       if (result.failures && result.failures >= 1) {
         returnValue = false;
-        logger.error('Could not create archive_tenant_monthly WITH errors: ' + result.failures);
+        logger.error('Failed to create archive_tenant_monthly, errors: ' + result.failures);
       } else {
         returnValue = true;
-        logger.error('Successfully created archive_global_daily');
+        logger.log('Successfully created archive_global_daily');
 
         events.emit('archive.curator.logrotation.job.finished', {
           type: MsgTypes.UPDATE_TENANT_MONTHLY,
@@ -173,10 +178,15 @@ async function handleUpdateTenantMonthly(tenantConfig) {
       }
     }
   } catch (e) {
-    // Dismiss event incase the source index does not exist.
-    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+    let errCodes = [
+      'ERR_INDEX_DOES_NOT_EXIST',
+      'ERR_INDEX_OPEN_FAILED'
+    ];
 
-    logger.error('Failed to update archive_tenant_monthly index.');
+    // Dismiss event incase the source index does not exist.
+    returnValue = errCodes.includes(e.code) ? null : false;
+
+    logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
     logger.error(e);
   }
 
