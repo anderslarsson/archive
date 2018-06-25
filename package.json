@@ -30,6 +30,7 @@
     "elasticsearch": "^15.0.0",
     "moment": "^2.22.2",
     "ocbesbn-logger": "^1.0.8",
+    "react-bootstrap": "^0.32.1",
     "sequelize": "^4.37.10",
     "webpack-config": "^7.5.0"
   },
