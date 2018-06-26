@@ -327,6 +327,7 @@ class Elasticsearch {
       // Create index or throw
 
       if (create) {
+        // TODO copy mappings from srcIndex, has to be done by the caller ...
         return await this.conn.indices.create({index: indexName});
       } else {
         return false;

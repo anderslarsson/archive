@@ -7,7 +7,46 @@ const validTypes = [
   'yearly'
 ];
 
-module.exports.listByType =  async function listByType(req, res) {
+module.exports.listAllByType = async function listAllByType(req, res) {
+  try {
+    let type = req.params.type;
+    if (!validTypes.includes(type)) {
+      return sendErrorResponse(400, 'Wrong parameters.');
+    }
+
+    let tenants = (await req.opuscapita.getUserTenants())
+      .map(tenant => {
+        return req.opuscapita.getCustomerId(tenant) || req.opuscapita.getSupplierId(tenant);
+      })
+      .filter(tenant => tenant !== null);
+
+    let fetchResults = tenants.map(async (tenantId) => {
+      let indicesList = await fetchIndicesFromEs(tenantId, type);
+      return {
+        tenant: tenantId,
+        type: type,
+        indices: indicesList
+      };
+    });
+
+    let tenantIndices = await Promise.all(fetchResults);
+    let tenantIndicesCleaned = tenantIndices.filter((tenant) => tenant.indices.length > 0);
+
+    res.status(200).json(tenantIndicesCleaned);
+  } catch (e) {
+    /* handle error */
+    switch (e.code) {
+      case '':
+        sendErrorResponse(500, '');
+        break;
+
+      default:
+        sendErrorResponse(500, 'The application encountered an unexpected error.');
+    }
+  }
+};
+
+module.exports.listAllByTenantAndType =  async function listAllByTenantAndType(req, res) {
   let tenantId = req.params.tenantId;
   // TODO check that user is allowed to list tenant's indices
 
