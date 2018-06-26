@@ -1,18 +1,12 @@
 import React from 'react';
-import { Containers } from '@opuscapita/service-base-ui';
-import { Route } from 'react-router';
+import {Containers} from '@opuscapita/service-base-ui';
+import {Route} from 'react-router';
+import Archive from './components/Archive';
 
-const Index = () => (
-  <div className="index">
-    Hello ...
-  </div>
-);
-
-const App = () => (
+const App = () =>
   <Containers.ServiceLayout serviceName="archive">
-    <Route path={"/"} component={Index}/>
-  </Containers.ServiceLayout>
-);
+    <Route path={'/'} component={Archive}/>
+  </Containers.ServiceLayout>;
 
 export default App;
 
