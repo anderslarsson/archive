@@ -14,12 +14,14 @@ module.exports.listAllByType = async function listAllByType(req, res) {
       return sendErrorResponse(400, 'Wrong parameters.');
     }
 
+    // Fetch tenants from session
     let tenants = (await req.opuscapita.getUserTenants())
       .map(tenant => {
         return req.opuscapita.getCustomerId(tenant) || req.opuscapita.getSupplierId(tenant);
       })
       .filter(tenant => tenant !== null);
 
+    // Fetch indices for all configured tenants from ES
     let fetchResults = tenants.map(async (tenantId) => {
       let indicesList = await fetchIndicesFromEs(tenantId, type);
       return {

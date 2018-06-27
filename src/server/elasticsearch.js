@@ -1,6 +1,8 @@
 const {Client} = require('elasticsearch');
 const moment = require('moment');
 
+const ErrCodes = require('../shared/error_codes');
+
 const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 
 class Elasticsearch {
@@ -201,6 +203,11 @@ class Elasticsearch {
 
       return reindexResult;
     } else {
+      if (!statusSrcIndex) {
+        error = new Error('Source index does not exist.');
+        error.code = ErrCodes.ERR_SRC_INDEX_DOES_NOT_EXIST;
+      }
+
       throw error;
     }
   }

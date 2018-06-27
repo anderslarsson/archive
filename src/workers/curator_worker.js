@@ -27,12 +27,15 @@
 
 const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
-const MsgTypes    = require('../shared/msg_types');
+
+const MsgTypes       = require('../shared/msg_types');
+const ErrCodes       = require('../shared/error_codes');
 
 const elasticContext = require('../server/elasticsearch');
 
 const events = new EventClient({
   exchangeName: 'archive',
+  messageLimit: 1,
 
   // Override needed for non-containerized testing
   consulOverride: {
@@ -50,7 +53,8 @@ const logger = new Logger({
 });
 
 // Subscribe to archive.curator.logrotation.job.created topic
-events.subscribe('archive.curator.logrotation.job.created', waitDispatcher);
+events.subscribe('archive.curator.logrotation.job.created');
+waitDispatcher();
 
 /**
  * @function handleCreateGlobalDaily
@@ -178,13 +182,10 @@ async function handleUpdateTenantMonthly(tenantConfig) {
       }
     }
   } catch (e) {
-    let errCodes = [
-      'ERR_INDEX_DOES_NOT_EXIST',
-      'ERR_INDEX_OPEN_FAILED'
-    ];
-
-    // Dismiss event incase the source index does not exist.
-    returnValue = errCodes.includes(e.code) ? null : false;
+    if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
+      // Dismiss event incase the source index does not exist.
+      returnValue = null;
+    }
 
     logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
     logger.error(e);
@@ -202,25 +203,54 @@ async function handleUpdateTenantMonthly(tenantConfig) {
  * @returns {Boolean} - Indicates the success of the job processing
  *
  */
-function waitDispatcher(msg) {
-  let result = false;
+async function waitDispatcher() {
+  let msg, result;
 
-  switch (msg.type) {
-    case MsgTypes.CREATE_GLOBAL_DAILY:
-      result = handleCreateGlobalDaily();
-      break;
-    case MsgTypes.UPDATE_TENANT_MONTHLY:
-      result = handleUpdateTenantMonthly(msg.tenantConfig);
-      break;
-    case MsgTypes.UPDATE_TENANT_YEARLY:
-      result = handleUpdateTenantYearly(msg.tenantConfig);
-      break;
-    default:
-      logger.error('CuratorWorker: No handle for msg.type ' + msg.type);
-      result = null; // Dismiss message from the MQ as the given type is not implemented.
+  try {
+    result = false;
+
+    msg = await events.getMessage('archive.curator.logrotation.job.created', false); // Get single message, no auto ack
+
+    if (msg && msg.payload && msg.payload.type) {
+      let payload = msg.payload;
+
+      switch (payload.type) {
+        case MsgTypes.CREATE_GLOBAL_DAILY:
+          result = await handleCreateGlobalDaily();
+          break;
+        case MsgTypes.UPDATE_TENANT_MONTHLY:
+          result = await handleUpdateTenantMonthly(payload.tenantConfig);
+          break;
+        case MsgTypes.UPDATE_TENANT_YEARLY:
+          result = await handleUpdateTenantYearly(payload.tenantConfig);
+          break;
+        default:
+          logger.error('CuratorWorker: No handle for msg.type ' + payload.type);
+          result = null; // Dismiss message from the MQ as the given type is not implemented.
+      }
+
+      if (result) {
+        logger.log(`Acking message with deliveryTag ${msg.tag}`);
+        await events.ackMessage(msg);
+        logger.log('Finished curator job with result: \n' + result);
+      }
+    }
+  } catch (handleMessageError) {
+
+    if (msg) {
+      try {
+        // Requeu message
+        await events.nackMessage(msg);
+      } catch (nackErr) {
+        logger.error(nackErr);
+      }
+    }
+
+    logger.error(handleMessageError);
+  } finally {
+    // restart the timer
+    setTimeout(waitDispatcher, 1000);
   }
-
-  return result;
 }
 
 /**
