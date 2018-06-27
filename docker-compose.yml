@@ -91,6 +91,8 @@ services:
       - ES_NO_CLUSTER=${ES_NO_CLUSTER}
     depends_on:
       - registrator
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -267,3 +269,7 @@ services:
     labels:
       SERVICE_IGNORE: 'true'  # Do not add any of Consul's services to Consul's service discovery registry.
     command: [agent, '-server', '-ui', '-bootstrap', '-client=0.0.0.0']
+
+volumes:
+  esdata1:
+    driver: local
