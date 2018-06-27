@@ -4,6 +4,9 @@
       "shortterm": "Short term archive",
       "longterm": "Long term",
       "settings": "Settings"
+    },
+    "forms": {
+      "selectTenantId": "Please select a tenant"
     }
   }
 }

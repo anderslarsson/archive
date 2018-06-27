@@ -1,9 +1,10 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
 import {Components} from '@opuscapita/service-base-ui';
 import translations from './i18n';
 
 import {Tab, Tabs} from 'react-bootstrap';
+
+import ShortTerm from './ShortTermArchive';
 
 export default class Archive extends Components.ContextComponent {
 
@@ -33,7 +34,9 @@ export default class Archive extends Components.ContextComponent {
     return (
       <div>
         <Tabs id="archiveTabs" activeKey={this.state.activeTabKey} onSelect={this.handleSelect}>
-          <Tab eventKey="shortterm" title={i18n.getMessage('Archive.nav.shortterm')}>90 days</Tab>
+          <Tab eventKey="shortterm" title={i18n.getMessage('Archive.nav.shortterm')}>
+            <ShortTerm />
+          </Tab>
           <Tab eventKey="longterm" title={i18n.getMessage('Archive.nav.longterm')}>Long term</Tab>
           <Tab eventKey="settings" title={i18n.getMessage('Archive.nav.settings')}>Settings</Tab>
         </Tabs>

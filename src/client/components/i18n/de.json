@@ -4,6 +4,9 @@
       "shortterm": "Kurzzeit Archiv",
       "longterm": "Langzeit Archiv",
       "settings": "Einstellungen"
+    },
+    "forms": {
+      "selectTenantId": "Tenant auswählen"
     }
   }
 }
