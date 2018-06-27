@@ -130,13 +130,10 @@ async function handleUpdateTenantYearly(tenantConfig) {
       }
     }
   } catch (e) {
-    let errCodes = [
-      'ERR_INDEX_DOES_NOT_EXIST',
-      'ERR_INDEX_OPEN_FAILED'
-    ];
-
     // Dismiss event incase the source index does not exist.
-    returnValue = errCodes.includes(e.code) ? null : false;
+    if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
+      returnValue = null;
+    }
 
     logger.error('Failed to update archive_tenant_yearly index for tenant ' + tenantId);
     logger.error(e);
