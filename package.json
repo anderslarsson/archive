@@ -25,6 +25,7 @@
     "@opuscapita/i18n": "1.2.1",
     "@opuscapita/useridentity-middleware": "^3.0.8",
     "@opuscapita/web-init": "^3.0.41",
+    "@types/superagent": "^3.8.1",
     "accept-language-parser": "^1.5.0",
     "bee-queue": "^1.2.2",
     "elasticsearch": "^15.0.0",
