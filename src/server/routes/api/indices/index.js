@@ -7,6 +7,10 @@ const validTypes = [
   'yearly'
 ];
 
+/**
+ * @function listAllByType
+ *
+ */
 module.exports.listAllByType = async function listAllByType(req, res) {
   try {
     let type = req.params.type;

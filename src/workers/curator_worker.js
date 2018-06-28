@@ -80,7 +80,7 @@ async function handleCreateGlobalDaily() {
         logger.log('Successfully created archive_global_daily');
 
         events.emit('archive.curator.logrotation.job.finished', {
-          type: MsgTypes.UPDATE_TENANT_MONTHLY
+          type: MsgTypes.CREATE_GLOBAL_DAILY
         }).catch((e) => logger.error(e));
       }
     }

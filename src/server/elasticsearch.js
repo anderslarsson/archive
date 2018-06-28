@@ -129,21 +129,28 @@ class Elasticsearch {
     let dstIndexName = `archive_global_daily-${yesterday}`;
 
     let error,
-        copyMappingResult,
+        srcHasDstMapping,
+        statusSrcIndex,
         statusDstIndex;
 
     try {
-      let dstIndexExists = await this.conn.indices.exists({index: dstIndexName});
+      statusSrcIndex = await this.openIndex(srcIndexName, false);
 
-      if (dstIndexExists === false) {
-        statusDstIndex = await this.openIndex(dstIndexName, !dstIndexExists);
-        copyMappingResult = await this.copyMapping(srcIndexName, dstIndexName);
+      let dstExists = await this.conn.indices.exists({index: dstIndexName});
+      if (dstExists === false) {
+        // Create index + copy mappings
+        statusDstIndex = await this.openIndex(dstIndexName, true);
+        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
+      } else {
+        // Use existing index
+        statusDstIndex = await this.openIndex(dstIndexName, true);
+        srcHasDstMapping = true;
       }
     } catch (e) {
       error = e;
     }
 
-    if (statusDstIndex && copyMappingResult && !error) {
+    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
       return this.conn.reindex({
         waitForCompletion: true,
         body: {
@@ -185,15 +192,27 @@ class Elasticsearch {
     let srcIndexName = `archive_global_daily-${yesterday}`;
     let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
 
-    let error, statusSrcIndex, statusDstIndex;
+    let error,
+        srcHasDstMapping,
+        statusSrcIndex,
+        statusDstIndex;
+
     try {
       statusSrcIndex = await this.openIndex(srcIndexName, false);
-      statusDstIndex = await this.openIndex(dstIndexName, true);
+
+      let dstExists = await this.conn.indices.exists({index: dstIndexName});
+      if (dstExists === false) {
+        statusDstIndex = await this.openIndex(dstIndexName, true);
+        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
+      } else {
+        statusDstIndex = await this.openIndex(dstIndexName, false);
+        srcHasDstMapping = true;
+      }
     } catch (e) {
       error = e;
     }
 
-    if (statusSrcIndex && statusDstIndex && !error) {
+    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
       let reindexResult = await this.conn.reindex({
         waitForCompletion: true,
         body: {
@@ -237,15 +256,27 @@ class Elasticsearch {
     let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
     let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
 
-    let error, statusSrcIndex, statusDstIndex;
+    let error,
+        srcHasDstMapping,
+        statusSrcIndex,
+        statusDstIndex;
+
     try {
       statusSrcIndex = await this.openIndex(srcIndexName, false);
-      statusDstIndex = await this.openIndex(dstIndexName, true);
+
+      let dstExists = await this.conn.indices.exists({index: dstIndexName});
+      if (dstExists === false) {
+        statusDstIndex = await this.openIndex(dstIndexName, true);
+        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
+      } else {
+        statusDstIndex = await this.openIndex(dstIndexName, false);
+        srcHasDstMapping = true;
+      }
     } catch (e) {
       error = e;
     }
 
-    if (statusSrcIndex && statusDstIndex && !error) {
+    if (statusSrcIndex && srcHasDstMapping && statusDstIndex && !error) {
       await this.conn.reindex({
         waitForCompletion: true,
         body: {
