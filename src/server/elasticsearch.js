@@ -125,22 +125,30 @@ class Elasticsearch {
   async reindexGlobalDaily() {
     let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
 
+    let srcIndexName = `bn_tx_logs-${yesterday}`;
     let dstIndexName = `archive_global_daily-${yesterday}`;
 
-    let error, statusDstIndex;
+    let error,
+        copyMappingResult,
+        statusDstIndex;
+
     try {
-      // TODO also check the existence of the source index.
-      statusDstIndex = await this.openIndex(dstIndexName, true);
+      let dstIndexExists = await this.conn.indices.exists({index: dstIndexName});
+
+      if (dstIndexExists === false) {
+        statusDstIndex = await this.openIndex(dstIndexName, !dstIndexExists);
+        copyMappingResult = await this.copyMapping(srcIndexName, dstIndexName);
+      }
     } catch (e) {
       error = e;
     }
 
-    if (statusDstIndex && !error) {
+    if (statusDstIndex && copyMappingResult && !error) {
       return this.conn.reindex({
         waitForCompletion: true,
         body: {
           source: {
-            index: `bn_tx_logs-${yesterday}`,
+            index: srcIndexName,
             // TODO copy only those entries with archive flag set
             // query: {
             //   term: {
@@ -148,7 +156,7 @@ class Elasticsearch {
             //   }
           },
           dest: {
-            index: dstIndexName // Will be created if it not exists
+            index: dstIndexName
           }
         }
       });
@@ -341,6 +349,32 @@ class Elasticsearch {
       }
     }
 
+  }
+
+  async copyMapping(srcIndex, dstIndex) {
+    let retVal = false;
+
+    try {
+      let srcMapping = await this.conn.indices.getMapping({
+        index: srcIndex,
+        type: '_all'
+      });
+
+      let putMappingResult = false;
+      if (srcMapping && srcMapping[srcIndex] && srcMapping[srcIndex].mappings && srcMapping[srcIndex].mappings.event) {
+        putMappingResult = await this.conn.indices.putMapping({
+          body: srcMapping[srcIndex].mappings.event,
+          index: dstIndex,
+          type: 'event'
+        });
+      }
+
+      retVal = putMappingResult || false;
+    } catch (e) {
+      retVal = false;
+    }
+
+    return retVal;
   }
 
   search(query) {
