@@ -300,7 +300,7 @@ class Elasticsearch {
    * @returns {Boolean}
    *
    */
-  async openIndex(indexName, create = true) {
+  async openIndex(indexName, create = false) {
     let exists = false;
     let error = null;
 

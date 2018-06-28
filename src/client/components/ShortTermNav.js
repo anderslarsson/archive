@@ -25,12 +25,12 @@ export default class ShortTermNav extends Components.ContextComponent {
     this.state = {
       indices: [],
       tenantIndices: [],
-      selectedTenantId: null
+      selectedTenantId: 'noop'
     };
   }
 
   handleArchiveOnClick(e) {
-    console.log(e);
+    this.props.onHandleArchiveChange(e.target.value);
   }
 
   handleTenantIdSelectChange(e) {
@@ -52,9 +52,9 @@ export default class ShortTermNav extends Components.ContextComponent {
     );
 
     if (tenantOptions.length > 0) {
-      tenantOptions.unshift(<option key="noop" selected disabled>Please select a tenant ID ...</option>);
+      tenantOptions.unshift(<option key="noop" disabled>Please select a tenant ID ...</option>);
     } else {
-      tenantOptions.unshift(<option key="noop" selected disabled>No tenants with archiving enabled.</option>);
+      tenantOptions.unshift(<option key="noop" disabled>No tenants with archiving enabled.</option>);
     }
 
     let availableArchives = this.state.tenantIndices.map((archiveName) => {
@@ -64,6 +64,7 @@ export default class ShortTermNav extends Components.ContextComponent {
         <ListGroupItem
           key={archiveName}
           onClick={this.handleArchiveOnClick}
+          value={archiveName}
         >
           {displayName}
         </ListGroupItem>
@@ -80,7 +81,7 @@ export default class ShortTermNav extends Components.ContextComponent {
                 <FormControl
                   componentClass="select"
                   onChange={this.handleTenantIdSelectChange}
-                  placeholder={i18n.getMessage('Archive.forms.selectTenantIdPlaceholder')}
+                  value={this.state.selectedTenantId}
                 >
                   {tenantOptions}
                 </FormControl>

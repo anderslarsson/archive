@@ -21,13 +21,18 @@ module.exports.init = async function (app, db) {
     res.send('Hello world!');
   });
 
+  // --- Curator
   app.get('/api/curator/:period', (req, res) => curatorHandler.curate(req, res, app, db));
 
+  // --- Info
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
 
+  // --- Indices
   app.get('/api/indices/:type', (req, res) => indicesHandler.listAllByType(req, res));
   app.get('/api/indices/:tenantId/:type', (req, res) => indicesHandler.listByTenantAndType(req, res));
+  app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
 
+  // --- Entries
   app.get('/api/entries/:tenantId/:year/:month', (req, res) => res.status(500).send('Not implemented.'));
 
 };
