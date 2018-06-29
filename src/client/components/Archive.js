@@ -4,7 +4,8 @@ import translations from './i18n';
 
 import {Tab, Tabs} from 'react-bootstrap';
 
-import ShortTerm from './ShortTermArchive';
+import ArchiveShortTermContainer from './ArchiveShortTermContainer';
+import ArchiveLongTermContainer from './ArchiveLongTermContainer';
 
 export default class Archive extends Components.ContextComponent {
 
@@ -35,9 +36,11 @@ export default class Archive extends Components.ContextComponent {
       <div>
         <Tabs id="archiveTabs" activeKey={this.state.activeTabKey} onSelect={this.handleSelect}>
           <Tab eventKey="shortterm" title={i18n.getMessage('Archive.nav.shortterm')}>
-            <ShortTerm />
+            <ArchiveShortTermContainer />
           </Tab>
-          <Tab eventKey="longterm" title={i18n.getMessage('Archive.nav.longterm')}>Long term</Tab>
+          <Tab eventKey="longterm" title={i18n.getMessage('Archive.nav.longterm')}>
+            <ArchiveLongTermContainer />
+          </Tab>
           <Tab eventKey="settings" title={i18n.getMessage('Archive.nav.settings')}>Settings</Tab>
         </Tabs>
       </div>

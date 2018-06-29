@@ -1,8 +1,4 @@
-import React from 'react';
-import request from 'superagent';
-
-import {Components} from '@opuscapita/service-base-ui';
-import translations from './i18n';
+'use strict';
 
 import {
   Col,
@@ -14,9 +10,17 @@ import {
   Row,
 } from 'react-bootstrap';
 
-export default class ShortTermNav extends Components.ContextComponent {
+import React from 'react';
+import request from 'superagent';
+
+import {Components} from '@opuscapita/service-base-ui';
+import translations from './i18n';
+
+export default class ArchiveTenantIndexSelect extends Components.ContextComponent {
+
   constructor(props, context) {
     super(props);
+
     context.i18n.register('Archive', translations);
 
     this.handleTenantIdSelectChange = this.handleTenantIdSelectChange.bind(this);
@@ -36,12 +40,24 @@ export default class ShortTermNav extends Components.ContextComponent {
   handleTenantIdSelectChange(e) {
     let selectedTenantId = e.target.value;
 
-    let tenantIndices = this.state.indices.filter((t) => t.tenant === selectedTenantId)[0].indices;
+    let tenantIndices = this.state.indices
+      .filter((t) => t.tenant === selectedTenantId)[0].indices;
 
     this.setState({
       selectedTenantId: selectedTenantId,
       tenantIndices: tenantIndices
     });
+  }
+
+  componentDidMount() {
+    request
+      .get(`/archive/api/indices/${this.props.mode}`)
+      .then((res) => {
+        this.setState({indices: res.body});
+      }).
+      catch(() => {
+        this.setState({indices: []});
+      });
   }
 
   render() {
@@ -101,16 +117,5 @@ export default class ShortTermNav extends Components.ContextComponent {
         </Row>
       </div>
     );
-  }
-
-  componentDidMount() {
-    request
-      .get('/archive/api/indices/monthly')
-      .then((res) => {
-        this.setState({indices: res.body});
-      }).
-      catch(() => {
-        this.setState({indices: []});
-      });
   }
 }

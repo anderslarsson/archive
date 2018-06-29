@@ -11,7 +11,7 @@ import request from 'superagent';
 import {Components} from '@opuscapita/service-base-ui';
 
 import translations from './i18n';
-import ShortTermNav from './ShortTermNav';
+import ArchiveTenantIndexSelect from './ArchiveTenantIndexSelect.jsx';
 
 export default class ShortTermArchive extends Components.ContextComponent {
 
@@ -24,7 +24,6 @@ export default class ShortTermArchive extends Components.ContextComponent {
 
     this.state = {
       selectedArchiveName: null,
-
       openingArchive: null
     };
   }
@@ -54,9 +53,7 @@ export default class ShortTermArchive extends Components.ContextComponent {
   }
 
   render() {
-    // const {i18n} = this.context;
-
-    let archiveName = this.state.selectedArchiveName || 'Bitte Archiv auswählen';
+    let archiveName = this.state.selectedArchiveName || 'Please select an archive';
 
     let actionState = this.state.openingArchive ? 'Opening archive ...' : 'done';
 
@@ -64,7 +61,8 @@ export default class ShortTermArchive extends Components.ContextComponent {
       <Grid>
         <Row>
           <Col md={2}>
-            <ShortTermNav
+            <ArchiveTenantIndexSelect
+              mode='yearly'
               onHandleArchiveChange={this.handleArchiveClick}
               openingArchive={this.state.openingArchive}
             />
@@ -83,6 +81,4 @@ export default class ShortTermArchive extends Components.ContextComponent {
       </Grid>
     );
   }
-
 }
-
