@@ -5,3 +5,4 @@ test-results.xml
 coverage
 src/server/static/bundle.js
 src/server/static/components/
+tags
