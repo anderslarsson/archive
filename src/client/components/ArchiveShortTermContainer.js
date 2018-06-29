@@ -62,15 +62,16 @@ export default class ShortTermArchive extends Components.ContextComponent {
     return (
       <Grid>
         <Row>
-          <Col md={2}>
+          <Col md={12}>
             <ArchiveTenantIndexSelect
               mode='monthly'
               onHandleArchiveChange={this.handleArchiveClick}
               openingArchive={this.state.openingArchive}
             />
           </Col>
-
-          <Col md={10}>
+        </Row>
+        <Row>
+          <Col md={12}>
             <p>
               {archiveName}
             </p>

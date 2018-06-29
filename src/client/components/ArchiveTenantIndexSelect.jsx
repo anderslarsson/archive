@@ -3,10 +3,9 @@
 import {
   Col,
   ControlLabel,
+  Form,
   FormControl,
   FormGroup,
-  ListGroup,
-  ListGroupItem,
   Row,
 } from 'react-bootstrap';
 
@@ -24,16 +23,65 @@ export default class ArchiveTenantIndexSelect extends Components.ContextComponen
     context.i18n.register('Archive', translations);
 
     this.handleTenantIdSelectChange = this.handleTenantIdSelectChange.bind(this);
-    this.handleArchiveOnClick = this.handleArchiveOnClick.bind(this);
+    this.handleArchiveChange = this.handleArchiveChange.bind(this);
 
     this.state = {
       indices: [],
       tenantIndices: [],
-      selectedTenantId: 'noop'
+      selectedTenantId: 'noop',
+      selectedArchive: 'noop'
     };
   }
 
-  handleArchiveOnClick(e) {
+  buildAvailableArchivesOptions() {
+    const t = this.context.i18n.getMessage;
+
+    let availableArchives = this.state.tenantIndices.map((archiveName) => {
+      let displayName = archiveName.split(this.state.selectedTenantId.toLowerCase() + '-').pop();
+
+      return (
+        <option
+          key={archiveName}
+          value={archiveName}
+        >
+          {displayName}
+        </option>
+      );
+    });
+
+    if (availableArchives.length > 0) {
+      availableArchives.unshift(<option key="noop" disabled>{t('Archive.forms.tenantIndexSelect.archiveSelect')}</option>);
+    } else {
+      availableArchives.unshift(<option key="noop" disabled>{t('Archive.forms.tenantIndexSelect.archiveSelectEmpty')}</option>);
+    }
+
+    return availableArchives;
+  }
+
+  buildTenantOptions() {
+    const t = this.context.i18n.getMessage;
+
+    let tenantOptions = this.state.indices.map((i) =>
+      <option
+        key={i.tenant.toString()}
+        value={i.tenant.toString()}
+      >{i.tenant}</option>
+    );
+
+    if (tenantOptions.length > 0) {
+      tenantOptions.unshift(<option key="noop" disabled>{t('Archive.forms.tenantIndexSelect.tenantIdSelect')}</option>);
+    } else {
+      tenantOptions.unshift(<option key="noop" disabled>{t('Archive.forms.tenantIndexSelect.tenantIdSelectEmpty')}</option>);
+    }
+
+    return tenantOptions;
+  }
+
+  handleArchiveChange(e) {
+    let selectedArchive = e.target.value;
+
+    this.setState({selectedArchive: selectedArchive});
+
     this.props.onHandleArchiveChange(e.target.value);
   }
 
@@ -45,6 +93,7 @@ export default class ArchiveTenantIndexSelect extends Components.ContextComponen
 
     this.setState({
       selectedTenantId: selectedTenantId,
+      selectedArchive: 'noop',
       tenantIndices: tenantIndices
     });
   }
@@ -61,61 +110,43 @@ export default class ArchiveTenantIndexSelect extends Components.ContextComponen
   }
 
   render() {
-    const {i18n} = this.context;
+    const t = this.context.i18n.getMessage;
 
-    let tenantOptions = this.state.indices.map((t) =>
-      <option key={t.tenant.toString()} value={t.tenant.toString()}>{t.tenant}</option>
-    );
-
-    if (tenantOptions.length > 0) {
-      tenantOptions.unshift(<option key="noop" disabled>Please select a tenant ID ...</option>);
-    } else {
-      tenantOptions.unshift(<option key="noop" disabled>No tenants with archiving enabled.</option>);
-    }
-
-    let availableArchives = this.state.tenantIndices.map((archiveName) => {
-      let displayName = archiveName.split(this.state.selectedTenantId.toLowerCase() + '-').pop();
-
-      return (
-        <ListGroupItem
-          key={archiveName}
-          onClick={this.handleArchiveOnClick}
-          value={archiveName}
-        >
-          {displayName}
-        </ListGroupItem>
-      );
-    });
+    let availableArchives = this.buildAvailableArchivesOptions();
+    let tenantOptions = this.buildTenantOptions();
 
     return (
-      <div>
-        <Row>
-          <Col md={12}>
-            <form>
-              <FormGroup controlId="formControlsSelect">
-                <ControlLabel>{i18n.getMessage('Archive.forms.selectTenantId')}</ControlLabel>
-                <FormControl
-                  componentClass="select"
-                  onChange={this.handleTenantIdSelectChange}
-                  value={this.state.selectedTenantId}
-                >
-                  {tenantOptions}
-                </FormControl>
-              </FormGroup>
-            </form>
-          </Col>
-        </Row>
+      <Row>
+        <Col md={12}>
 
-        <Row>
-          <Col md={12}>
-            <div>
-              <ListGroup>
+          <Form inline>
+
+            <FormGroup controlId="formInlineTenant">
+              <ControlLabel>{t('Archive.forms.tenantIndexSelect.selectTenantId')}</ControlLabel>{': '}
+              <FormControl
+                componentClass="select"
+                onChange={this.handleTenantIdSelectChange}
+                value={this.state.selectedTenantId}
+              >
+                {tenantOptions}
+              </FormControl>
+            </FormGroup>{'  '}
+
+            <FormGroup controlId="formInlineArchive">
+              <ControlLabel>{t('Archive.forms.tenantIndexSelect.selectArchive')}</ControlLabel>{': '}
+              <FormControl
+                componentClass="select"
+                onChange={this.handleArchiveChange}
+                value={this.state.selectedArchive}
+              >
                 {availableArchives}
-              </ListGroup>
-            </div>
-          </Col>
-        </Row>
-      </div>
+              </FormControl>
+            </FormGroup>
+
+          </Form>
+
+        </Col>
+      </Row>
     );
   }
 }

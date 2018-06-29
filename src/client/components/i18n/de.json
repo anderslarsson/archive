@@ -6,7 +6,14 @@
       "settings": "Einstellungen"
     },
     "forms": {
-      "selectTenantId": "Tenant auswählen"
+      "tenantIndexSelect": {
+        "selectArchive": "2. Archiv auswählen",
+        "archiveSelect": "Bitte wählen ...",
+        "archiveSelectEmpty": "Kein Archiv verfügbar",
+        "selectTenantId": "1. Bitte Tenant wählen",
+        "tenantIdSelect": "Bitte wählen ...",
+        "tenantIdSelectEmpty": "Kein Tenant verfügbar"
+      }
     }
   }
 }
