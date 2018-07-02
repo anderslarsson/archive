@@ -128,48 +128,7 @@ class Elasticsearch {
     let srcIndexName = `bn_tx_logs-${yesterday}`;
     let dstIndexName = `archive_global_daily-${yesterday}`;
 
-    let error,
-        srcHasDstMapping,
-        statusSrcIndex,
-        statusDstIndex;
-
-    try {
-      statusSrcIndex = await this.openIndex(srcIndexName, false);
-
-      let dstExists = await this.conn.indices.exists({index: dstIndexName});
-      if (dstExists === false) {
-        // Create index + copy mappings
-        statusDstIndex = await this.openIndex(dstIndexName, true);
-        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
-      } else {
-        // Use existing index
-        statusDstIndex = await this.openIndex(dstIndexName, true);
-        srcHasDstMapping = true;
-      }
-    } catch (e) {
-      error = e;
-    }
-
-    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
-      return this.conn.reindex({
-        waitForCompletion: true,
-        body: {
-          source: {
-            index: srcIndexName,
-            // TODO copy only those entries with archive flag set
-            // query: {
-            //   term: {
-            //     archive: true
-            //   }
-          },
-          dest: {
-            index: dstIndexName
-          }
-        }
-      });
-    } else {
-      throw error;
-    }
+    return await this.reindex(srcIndexName, dstIndexName, null);
   }
 
   /**
@@ -192,51 +151,11 @@ class Elasticsearch {
     let srcIndexName = `archive_global_daily-${yesterday}`;
     let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
 
-    let error,
-        srcHasDstMapping,
-        statusSrcIndex,
-        statusDstIndex;
+    let reindexResult = await this.reindex(srcIndexName, dstIndexName, query);
 
-    try {
-      statusSrcIndex = await this.openIndex(srcIndexName, false);
+    await this.conn.indices.close({index: dstIndexName});
 
-      let dstExists = await this.conn.indices.exists({index: dstIndexName});
-      if (dstExists === false) {
-        statusDstIndex = await this.openIndex(dstIndexName, true);
-        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
-      } else {
-        statusDstIndex = await this.openIndex(dstIndexName, false);
-        srcHasDstMapping = true;
-      }
-    } catch (e) {
-      error = e;
-    }
-
-    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
-      let reindexResult = await this.conn.reindex({
-        waitForCompletion: true,
-        body: {
-          source: {
-            index: srcIndexName,
-            query: query
-          },
-          dest: {
-            index: dstIndexName // Will be created if it not exists
-          }
-        }
-      });
-
-      await this.conn.indices.close({index: dstIndexName});
-
-      return reindexResult;
-    } else {
-      if (!statusSrcIndex) {
-        error = new Error('Source index does not exist.');
-        error.code = ErrCodes.ERR_SRC_INDEX_DOES_NOT_EXIST;
-      }
-
-      throw error;
-    }
+    return reindexResult;
   }
 
   /**
@@ -256,6 +175,21 @@ class Elasticsearch {
     let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
     let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
 
+    await this.reindex(srcIndexName, dstIndexName, null);
+    // await this.conn.indices.close({index: srcIndexName});
+    await this.conn.indices.close({index: dstIndexName});
+  }
+
+  /**
+   * @function reindex
+   *
+   * @param {String} srcIndex
+   * @param {String} dstIndex
+   * @returns {Boolean}
+   *
+   * @throws
+   */
+  async reindex(srcIndexName, dstIndexName, query) {
     let error,
         srcHasDstMapping,
         statusSrcIndex,
@@ -263,36 +197,60 @@ class Elasticsearch {
 
     try {
       statusSrcIndex = await this.openIndex(srcIndexName, false);
+      if (statusSrcIndex === false) {
+        let e = new Error('Source index does not exist.');
+        e.code = ErrCodes.ERR_SRC_INDEX_DOES_NOT_EXIST;
+
+        throw e;
+      }
 
       let dstExists = await this.conn.indices.exists({index: dstIndexName});
       if (dstExists === false) {
+        // Create index + copy mappings
         statusDstIndex = await this.openIndex(dstIndexName, true);
-        srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName);
+
+        try {
+          srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName, true);
+        } catch (copyMappingError) {
+
+          // Failed to copy mapping
+          srcHasDstMapping = false;
+
+          // Delete dstIndex as it has no valid mapping
+          await this.conn.indices.delete({index: dstIndexName}); // oO DANGERZONE - double check this
+
+          let e = new Error(`Unable to copy mapping from ${srcIndexName} to ${dstIndexName}.`);
+          throw e;
+        }
+
       } else {
+        // Use existing index
         statusDstIndex = await this.openIndex(dstIndexName, false);
         srcHasDstMapping = true;
       }
+
     } catch (e) {
       error = e;
     }
 
-    if (statusSrcIndex && srcHasDstMapping && statusDstIndex && !error) {
-      await this.conn.reindex({
-        waitForCompletion: true,
-        body: {
-          source: {
-            index: srcIndexName
-          },
-          dest: {
-            index: dstIndexName // Will be created if it not exists
-          }
+    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
+      let body = {
+        source: {
+          index: srcIndexName,
+        },
+        dest: {
+          index: dstIndexName
         }
+      };
+
+      if (query) {
+        body.source.query = query;
+      }
+
+      return this.conn.reindex({
+        waitForCompletion: true,
+        body: body
       });
-
-      // await this.conn.indices.close({index: srcIndexName});
-      await this.conn.indices.close({index: dstIndexName});
-
-      return true;
     } else {
       throw error;
     }
@@ -334,9 +292,11 @@ class Elasticsearch {
    * Opens an existing index.
    * Will @throws if index does not exist or opening does not work.
    *
-   * @params {String} indexName
+   * @params {String} indexName - Name of the Elasticsearch index
    * @params {Boolean} create=true - Create the index if it does not yeat exist.
    * @returns {Boolean}
+   *
+   * @throws  Throws if the index could not be openend
    *
    */
   async openIndex(indexName, create = false) {
@@ -347,7 +307,7 @@ class Elasticsearch {
       exists = await this.conn.indices.exists({index: indexName});
     } catch (e) {
       error = new Error(`Index ${indexName} does not exist`);
-      error.code = 'ERR_INDEX_DOES_NOT_EXIST';
+      error.code = ErrCodes.ERR_INDEX_DOES_NOT_EXIST;
     }
 
     if (exists === true && error === null) {
@@ -363,7 +323,7 @@ class Elasticsearch {
         // Throw error if index can not be opened
 
         error = new Error(`Can not open index ${indexName}.`);
-        error.code = 'ERR_INDEX_OPEN_FAILED';
+        error.code = ErrCodes.ERR_INDEX_OPEN_FAILED;
         error.indexName = indexName;
 
         throw error;
@@ -373,7 +333,6 @@ class Elasticsearch {
       // Create index or throw
 
       if (create) {
-        // TODO copy mappings from srcIndex, has to be done by the caller ...
         return await this.conn.indices.create({index: indexName});
       } else {
         return false;
@@ -382,7 +341,7 @@ class Elasticsearch {
 
   }
 
-  async copyMapping(srcIndex, dstIndex) {
+  async copyMapping(srcIndex, dstIndex, shouldThrow) {
     let retVal = false;
 
     try {
@@ -391,18 +350,24 @@ class Elasticsearch {
         type: '_all'
       });
 
-      let putMappingResult = false;
       if (srcMapping && srcMapping[srcIndex] && srcMapping[srcIndex].mappings && srcMapping[srcIndex].mappings.event) {
-        putMappingResult = await this.conn.indices.putMapping({
+        retVal = await this.conn.indices.putMapping({
           body: srcMapping[srcIndex].mappings.event,
           index: dstIndex,
           type: 'event'
         });
+      } else {
+        // Broken mapping on srcIndex
+        let e = new Error(`Source index ${srcIndex} has no valid archive mapping.`);
+        throw e;
       }
 
-      retVal = putMappingResult || false;
     } catch (e) {
-      retVal = false;
+      if (shouldThrow) {
+        throw e;
+      } else {
+        retVal = false;
+      }
     }
 
     return retVal;
