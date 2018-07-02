@@ -40,7 +40,7 @@ const events = new EventClient({
   // Override needed for non-containerized testing
   consulOverride: {
     host: 'localhost',
-    // mqServiceName  : 'rabbitmq-amqp',
+    port: '5672',
     password: 'notSecureP455w0rd',
     username: 'rabbit'
   }
@@ -86,7 +86,9 @@ async function handleCreateGlobalDaily() {
     }
   } catch (e) {
     // Dismiss event incase the source index does not exist.
-    returnValue = (e.code = 'ERR_SOURCE_INDEX_DOES_NOT_EXIST') ? null : false;
+    if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
+      returnValue = null;
+    }
 
     logger.error('Failed to create archive_global_daily index.');
     logger.error(e);
@@ -226,6 +228,15 @@ async function waitDispatcher() {
           result = null; // Dismiss message from the MQ as the given type is not implemented.
       }
 
+      if (result === null) {
+        // FIXME 
+        // Broken because default for nackMessage is requeue = true, meaning that
+        // the message will be put back into the queue instead of being thrown away.
+        // See @opuscapita/event-client #3
+        logger.error(`Nacking message with deliveryTag ${msg.tag}`);
+        await events.nackMessage(msg);
+      }
+
       if (result) {
         logger.log(`Acking message with deliveryTag ${msg.tag}`);
         await events.ackMessage(msg);
@@ -233,6 +244,8 @@ async function waitDispatcher() {
       }
     }
   } catch (handleMessageError) {
+
+    logger.error(handleMessageError);
 
     if (msg) {
       try {
@@ -242,8 +255,6 @@ async function waitDispatcher() {
         logger.error(nackErr);
       }
     }
-
-    logger.error(handleMessageError);
   } finally {
     // restart the timer
     setTimeout(waitDispatcher, 1000);
