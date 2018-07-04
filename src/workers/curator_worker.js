@@ -56,8 +56,6 @@ const logger = new Logger({
   }
 });
 
-init();
-
 async function init() {
 
   if (process.env.NODE_ENV !== 'testing') {
@@ -308,3 +306,6 @@ if (process.env.NODE_ENV === 'testing') {
     processReindexResult,
   };
 }
+
+init();
+
