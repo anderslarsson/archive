@@ -33,18 +33,22 @@ const ErrCodes       = require('../shared/error_codes');
 
 const elasticContext = require('../server/elasticsearch');
 
-const events = new EventClient({
+let evConf = {
   exchangeName: 'archive',
-  messageLimit: 1,
+  messageLimit: 1
+};
 
+if (process.env.NODE_ENV !== 'testing') {
   // Override needed for non-containerized testing
-  consulOverride: {
+  evConf.consulOverride =  {
     host: 'localhost',
     port: '5672',
     password: 'notSecureP455w0rd',
     username: 'rabbit'
-  }
-});
+  };
+}
+
+const events = new EventClient(evConf);
 
 const logger = new Logger({
   context: {
@@ -57,33 +61,56 @@ events.subscribe('archive.curator.logrotation.job.created');
 waitDispatcher();
 
 /**
+ * @function processReindexResult
+ *
+ * Processes the result of an reindex operation and return
+ * an indication of success or failure.
+ *
+ * @param {object} result
+ *
+ * @returns {Boolean} Success indicator
+ */
+function processReindexResult(result, tenantConfig) {
+  let returnValue = false;
+
+  if (result && result.dstIndex && result.reindexResult) {
+    if (result.reindexResult.failures && result.reindexResult.failures.length >= 1) {
+      logger.error(`Failed to create ${result.dstIndex}`);
+      returnValue = false;
+    } else {
+      logger.log(`Successfully created ${result.dstIndex}`);
+      returnValue = true;
+
+      let payload = tenantConfig ? {result, tenantConfig} : {result};
+
+      events.emit('archive.curator.logrotation.job.finished', payload)
+        .catch((e) => logger.error(e));
+    }
+  } else {
+    // ES returned null or undefined
+    logger.error('Failed to create archive. Got unvalid result from elasticContext.');
+    returnValue = false;
+  }
+
+  return returnValue;
+}
+
+/**
  * @function handleCreateGlobalDaily
  *
  * Handler for msg.type = "daily"
  *
  * Triggers the reindexing from eg.: bn_tx_logs-2018.05.* to archive_global_daily-2018.05.*
  *
+ * @returns {Boolean} Indicates job success
+ *
  */
 async function handleCreateGlobalDaily() {
-  let result;
   let returnValue = false;
 
   try {
-    result = await elasticContext.reindexGlobalDaily();
-
-    if (result) {
-      if (result.failures && result.failures >= 1) {
-        returnValue = false;
-        logger.error('Failed to create archive_global_daily index. Response contained failures.');
-      } else {
-        returnValue = true;
-        logger.log('Successfully created archive_global_daily');
-
-        events.emit('archive.curator.logrotation.job.finished', {
-          type: MsgTypes.CREATE_GLOBAL_DAILY
-        }).catch((e) => logger.error(e));
-      }
-    }
+    let result = await elasticContext.reindexGlobalDaily();
+    returnValue = processReindexResult(result);
   } catch (e) {
     // Dismiss event incase the source index does not exist.
     if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
@@ -116,21 +143,7 @@ async function handleUpdateTenantYearly(tenantConfig) {
 
   try {
     let result = await elasticContext.reindexTenantMonthlyToYearly(tenantId);
-
-    if (result) {
-      if (result.failures && result.failures >= 1) {
-        returnValue = false;
-        logger.error('Could not update archive_tenant_yearly : ' + result.failures);
-      } else {
-        returnValue = true;
-        logger.log(`Successfully created archive_tenant_yearly for tenantId ${tenantId}`);
-
-        events.emit('archive.curator.logrotation.job.finished', {
-          type: MsgTypes.UPDATE_TENANT_YEARLY,
-          tenantConfig: tenantConfig
-        }).catch((e) => logger.error(e));
-      }
-    }
+    returnValue = processReindexResult(result, tenantConfig);
   } catch (e) {
     // Dismiss event incase the source index does not exist.
     if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
@@ -140,8 +153,6 @@ async function handleUpdateTenantYearly(tenantConfig) {
     logger.error('Failed to update archive_tenant_yearly index for tenant ' + tenantId);
     logger.error(e);
   }
-
-  // TODO create/update tenant record in RDB pointing to the ES index
 
   return returnValue;
 }
@@ -166,20 +177,7 @@ async function handleUpdateTenantMonthly(tenantConfig) {
     let query = await buildTenantQueryParam(tenantConfig);
     let result = await elasticContext.reindexGlobalDailyToTenantMonthly(tenantId, query);
 
-    if (result) {
-      if (result.failures && result.failures >= 1) {
-        returnValue = false;
-        logger.error('Failed to create archive_tenant_monthly, errors: ' + result.failures);
-      } else {
-        returnValue = true;
-        logger.log('Successfully created archive_global_daily');
-
-        events.emit('archive.curator.logrotation.job.finished', {
-          type: MsgTypes.UPDATE_TENANT_MONTHLY,
-          tenantConfig: tenantConfig
-        }).catch((e) => logger.error(e));
-      }
-    }
+    returnValue = processReindexResult(result);
   } catch (e) {
     if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
       // Dismiss event incase the source index does not exist.
@@ -189,8 +187,6 @@ async function handleUpdateTenantMonthly(tenantConfig) {
     logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
     logger.error(e);
   }
-
-  // TODO create/update tenant record in RDB pointing to the ES index
 
   return returnValue;
 }
@@ -203,10 +199,10 @@ async function handleUpdateTenantMonthly(tenantConfig) {
  *
  */
 async function waitDispatcher() {
-  let msg, result;
+  let msg;
 
   try {
-    result = false;
+    let success = false;
 
     msg = await events.getMessage('archive.curator.logrotation.job.created', false); // Get single message, no auto ack
 
@@ -215,32 +211,37 @@ async function waitDispatcher() {
 
       switch (payload.type) {
         case MsgTypes.CREATE_GLOBAL_DAILY:
-          result = await handleCreateGlobalDaily();
+          success = await handleCreateGlobalDaily();
           break;
         case MsgTypes.UPDATE_TENANT_MONTHLY:
-          result = await handleUpdateTenantMonthly(payload.tenantConfig);
+          success = await handleUpdateTenantMonthly(payload.tenantConfig);
           break;
         case MsgTypes.UPDATE_TENANT_YEARLY:
-          result = await handleUpdateTenantYearly(payload.tenantConfig);
+          success = await handleUpdateTenantYearly(payload.tenantConfig);
           break;
         default:
           logger.error('CuratorWorker: No handle for msg.type ' + payload.type);
-          result = null; // Dismiss message from the MQ as the given type is not implemented.
+          success = null; // Dismiss message from the MQ as the given type is not implemented.
       }
 
-      if (result === null) {
-        // FIXME 
-        // Broken because default for nackMessage is requeue = true, meaning that
+      // Failure (false -> ES result contained failures)
+      // Failure (null -> catch was invoked in handler function)
+      if (success === false || success === null) {
+        //
+        // FIXME
+        //
+        // Broken because event-client default for nackMessage is requeue = true, meaning that
         // the message will be put back into the queue instead of being thrown away.
         // See @opuscapita/event-client #3
         logger.error(`Nacking message with deliveryTag ${msg.tag}`);
         await events.nackMessage(msg);
       }
 
-      if (result) {
+      // Success
+      if (success) {
         logger.log(`Acking message with deliveryTag ${msg.tag}`);
         await events.ackMessage(msg);
-        logger.log('Finished curator job with result: \n' + result);
+        logger.log('Finished curator job with result: \n' + success);
       }
     }
   } catch (handleMessageError) {
@@ -256,7 +257,7 @@ async function waitDispatcher() {
       }
     }
   } finally {
-    // restart the timer
+    // Restart the timer
     setTimeout(waitDispatcher, 1000);
   }
 }
@@ -288,4 +289,10 @@ async function buildTenantQueryParam({customerId, supplierId}) {
   }
 
   return queryParam;
+}
+
+if (process.env.NODE_ENV === 'testing') {
+  module.exports = {
+    processReindexResult,
+  };
 }

@@ -114,21 +114,41 @@ class Elasticsearch {
   // --- Reindexing
 
   /**
+   * @async
    * @function reindexGlobalDaily
    *
    * Triggers a reindex job on ES to copy all archivable
    * entries from the daily transaction index to the global
    * daily archive index.
    *
-   * @returns {Promise}
+   * @returns {Promise<object>} Config object containing the reindex operation details
    */
   async reindexGlobalDaily() {
-    let yesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
+    let yesterday = moment().subtract(1, 'days');
+    let fmtYesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
 
-    let srcIndexName = `bn_tx_logs-${yesterday}`;
-    let dstIndexName = `archive_global_daily-${yesterday}`;
+    let srcIndex = `bn_tx_logs-${fmtYesterday}`;
+    let dstIndex = `archive_global_daily-${fmtYesterday}`;
 
-    return await this.reindex(srcIndexName, dstIndexName, null);
+    let result = {
+      srcIndex,
+      dstIndex,
+      tenantId: null,
+      type: {
+        scope: 'global',
+        period: 'daily'
+      },
+      date: {
+        day: yesterday.format('DD'),
+        month: yesterday.format('MM'),
+        year: yesterday.format('YYYY')
+      },
+      reindexResult: null
+    };
+
+    result.reindexResult = await this.reindex(srcIndex, dstIndex, null);
+
+    return result;
   }
 
   /**
@@ -143,19 +163,37 @@ class Elasticsearch {
    *
    */
   async reindexGlobalDailyToTenantMonthly(tenantId, query) {
-    let yesterday       = moment().subtract(1, 'days').format('YYYY.MM.DD');
-    let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
+    let yesterday          = moment().subtract(1, 'days');
+
+    let fmtYesterday       = yesterday.format('YYYY.MM.DD');
+    let fmtYesterdaysMonth = yesterday.format('YYYY.MM');
 
     let lowerTenantId = this.normalizeTenantId(tenantId);
 
-    let srcIndexName = `archive_global_daily-${yesterday}`;
-    let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
+    let srcIndexName = `archive_global_daily-${fmtYesterday}`;
+    let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
 
-    let reindexResult = await this.reindex(srcIndexName, dstIndexName, query);
+    let result = {
+      srcIndex: srcIndexName,
+      dstIndex: dstIndexName,
+      tenantId: tenantId,
+      type: {
+        scope: 'tenant',
+        period: 'monthly'
+      },
+      date: {
+        day: yesterday.format('DD'),
+        month: yesterday.format('MM'),
+        year: yesterday.format('YYYY')
+      },
+      reindexResult: null
+    };
+
+    result.reindexResult = await this.reindex(srcIndexName, dstIndexName, query);
 
     await this.conn.indices.close({index: dstIndexName});
 
-    return reindexResult;
+    return result;
   }
 
   /**
@@ -167,35 +205,56 @@ class Elasticsearch {
    * @param {String} tenantId
    */
   async reindexTenantMonthlyToYearly(tenantId) {
-    let yesterdaysmonth = moment().subtract(1, 'days').format('YYYY.MM');
-    let yesterdaysyear  = moment().subtract(1, 'days').format('YYYY');
+    let yesterday          = moment().subtract(1, 'days');
+
+    let fmtYesterdaysMonth = moment().subtract(1, 'days').format('YYYY.MM');
+    let fmtYesterdaysYear  = moment().subtract(1, 'days').format('YYYY');
 
     let lowerTenantId = this.normalizeTenantId(tenantId);
 
-    let srcIndexName = `archive_tenant_monthly-${lowerTenantId}-${yesterdaysmonth}`;
-    let dstIndexName = `archive_tenant_yearly-${lowerTenantId}-${yesterdaysyear}`;
+    let srcIndex = `archive_tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
+    let dstIndex = `archive_tenant_yearly-${lowerTenantId}-${fmtYesterdaysYear}`;
 
-    await this.reindex(srcIndexName, dstIndexName, null);
+    let result = {
+      srcIndex,
+      dstIndex,
+      tenantId: null,
+      type: {
+        scope: 'tenant',
+        period: 'yearly'
+      },
+      date: {
+        day: yesterday.format('DD'),
+        month: yesterday.format('MM'),
+        year: yesterday.format('YYYY')
+      },
+      reindexResult: null
+    };
+
+    result.reindexResult = await this.reindex(srcIndex, dstIndex, null);
+
     // await this.conn.indices.close({index: srcIndexName});
-    await this.conn.indices.close({index: dstIndexName});
+    await this.conn.indices.close({index: dstIndex});
+
+    return result;
   }
 
   /**
+   * @async
    * @function reindex
    *
    * @param {String} srcIndex
    * @param {String} dstIndex
-   * @returns {Boolean}
    *
-   * @throws
+   * @returns {Promise<object>} Object containing the result of the reindex operation coming from ES.
    */
   async reindex(srcIndexName, dstIndexName, query) {
-    let error,
-        srcHasDstMapping,
-        statusSrcIndex,
-        statusDstIndex;
-
     try {
+
+      let srcHasDstMapping,
+          statusSrcIndex,
+          statusDstIndex;
+
       statusSrcIndex = await this.openIndex(srcIndexName, false);
       if (statusSrcIndex === false) {
         let e = new Error('Source index does not exist.');
@@ -229,31 +288,32 @@ class Elasticsearch {
         srcHasDstMapping = true;
       }
 
-    } catch (e) {
-      error = e;
-    }
+      if (statusSrcIndex && statusDstIndex && srcHasDstMapping) {
+        let body = {
+          source: {
+            index: srcIndexName,
+          },
+          dest: {
+            index: dstIndexName
+          }
+        };
 
-    if (statusSrcIndex && statusDstIndex && srcHasDstMapping && !error) {
-      let body = {
-        source: {
-          index: srcIndexName,
-        },
-        dest: {
-          index: dstIndexName
+        if (query) {
+          body.source.query = query;
         }
-      };
 
-      if (query) {
-        body.source.query = query;
+        // Return the actual result of the reindex action
+        // to the caller.
+        return await this.conn.reindex({
+          waitForCompletion: true,
+          body: body
+        });
       }
-
-      return this.conn.reindex({
-        waitForCompletion: true,
-        body: body
-      });
-    } else {
-      throw error;
+    } catch (e) {
+      // TODO Do something with the error?
+      throw e;
     }
+
   }
 
   /**
@@ -341,7 +401,17 @@ class Elasticsearch {
 
   }
 
-  async copyMapping(srcIndex, dstIndex, shouldThrow) {
+  /**
+   * @function copyMapping
+   *
+   * Copies the event mapping from srcIndex to dstIndex.
+   *
+   * @param {String} srcIndex - Name of the source index
+   * @param {String} dstIndex - Name of the destination index
+   * @param {Boolean} shouldThrow - Identifies if the function should throw incase of an error
+   *
+   */
+  async copyMapping(srcIndex, dstIndex, shouldThrow = false) {
     let retVal = false;
 
     try {
