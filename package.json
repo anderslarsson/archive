@@ -75,6 +75,6 @@
     "setup-consul": "sh setup-consul.sh",
     "start": "node src/server/index.js",
     "test": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive -R mocha-junit-reporter",
-    "test:local": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive"
+    "test:local": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive --watch"
   }
 }

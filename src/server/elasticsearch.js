@@ -251,7 +251,7 @@ class Elasticsearch {
   async reindex(srcIndexName, dstIndexName, query) {
     try {
 
-      let srcHasDstMapping,
+      let dstHasSrcMapping,
           statusSrcIndex,
           statusDstIndex;
 
@@ -269,11 +269,11 @@ class Elasticsearch {
         statusDstIndex = await this.openIndex(dstIndexName, true);
 
         try {
-          srcHasDstMapping = await this.copyMapping(srcIndexName, dstIndexName, true);
+          dstHasSrcMapping = await this.copyMapping(srcIndexName, dstIndexName, true);
         } catch (copyMappingError) {
 
           // Failed to copy mapping
-          srcHasDstMapping = false;
+          dstHasSrcMapping = false;
 
           // Delete dstIndex as it has no valid mapping
           await this.conn.indices.delete({index: dstIndexName}); // oO DANGERZONE - double check this
@@ -285,10 +285,13 @@ class Elasticsearch {
       } else {
         // Use existing index
         statusDstIndex = await this.openIndex(dstIndexName, false);
-        srcHasDstMapping = true;
+
+        // Assuming the  dstIndex has the srcIndex mapping
+        // TODO Implement check
+        dstHasSrcMapping = true;
       }
 
-      if (statusSrcIndex && statusDstIndex && srcHasDstMapping) {
+      if (statusSrcIndex && statusDstIndex && dstHasSrcMapping) {
         let body = {
           source: {
             index: srcIndexName,
