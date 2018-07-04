@@ -56,9 +56,20 @@ const logger = new Logger({
   }
 });
 
-// Subscribe to archive.curator.logrotation.job.created topic
-events.subscribe('archive.curator.logrotation.job.created');
-waitDispatcher();
+init();
+
+async function init() {
+
+  if (process.env.NODE_ENV !== 'testing') {
+    // Subscribe to archive.curator.logrotation.job.created topic
+    await events.subscribe('archive.curator.logrotation.job.created');
+
+    // Enter main loop
+    waitDispatcher();
+  }
+
+  return true;
+}
 
 /**
  * @function processReindexResult
@@ -293,6 +304,7 @@ async function buildTenantQueryParam({customerId, supplierId}) {
 
 if (process.env.NODE_ENV === 'testing') {
   module.exports = {
+    eventClient: events,
     processReindexResult,
   };
 }

@@ -1,12 +1,20 @@
 'use strict';
 
-/* global describe:true, it:true */
+/* global after:true, describe:true, it:true */
 
 const assert = require('assert');
 const CuratorWorker = require('../../src/workers/curator_worker');
 
+const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
+
 // Put your Mocha tests here and run "npm test".
 describe('CuratorWorker', () => {
+
+  after(async () => {
+    await sleep(500);
+
+    await CuratorWorker.eventClient.dispose();
+  });
 
   describe('processReindexResult', () => {
 

@@ -74,6 +74,7 @@
     "rest-doc": "mkdir -p wiki/rest-doc ; npx raml2md -o file-per-resource -p wiki/rest-doc --output-ext=.endpoint.md rest-doc/main.raml",
     "setup-consul": "sh setup-consul.sh",
     "start": "node src/server/index.js",
-    "test": "npm run clean ; npm run setup-consul; NDOE_ENV=testing npx nyc mocha --recursive -R mocha-junit-reporter"
+    "test": "npm run clean ; npm run setup-consul; NDOE_ENV=testing npx mocha --recursive -R mocha-junit-reporter",
+    "test:local": "npm run clean ; npm run setup-consul; NDOE_ENV=testing npx mocha --recursive"
   }
 }
