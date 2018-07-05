@@ -3,9 +3,7 @@
 const xml = require('fast-xml-parser');
 const fs  = require('fs');
 
-const emlFormat = require('eml-format');
-emlFormat.fileExtensions['application/pdf'] = '.pdf';
-emlFormat.fileExtensions['application/octet-stream'] = '.pdf';
+const simpleParser = require('mailparse').simpleParser;
 
 const homeDir = require('os').homedir();
 const dataDir = `${homeDir}/tmp/Test-export`;
@@ -49,21 +47,16 @@ function main() {
     let existingFiles = files
       .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
-    existingFiles.forEach((f) => {
+    existingFiles.forEach(async (f) => {
       console.log(f.path);
 
       let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
 
       console.log(`// ------------------- ${f.path}`);
 
-      emlFormat.read(eml, (err, data) => {
-        if (err) {
-          return console.log(err);
-        } else {
-          debugger
-          console.log(data.html || data.text || 'NOOOOO');
-        }
-      });
+      let mail = await simpleParser(eml);
+
+      debugger;
     });
 
     // TODO
