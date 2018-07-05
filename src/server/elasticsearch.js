@@ -191,7 +191,12 @@ class Elasticsearch {
 
     result.reindexResult = await this.reindex(srcIndexName, dstIndexName, query);
 
-    await this.conn.indices.close({index: dstIndexName});
+    try {
+      await this.conn.indices.close({index: dstIndexName});
+    } catch (e) {
+      // Do not throw just because we could not close the index.
+      console.error(`Could not close ${dstIndexName}`);
+    }
 
     return result;
   }
@@ -233,8 +238,13 @@ class Elasticsearch {
 
     result.reindexResult = await this.reindex(srcIndex, dstIndex, null);
 
-    // await this.conn.indices.close({index: srcIndexName});
-    await this.conn.indices.close({index: dstIndex});
+    try {
+      // await this.conn.indices.close({index: srcIndexName});
+      await this.conn.indices.close({index: dstIndex});
+    } catch (e) {
+      // Do not throw just because we could not close the index.
+      console.error(`Could not close ${dstIndex}`);
+    }
 
     return result;
   }
