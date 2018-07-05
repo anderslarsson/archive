@@ -3,7 +3,12 @@
 const xml = require('fast-xml-parser');
 const fs  = require('fs');
 
-const dataDir = '/tmp/Test-export';
+const emlFormat = require('eml-format');
+emlFormat.fileExtensions['application/pdf'] = '.pdf';
+emlFormat.fileExtensions['application/octet-stream'] = '.pdf';
+
+const homeDir = require('os').homedir();
+const dataDir = `${homeDir}/tmp/Test-export`;
 
 const options = {
   attributeNamePrefix: '@_',
@@ -44,9 +49,28 @@ function main() {
     let existingFiles = files
       .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
-    files.forEach((f) => console.log(f.path));
+    existingFiles.forEach((f) => {
+      console.log(f.path);
 
-    debugger;
+      let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
+
+      console.log(`// ------------------- ${f.path}`);
+
+      emlFormat.read(eml, (err, data) => {
+        if (err) {
+          return console.log(err);
+        } else {
+          debugger
+          console.log(data.html || data.text || 'NOOOOO');
+        }
+      });
+    });
+
+    // TODO
+    // - get email text from eml for ES indexing
+    // - put file to blob storage
+    // - create archive entry
+
   }
 
 
@@ -62,7 +86,7 @@ function main() {
 function readContentXml(entityName) {
   let capitalizedEntityName = entityName.replace(/^\w/, c => c.toUpperCase());
 
-  let contentXml = fs.readFileSync(`/tmp/Test-export/Metadata/${capitalizedEntityName}.xml`);
+  let contentXml = fs.readFileSync(`${dataDir}/Metadata/${capitalizedEntityName}.xml`);
   let content = xml.parse(contentXml.toString(), options).content;
 
   return content.object;
