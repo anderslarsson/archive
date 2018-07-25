@@ -300,9 +300,40 @@ async function buildTenantQueryParam({customerId, supplierId}) {
   return queryParam;
 }
 
+/**
+ * @function getPrefixTenantId
+ *
+ * Takes a tenantConfig object and returns the prefixed tenantId.
+ *
+ * @param {Object} - TenantConfig
+ *
+ * @return {String|null}
+ *
+ */
+function getPrefixedTenantId(tenantConfig) {
+  if (typeof tenantConfig !== 'object') {
+    return null;
+  }
+
+  if (!tenantConfig.hasOwnProperty('customerId') && !tenantConfig.hasOwnProperty('supplierId')) {
+    return null;
+  }
+
+  if (tenantConfig.customerId && typeof tenantConfig.customerId === 'string' && tenantConfig.customerId.length >= 1) {
+    return `c_${tenantConfig.customerId}`;
+  }
+
+  if (tenantConfig.supplierId && typeof tenantConfig.supplierId === 'string' && tenantConfig.supplierId.length >= 1) {
+    return `s_${tenantConfig.supplierId}`;
+  }
+
+  return null;
+}
+
 if (process.env.NODE_ENV === 'testing') {
   module.exports = {
     eventClient: events,
+    getPrefixedTenantId,
     processReindexResult,
   };
 }

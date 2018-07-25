@@ -43,5 +43,19 @@ describe('CuratorWorker', () => {
 
   });
 
+  describe('#getPrefixedTenantId()', () => {
+    it('Should return null for invalid parameters', () => {
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId(''), null);
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId({}), null);
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId({customerId: ['a'], supplierId: ['c']}), null);
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId({customerId: '', supplierId: ''}), null);
+    });
+
+    it('Should return a prefixed tenantId for valid params', () => {
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId({customerId: 'OC001', supplierId: null}), 'c_OC001');
+      assert.strictEqual(CuratorWorker.getPrefixedTenantId({customerId: null, supplierId: 'hard001'}), 's_hard001');
+    });
+  });
+
 });
 
