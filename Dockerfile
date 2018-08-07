@@ -2,13 +2,13 @@ FROM node:8-alpine
 MAINTAINER denic 
 
 # NOTE: "node" user and corresponding "/home/node" dir are created by "node:6-alpine" image.
-
 WORKDIR /home/node/archive
-RUN chown -R node:node . 
 
-# Change owner since COPY/ADD assignes UID/GID 0 to all copied content.
 RUN apk add --no-cache rsync curl
-COPY --chown=node:node . .
+
+COPY . .
+# Change owner since COPY/ADD assignes UID/GID 0 to all copied content.
+RUN chown -R node:node . 
 
 ENV NODE_ENV=development
 
