@@ -1,6 +1,6 @@
 'use strict';
 
-const curatorHandler = require('./api/curator/');
+const invoiceArchigeHandler = require('./api/invoice_archive/');
 const infoHandler = require('./api/info/');
 const indicesHandler = require('./api/indices/');
 
@@ -14,15 +14,18 @@ const indicesHandler = require('./api/indices/');
  * @see [Minimum setup]{@link https://github.com/OpusCapita/web-init#minimum-setup}
  */
 module.exports.init = async function (app, db) {
-  // Register routes here.
-  // Use the passed db parameter in order to use Epilogue auto-routes.
-  // Use require in order to separate routes into multiple js files.
+
+  let ni = (req, res) => res.status(500).send('Not implemented.');
+
   app.get('/hello', async (req, res) => {
     res.send('Hello world!');
   });
 
-  // --- Curator
-  app.get('/api/curator/:period', (req, res) => curatorHandler.curate(req, res, app, db));
+  /* *** TenantConfig *** */
+  app.post('/api/tenantconfig', ni);
+
+  /* *** Invoice archive *** */
+  app.post('/api/archive/invoice/job', (req, res) => invoiceArchigeHandler.createJob(req, res, app, db));
 
   // --- Info
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
@@ -33,6 +36,6 @@ module.exports.init = async function (app, db) {
   app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
 
   // --- Entries
-  app.get('/api/entries/:tenantId/:year/:month', (req, res) => res.status(500).send('Not implemented.'));
+  app.get('/api/entries/:tenantId/:year/:month', ni);
 
 };

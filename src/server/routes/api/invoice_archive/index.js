@@ -1,43 +1,44 @@
 'use strict';
 
 /**
- * Curator API handlers
+ * InvoiceArchive API handlers
  */
 
-const curatorContext = require('../../../curator');
+const invoiceArchiveContext = require('../../../invoice_archive');
 const MsgTypes = require('../../../../shared/msg_types');
 
 /**
  * Handles requests to /archive/api/curate/:period and
- * dispatches the request to the curator context.
+ * dispatches the request to the InvoiceArchive context.
  *
  * @param {express.Request} req
  * @param {express.Response} res
  * @param {express.App} app
  * @param {Sequelize} db
  */
-module.exports.curate = async function (req, res, app, db) {
+module.exports.createJob = async function (req, res, app, db) {
+
   let period = req.params.period;
 
   try {
     switch (period) {
       case MsgTypes.CREATE_GLOBAL_DAILY:
-        res.status(200).send(await curatorContext.rotateGlobalDaily());
+        res.status(200).send(await invoiceArchiveContext.rotateGlobalDaily());
         break;
 
       case MsgTypes.UPDATE_TENANT_MONTHLY:
-        res.send(await curatorContext.rotateTenantsDaily(db));
+        res.send(await invoiceArchiveContext.rotateTenantsDaily(db));
         break;
 
       case MsgTypes.UPDATE_TENANT_YEARLY:
-        res.send(await curatorContext.rotateTenantsMonthly(db));
+        res.send(await invoiceArchiveContext.rotateTenantsMonthly(db));
         break;
 
       default:
         res.status(400).send(`Do not know what to do: ${period}`);
     }
   } catch (e) {
-    req.opuscapita.logger.error('Failure in archive curator.');
+    req.opuscapita.logger.error('Failure in invoiceArchive API handler.');
     res.status(500).send(e);
   }
 };

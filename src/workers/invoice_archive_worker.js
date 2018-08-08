@@ -59,8 +59,8 @@ const logger = new Logger({
 async function init() {
 
   if (process.env.NODE_ENV !== 'testing') {
-    // Subscribe to archive.curator.logrotation.job.created topic
-    await events.subscribe('archive.curator.logrotation.job.created');
+    // Subscribe to archive.invoice.logrotation.job.created topic
+    await events.subscribe('archive.invoice.logrotation.job.created');
 
     // Enter main loop
     waitDispatcher();
@@ -92,7 +92,7 @@ function processReindexResult(result, tenantConfig) {
 
       let payload = tenantConfig ? {result, tenantConfig} : {result};
 
-      events.emit('archive.curator.logrotation.job.finished', payload)
+      events.emit('archive.invoice.logrotation.job.finished', payload)
         .catch((e) => logger.error(e));
     }
   } else {
@@ -213,7 +213,7 @@ async function waitDispatcher() {
   try {
     let success = false;
 
-    msg = await events.getMessage('archive.curator.logrotation.job.created', false); // Get single message, no auto ack
+    msg = await events.getMessage('archive.invoice.logrotation.job.created', false); // Get single message, no auto ack
 
     if (msg && msg.payload && msg.payload.type) {
       let payload = msg.payload;
@@ -229,7 +229,7 @@ async function waitDispatcher() {
           success = await handleUpdateTenantYearly(payload.tenantConfig);
           break;
         default:
-          logger.error('CuratorWorker: No handle for msg.type ' + payload.type);
+          logger.error('InvoiceArchiveWorker: No handle for msg.type ' + payload.type);
           success = null; // Dismiss message from the MQ as the given type is not implemented.
       }
 
@@ -250,7 +250,7 @@ async function waitDispatcher() {
       if (success) {
         logger.log(`Acking message with deliveryTag ${msg.tag}`);
         await events.ackMessage(msg);
-        logger.log('Finished curator job with result: \n' + success);
+        logger.log('Finished job with result: \n' + success);
       }
     }
   } catch (handleMessageError) {

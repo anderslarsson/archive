@@ -4,7 +4,7 @@ const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const curatorContext = require('./curator');
+const invoiceArchiveContext = require('./invoice_archive');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -50,7 +50,7 @@ async function init() {
     }
   });
 
-  await curatorContext.initEventSubscriptions();
+  await invoiceArchiveContext.initEventSubscriptions();
 }
 
 (() => init().catch(console.error))();

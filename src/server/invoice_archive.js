@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Curator context module
+ * InvoiceArchive context module
  *
  * This module is responsible for creating archiving jobs on the event bus. This
  * events will be consumed by the worker pool.
@@ -44,7 +44,7 @@ module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.curator.logrotation.job.created', {
+        let result = await events.emit('archive.invoice.logrotation.job.created', {
           type: MsgTypes.UPDATE_TENANT_MONTHLY,
           tenantConfig: config
         });
@@ -90,7 +90,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.curator.logrotation.job.created', {
+        let result = await events.emit('archive.invoice.logrotation.job.created', {
           type: MsgTypes.UPDATE_TENANT_YEARLY,
           tenantConfig: config
         });
@@ -120,7 +120,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
  *
  */
 module.exports.rotateGlobalDaily = async function () {
-  await events.emit('archive.curator.logrotation.job.created', {
+  await events.emit('archive.invoice.logrotation.job.created', {
     type: MsgTypes.CREATE_GLOBAL_DAILY
   });
 
@@ -128,7 +128,7 @@ module.exports.rotateGlobalDaily = async function () {
 };
 
 module.exports.initEventSubscriptions = function initEventSubscriptions() {
-  return events.subscribe('archive.curator.logrotation.job.finished', jobFinishedHandler.bind(this));
+  return events.subscribe('archive.invoice.logrotation.job.finished', jobFinishedHandler.bind(this));
 };
 
 async function jobFinishedHandler(msg) {
