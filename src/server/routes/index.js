@@ -17,9 +17,8 @@ module.exports.init = async function (app, db) {
 
   let ni = (req, res) => res.status(500).send('Not implemented.');
 
-  app.get('/hello', async (req, res) => {
-    res.send('Hello world!');
-  });
+  app.get('/hello', async (req, res) => res.send('Hello world!'));
+  app.post('/hello', async (req, res) => res.send('Hello world!'));
 
   /* *** TenantConfig *** */
   app.post('/api/tenantconfig', ni);
