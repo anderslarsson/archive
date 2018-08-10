@@ -1,6 +1,8 @@
 const {Client} = require('elasticsearch');
 const moment = require('moment');
 
+const Logger = require('ocbesbn-logger');
+
 const ErrCodes = require('../shared/error_codes');
 
 const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
@@ -8,6 +10,8 @@ const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 class Elasticsearch {
 
   constructor() {
+    this.logger = new Logger();
+
     this.conn = new Client({
       apiVersion: '5.5',
       hosts: [
@@ -253,8 +257,13 @@ class Elasticsearch {
    * @async
    * @function reindex
    *
-   * @param {String} srcIndex
-   * @param {String} dstIndex
+   * Convenience function that handles a copy action from the srcIndex to the dstIndex,
+   * including creation of the dstIndex and copying the mapping.
+   * Callers can provide a query that will be used for the reindex operation.
+   *
+   * @param {String} srcIndex - Name of the source index
+   * @param {String} dstIndex - Name of the index to copy to
+   * @param {object} query
    *
    * @returns {Promise<object>} Object containing the result of the reindex operation coming from ES.
    */
@@ -324,6 +333,7 @@ class Elasticsearch {
       }
     } catch (e) {
       // TODO Do something with the error?
+      this.logger.error('Elasticsearch#reindex: Failed to execute reindex.', e);
       throw e;
     }
 

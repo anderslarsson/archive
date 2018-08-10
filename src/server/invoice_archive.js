@@ -51,7 +51,7 @@ module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
 
         results.push(result);
       } catch (e) {
-        logger.error('Could to emit archive event tenants_daily for tenant.' + (config.supplierId || config.customerId));
+        logger.error('Could not emit archive event update_tenants_daily for tenant.' + (config.supplierId || config.customerId));
         results.push(Promise.resolve(false));
       }
     }
@@ -60,6 +60,7 @@ module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
     let msg = 'Exception caught in' + __filename;
 
     results = [];
+
     logger.error(msg);
     logger.error(e);
   }
@@ -106,6 +107,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
     let msg = 'Exception caught in' + __filename;
 
     results = [];
+
     logger.error(msg);
     logger.error(e);
   }
