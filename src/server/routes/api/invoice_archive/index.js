@@ -18,7 +18,7 @@ const MsgTypes = require('../../../../shared/msg_types');
  */
 module.exports.createJob = async function (req, res, app, db) {
 
-  let period = req.params.period;
+  let period = req && req.body && req.body.period;
 
   try {
     switch (period) {
@@ -35,7 +35,7 @@ module.exports.createJob = async function (req, res, app, db) {
         break;
 
       default:
-        res.status(400).send(`Do not know what to do: ${period}`);
+        res.status(400).send(`Invalid value for paramater period: ${period}`);
     }
   } catch (e) {
     req.opuscapita.logger.error('Failure in invoiceArchive API handler.');

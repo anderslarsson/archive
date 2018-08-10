@@ -1,7 +1,6 @@
 version: '2'
 services:
   main:
-    build: .
     image: opuscapita/archive:dev
     depends_on:
       - elasticsearch

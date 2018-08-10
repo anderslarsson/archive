@@ -13,18 +13,3 @@ services:
       - '${PORT}:${PORT}'
     expose:
         - 9229
-
-  invoice_worker:
-    build: .
-    volumes:
-      - ./src:/home/node/archive/src
-      - ./test:/home/node/archive/test
-      - ./config:/home/node/archive/config
-    command: 'npm run worker:invoice'
-    ports:
-      - 9230:9230
-    expose:
-        - 9230
-    depends_on:
-        - rabbitmq 
-      

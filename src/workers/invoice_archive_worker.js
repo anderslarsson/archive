@@ -35,18 +35,21 @@ const elasticContext = require('../server/elasticsearch');
 
 let evConf = {
   exchangeName: 'archive',
-  messageLimit: 1
+  messageLimit: 1,
+  consul: {
+    host: 'consul'
+  }
 };
 
-if (process.env.NODE_ENV !== 'testing') {
-  // Override needed for non-containerized testing
-  evConf.consulOverride =  {
-    host: 'localhost',
-    port: '5672',
-    password: 'notSecureP455w0rd',
-    username: 'rabbit'
-  };
-}
+// if (process.env.NODE_ENV !== 'testing') {
+//   // Override needed for non-containerized testing
+//   evConf.consulOverride =  {
+//     host: 'localhost',
+//     port: '5672',
+//     password: 'notSecureP455w0rd',
+//     username: 'rabbit'
+//   };
+// }
 
 const events = new EventClient(evConf);
 
@@ -57,6 +60,8 @@ const logger = new Logger({
 });
 
 async function init() {
+
+  console.log('Node ENV: ' + process.env.NODE_ENV);
 
   if (process.env.NODE_ENV !== 'testing') {
     // Subscribe to archive.invoice.logrotation.job.created topic
