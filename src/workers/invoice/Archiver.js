@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const Logger = require('ocbesbn-logger');
 
-const elasticContext = require('../../server/elasticsearch');
+const elasticContext = require('../../shared/elasticsearch');
 const ErrCodes       = require('../../shared/error_codes');
 
 class Archiver {

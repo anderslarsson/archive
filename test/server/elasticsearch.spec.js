@@ -3,7 +3,7 @@
 /* global after:true, beforeEach:true describe:true, it:true */
 
 const assert = require('assert');
-const elasticContext = require('../../src/server/elasticsearch');
+const elasticContext = require('../../src/shared/elasticsearch');
 
 const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
 

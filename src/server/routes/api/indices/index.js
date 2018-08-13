@@ -1,6 +1,6 @@
 'use strict';
 
-const elasticContext = require('../../../elasticsearch');
+const elasticContext = require('../../../../shared/elasticsearch');
 
 const validTypes = [
   'monthly',
