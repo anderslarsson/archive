@@ -142,12 +142,19 @@ class Archiver {
       returnValue = this.processReindexResult(result);
     } catch (e) {
       if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
-        // Dismiss event incase the source index does not exist.
-        returnValue = null;
+
+        if (e.code === ErrCodes.ERR_SRC_INDEX_DOES_NOT_EXIST) {
+          this.logger.warn(`Archiver#handleUpdateTenantMonthly: Failed to update monthly invoice archive for tenantId ${tenantId}. Source index unavailable.`);
+
+          returnValue = true;
+        } else {
+          this.logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
+          this.logger.error(e);
+
+          returnValue = null;
+        }
       }
 
-      this.logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
-      this.logger.error(e);
     }
 
     return returnValue;
