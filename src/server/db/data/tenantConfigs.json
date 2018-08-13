@@ -1,10 +1,12 @@
 [
   {
     "customerId": "OC001",
-    "retentionPeriodHot": 30
+    "retentionPeriodHot": 30,
+    "type": "invoice"
   },
   {
     "customerId": "OC002",
-    "retentionPeriodHot": 30
+    "retentionPeriodHot": 30,
+    "type": "invoice"
   }
 ]
