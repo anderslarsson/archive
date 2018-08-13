@@ -9,7 +9,10 @@
 
 const Logger      = require('ocbesbn-logger');
 const EventClient = require('@opuscapita/event-client');
-const MsgTypes    = require('../shared/msg_types');
+const {
+  MsgTypes,
+  InvoiceArchiveConfig
+} = require('../shared/invoice_archive_config');
 
 const events = new EventClient({
   exchangeName: 'archive',
@@ -44,7 +47,7 @@ module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.invoice.logrotation.job.created', {
+        let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
           type: MsgTypes.UPDATE_TENANT_MONTHLY,
           tenantConfig: config
         });
@@ -91,7 +94,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
     // Enqueue a job for every tenant who has archive activated
     for (let config of configs) {
       try {
-        let result = await events.emit('archive.invoice.logrotation.job.created', {
+        let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
           type: MsgTypes.UPDATE_TENANT_YEARLY,
           tenantConfig: config
         });
@@ -122,7 +125,7 @@ module.exports.rotateTenantsMonthly = async function (db) {
  *
  */
 module.exports.rotateGlobalDaily = async function () {
-  await events.emit('archive.invoice.logrotation.job.created', {
+  await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
     type: MsgTypes.CREATE_GLOBAL_DAILY
   });
 
@@ -130,7 +133,7 @@ module.exports.rotateGlobalDaily = async function () {
 };
 
 module.exports.initEventSubscriptions = function initEventSubscriptions() {
-  return events.subscribe('archive.invoice.logrotation.job.finished', jobFinishedHandler.bind(this));
+  return events.subscribe(InvoiceArchiveConfig.finishedLogrotationJobQueueName, jobFinishedHandler.bind(this));
 };
 
 async function jobFinishedHandler(msg) {

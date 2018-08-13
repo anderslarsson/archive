@@ -28,7 +28,10 @@
 const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 
-const MsgTypes = require('../../shared/msg_types');
+const {
+  MsgTypes,
+  InvoiceArchiveConfig
+} = require('../../shared/invoice_archive_config');
 const Archiver = require('./Archiver');
 
 class Worker {
@@ -64,7 +67,7 @@ class Worker {
     if (process.env.NODE_ENV !== 'testing') {
       try {
         // Subscribe to archive.invoice.logrotation.job.created topic
-        await this.eventClient.subscribe('archive.invoice.logrotation.job.created');
+        await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
       } catch (e) {
         this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
         throw e;
@@ -90,7 +93,7 @@ class Worker {
     try {
       let success = false;
 
-      msg = await this.eventClient.getMessage('archive.invoice.logrotation.job.created', false); // Get single message, no auto ack
+      msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newLogrotationJobQueueName, false); // Get single message, no auto ack
 
       if (msg && msg.payload && msg.payload.type) {
         let payload = msg.payload;

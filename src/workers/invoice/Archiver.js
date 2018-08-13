@@ -4,7 +4,10 @@ const moment = require('moment');
 const Logger = require('ocbesbn-logger');
 
 const elasticContext = require('../../shared/elasticsearch');
-const ErrCodes       = require('../../shared/error_codes');
+const {
+  ErrCodes,
+  InvoiceArchiveConfig
+} = require('../../shared/invoice_archive_config');
 
 class Archiver {
 
@@ -45,7 +48,7 @@ class Archiver {
 
         let payload = tenantConfig ? {result, tenantConfig} : {result};
 
-        this.eventClient.emit('archive.invoice.logrotation.job.finished', payload)
+        this.eventClient.emit(InvoiceArchiveConfig.finishedLogrotationJobQueueName, payload)
           .catch((e) => this.logger.error(e));
       }
     } else {
@@ -79,7 +82,7 @@ class Archiver {
         returnValue = null;
       }
 
-      this.logger.error('Failed to create archive_global_daily index.');
+      this.logger.error('Invoice - Archiver#handleCreateGlobalDaily: Failed to create archive_global_daily index.');
       this.logger.error(e);
     }
 
@@ -109,11 +112,20 @@ class Archiver {
     } catch (e) {
       // Dismiss event incase the source index does not exist.
       if (e && e.code && ErrCodes.hasOwnProperty(e.code)) {
-        returnValue = null;
+
+        if (e.code === ErrCodes.ERR_SRC_INDEX_DOES_NOT_EXIST) {
+          this.logger.error(`Archiver#handleUpdateTenantYearly: Failed to update yearly invoice archive for tenantId ${tenantId}. Source index unavailable.`);
+
+          returnValue = true;
+        } else {
+          this.logger.error('Invoice - Archiver#handleUpdateTenantYearly: Failed to update archive_tenant_yearly index for tenant ' + tenantId);
+          this.logger.error(e);
+
+          returnValue = null;
+        }
+
       }
 
-      this.logger.error('Failed to update archive_tenant_yearly index for tenant ' + tenantId);
-      this.logger.error(e);
     }
 
     return returnValue;
@@ -148,7 +160,7 @@ class Archiver {
 
           returnValue = true;
         } else {
-          this.logger.error('Failed to update archive_tenant_monthly index for tenant ' + tenantId);
+          this.logger.error('Invoice - Archiver#handleUpdateTenantMonthly: Failed to update archive_tenant_monthly index for tenant ' + tenantId);
           this.logger.error(e);
 
           returnValue = null;
@@ -172,7 +184,7 @@ class Archiver {
    */
   async buildTenantQueryParam({customerId, supplierId}) {
     if (customerId === null && supplierId === null) {
-      throw new Error('TenantConfig does not contain a supplier or customer ID.');
+      throw new Error('Invoice Archiver#buildTenantQueryParam: TenantConfig does not contain a supplier or customer ID.');
     }
 
     let queryParam = {
@@ -235,7 +247,7 @@ class Archiver {
     let fmtYesterday = moment().subtract(1, 'days').format('YYYY.MM.DD');
 
     let srcIndex = `bn_tx_logs-${fmtYesterday}`;
-    let dstIndex = `archive_global_daily-${fmtYesterday}`;
+    let dstIndex = `${InvoiceArchiveConfig.indexPrefix}global_daily-${fmtYesterday}`;
 
     let result = {
       srcIndex,
@@ -277,8 +289,8 @@ class Archiver {
 
     let lowerTenantId = this.elasticContext.normalizeTenantId(tenantId);
 
-    let srcIndexName = `archive_global_daily-${fmtYesterday}`;
-    let dstIndexName = `archive_tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
+    let srcIndexName = `${InvoiceArchiveConfig.indexPrefix}global_daily-${fmtYesterday}`;
+    let dstIndexName = `${InvoiceArchiveConfig.indexPrefix}tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
 
     let result = {
       srcIndex: srcIndexName,
@@ -324,8 +336,8 @@ class Archiver {
 
     let lowerTenantId = this.elasticContext.normalizeTenantId(tenantId);
 
-    let srcIndex = `archive_tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
-    let dstIndex = `archive_tenant_yearly-${lowerTenantId}-${fmtYesterdaysYear}`;
+    let srcIndex = `${InvoiceArchiveConfig.indexPrefix}tenant_monthly-${lowerTenantId}-${fmtYesterdaysMonth}`;
+    let dstIndex = `${InvoiceArchiveConfig.indexPrefix}tenant_yearly-${lowerTenantId}-${fmtYesterdaysYear}`;
 
     let result = {
       srcIndex,
