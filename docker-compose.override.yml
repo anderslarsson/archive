@@ -7,7 +7,7 @@ services:
       - ./test:/home/node/archive/test
       - ./config:/home/node/archive/config
       - ./wiki:/home/node/archive/wiki
-    command: 'npm run dev'
+    command: 'npm run debug'
     ports:
       - 9229:9229
       - '${PORT}:${PORT}'
