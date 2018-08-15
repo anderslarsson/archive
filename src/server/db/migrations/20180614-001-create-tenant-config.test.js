@@ -1,5 +1,3 @@
-const Sequelize = require('sequelize');
-
 /**
  * Inserts test data into existing database structures.
  * If all migrations were successul, this method will never be executed again.
@@ -10,15 +8,13 @@ const Sequelize = require('sequelize');
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.up = async function(db, config)
-{
+module.exports.up = async function (db, config) {
   let tenantConfigs = require('../data/tenantConfigs.json');
 
   tenantConfigs.forEach(c => c.createdOn = new Date());
 
-  return db.queryInterface.bulkInsert('TenantConfig', tenantConfigs);
-
-}
+  return await db.queryInterface.bulkInsert('TenantConfig', tenantConfigs);
+};
 
 /**
  * Reverts all migrations for databse tables and data.
@@ -29,15 +25,14 @@ module.exports.up = async function(db, config)
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.down = async function(db, config)
-{
+module.exports.down = async function (db, config) {
   let customerIds = [
     'OC001', 'OC002'
   ];
 
-  return db.queryInterface.bulkDelete('TenantConfig', {
-    id : {
-      $in : userIds
+  return await db.queryInterface.bulkDelete('TenantConfig', {
+    id: {
+      $in: customerIds
     }
   });
-}
+};

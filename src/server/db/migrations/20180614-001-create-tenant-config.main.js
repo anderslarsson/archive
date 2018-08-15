@@ -10,9 +10,8 @@ const Sequelize = require('sequelize');
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.up = async function(db, config)
-{
-  db.queryInterface.createTable('TenantConfig', {
+module.exports.up = async function (db, config) {
+  return await db.queryInterface.createTable('TenantConfig', {
     id: {
       type: Sequelize.INTEGER,
       primaryKey: true,
@@ -56,7 +55,7 @@ module.exports.up = async function(db, config)
       allowNull: true
     }
   });
-}
+};
 
 /**
  * Reverts all migrations for databse tables and data.
@@ -67,7 +66,6 @@ module.exports.up = async function(db, config)
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.down = async function(db, config)
-{
-    return db.queryInterface.dropTable('TenantConfig');
+module.exports.down = async function(db, config) {
+  return await db.queryInterface.dropTable('TenantConfig');
 }
