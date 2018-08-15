@@ -1,6 +1,6 @@
 'use strict';
 
-const invoiceArchigeHandler = require('./api/invoice_archive/');
+const invoiceArchiveHandler = require('./api/invoice_archive/');
 const infoHandler = require('./api/info/');
 const indicesHandler = require('./api/indices/');
 
@@ -24,7 +24,7 @@ module.exports.init = async function (app, db) {
   app.post('/api/tenantconfig', ni);
 
   /* *** Invoice archive *** */
-  app.post('/api/archive/invoice/job', (req, res) => invoiceArchigeHandler.createJob(req, res, app, db));
+  app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createJob(req, res, app, db));
 
   // --- Info
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
