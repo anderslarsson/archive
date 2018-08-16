@@ -15,16 +15,17 @@ const indicesHandler = require('./api/indices/');
  */
 module.exports.init = async function (app, db) {
 
-  let ni = (req, res) => res.status(500).send('Not implemented.');
+  let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
   app.get('/hello', async (req, res) => res.send('Hello world!'));
   app.post('/hello', async (req, res) => res.send('Hello world!'));
 
   /* *** TenantConfig *** */
-  app.post('/api/tenantconfig', ni);
+  app.post('/api/tenantconfig', notImplementedFn);
 
   /* *** Invoice archive *** */
-  app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createJob(req, res, app, db));
+  app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
+  app.post('/api/archive/invoice', notImplementedFn);
 
   // --- Info
   app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
@@ -35,6 +36,6 @@ module.exports.init = async function (app, db) {
   app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
 
   // --- Entries
-  app.get('/api/entries/:tenantId/:year/:month', ni);
+  app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);
 
 };

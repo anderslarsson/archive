@@ -8,16 +8,45 @@ const invoiceArchiveContext = require('../../../invoice_archive');
 const MsgTypes = require('../../../../shared/msg_types');
 
 /**
- * Handles requests to /archive/api/curate/:period and
- * dispatches the request to the InvoiceArchive context.
+ * @function createArchiverJob
+ *
+ * This API is called by external systems that want to trigger the archiving of a
+ * a specific transaction.
  *
  * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.transactionId - ID of the transaction to archive
  * @param {express.Response} res
  * @param {express.App} app
  * @param {Sequelize} db
  */
-module.exports.createJob = async function (req, res, app, db) {
+module.exports.createArchiverJob = async function (req, res, app, db) {
+  let transactionId = req && req.body && req.body.transactionId;
 
+  let result = null;
+
+  try {
+    result = await invoiceArchiveContext.archiveTransaction(transactionId);
+
+    res.status(200).send({success: 'true'});
+  } catch (e) {
+    /* handle error */
+    res.status(500).send(e);
+  }
+
+};
+
+/**
+ * @function createCuratorJob
+ *
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.period - Identifies the period that should be curated
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ */
+module.exports.createCuratorJob = async function (req, res, app, db) {
   let period = req && req.body && req.body.period;
 
   try {

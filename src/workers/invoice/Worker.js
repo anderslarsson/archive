@@ -41,7 +41,8 @@ class Worker {
    */
   constructor() {
 
-    this.waitDispatcherIntervall = null;
+    this.logWaitDispatcherTimeout = null;
+    this.archiveWaitDispatcherTimeout = null;
 
     this.logger = new Logger({
       context: {
@@ -68,16 +69,77 @@ class Worker {
       try {
         // Subscribe to archive.invoice.logrotation.job.created topic
         await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
+        await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
       } catch (e) {
         this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
         throw e;
       }
 
       // Enter main loop
-      this.waitDispatcher();
+      this.logWaitDispatcher();
+      this.archiveWaitDispatcher();
     }
 
     return true;
+  }
+
+  async archiveWaitDispatcher() {
+    let msg;
+
+    try {
+      let success = false;
+
+      msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, false); // Get single message, no auto ack
+
+      if (msg && msg.payload && msg.payload.type && msg.payload.type === MsgTypes.ARCHIVE_TRANSACTION) {
+        let payload = msg.payload;
+
+
+        if (payload.transactionId) {
+          // TODO do the magic
+          success = true;
+        } else {
+          success = false;
+          this.logger.error('Archive - Worker#archiveWaitDispatcher: No transactionId found in event payload.');
+        }
+
+        // Failure (false -> ES result contained failures)
+        // Failure (null -> catch was invoked in handler function)
+        if (success === false || success === null) {
+          //
+          // FIXME
+          //
+          // Broken because event-client default for nackMessage is requeue = true, meaning that
+          // the message will be put back into the queue instead of being thrown away.
+          // See @opuscapita/event-client #3
+          this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
+
+          await this.eventClient.nackMessage(msg);
+        }
+
+        // Success
+        if (success) {
+          this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
+          await this.eventClient.ackMessage(msg);
+          this.logger.log('Finished job with result: \n' + success);
+        }
+      }
+    } catch (handleMessageError) {
+
+      this.logger.error(handleMessageError);
+
+      if (msg) {
+        try {
+          // Requeu message
+          await this.eventClient.nackMessage(msg);
+        } catch (nackErr) {
+          this.logger.error(nackErr);
+        }
+      }
+    } finally {
+      // Restart the timer
+      this.archiveWaitDispatcherTimeout = setTimeout(this.archiveWaitDispatcher.bind(this), 1000);
+    }
   }
 
   /**
@@ -87,7 +149,7 @@ class Worker {
    * @returns {Boolean} - Indicates the success of the job processing
    *
    */
-  async waitDispatcher() {
+  async logWaitDispatcher() {
     let msg;
 
     try {
@@ -148,7 +210,7 @@ class Worker {
       }
     } finally {
       // Restart the timer
-      setTimeout(this.waitDispatcher.bind(this), 1000);
+      this.logWaitDispatcherTimeout = setTimeout(this.logWaitDispatcher.bind(this), 1000);
     }
   }
 

@@ -132,6 +132,19 @@ module.exports.rotateGlobalDaily = async function () {
   return 'ok';
 };
 
+/**
+ * @function archiveTransaction
+ *
+ * @param {String} transactionId
+ * @returns {Boolean} Indicates the success of job creation
+ */
+module.exports.archiveTransaction = async function (transactionId) {
+  await events.emit(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, {
+    type: MsgTypes.ARCHIVE_TRANSACTION,
+    transactionId
+  });
+};
+
 module.exports.initEventSubscriptions = function initEventSubscriptions() {
   return events.subscribe(InvoiceArchiveConfig.finishedLogrotationJobQueueName, jobFinishedHandler.bind(this));
 };
