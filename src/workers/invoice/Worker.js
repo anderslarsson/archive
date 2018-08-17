@@ -29,190 +29,192 @@ const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 
 const {
-  MsgTypes,
-  InvoiceArchiveConfig
+    MsgTypes,
+    InvoiceArchiveConfig
 } = require('../../shared/invoice_archive_config');
 const Archiver = require('./Archiver');
 
 class Worker {
 
-  /**
-   * @constructor
-   */
-  constructor() {
+    /**
+     * @constructor
+     */
+    constructor() {
 
-    this.logWaitDispatcherTimeout = null;
-    this.archiveWaitDispatcherTimeout = null;
+        this.logWaitDispatcherTimeout = null;
+        this.archiveWaitDispatcherTimeout = null;
 
-    this.logger = new Logger({
-      context: {
-        serviceName: 'archive'
-      }
-    });
+        this.logger = new Logger({
+            context: {
+                serviceName: 'archive'
+            }
+        });
 
-    this.eventClient = new EventClient({
-      exchangeName: 'archive',
-      messageLimit: 1,
-      consul: {
-        host: 'consul'
-      }
-    });
+        this.eventClient = new EventClient({
+            exchangeName: 'archive',
+            messageLimit: 1,
+            consul: {
+                host: 'consul'
+            }
+        });
 
-    this.archiver = new Archiver(this.eventClient, this.logger);
+        this.archiver = new Archiver(this.eventClient, this.logger);
 
-    this.initEventSubscriptions();
-  }
-
-  async initEventSubscriptions() {
-
-    if (process.env.NODE_ENV !== 'testing') {
-      try {
-        // Subscribe to archive.invoice.logrotation.job.created topic
-        await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
-        await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
-      } catch (e) {
-        this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
-        throw e;
-      }
-
-      // Enter main loop
-      this.logWaitDispatcher();
-      this.archiveWaitDispatcher();
+        this.initEventSubscriptions();
     }
 
-    return true;
-  }
+    async initEventSubscriptions() {
 
-  async archiveWaitDispatcher() {
-    let msg;
+        if (process.env.NODE_ENV !== 'testing') {
+            try {
+                // Subscribe to archive.invoice.logrotation.job.created topic
+                await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
+                await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
+            } catch (e) {
+                this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
+                throw e;
+            }
 
-    try {
-      let success = false;
-
-      msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, false); // Get single message, no auto ack
-
-      if (msg && msg.payload && msg.payload.type && msg.payload.type === MsgTypes.ARCHIVE_TRANSACTION) {
-        let payload = msg.payload;
-
-
-        if (payload.transactionId) {
-          // TODO do the magic
-          success = true;
-        } else {
-          success = false;
-          this.logger.error('Archive - Worker#archiveWaitDispatcher: No transactionId found in event payload.');
+            // Enter main loop
+            this.logWaitDispatcher();
+            this.archiveWaitDispatcher();
         }
 
-        // Failure (false -> ES result contained failures)
-        // Failure (null -> catch was invoked in handler function)
-        if (success === false || success === null) {
-          //
-          // FIXME
-          //
-          // Broken because event-client default for nackMessage is requeue = true, meaning that
-          // the message will be put back into the queue instead of being thrown away.
-          // See @opuscapita/event-client #3
-          this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
+        return true;
+    }
 
-          await this.eventClient.nackMessage(msg);
-        }
+    async archiveWaitDispatcher() {
+        let msg;
 
-        // Success
-        if (success) {
-          this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
-          await this.eventClient.ackMessage(msg);
-          this.logger.log('Finished job with result: \n' + success);
-        }
-      }
-    } catch (handleMessageError) {
-
-      this.logger.error(handleMessageError);
-
-      if (msg) {
         try {
-          // Requeu message
-          await this.eventClient.nackMessage(msg);
-        } catch (nackErr) {
-          this.logger.error(nackErr);
+            let success = false;
+
+            msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, false); // Get single message, no auto ack
+
+            if (msg && msg.payload && msg.payload.type && msg.payload.type === MsgTypes.ARCHIVE_TRANSACTION) {
+                let payload = msg.payload;
+
+
+                if (payload.transactionId) {
+                    // TODO do the magic
+                    let result = await this.archiver.archiveTransaction(payload.transactionId);
+
+                    success = result || false;
+                } else {
+                    success = false;
+                    this.logger.error('Archive - Worker#archiveWaitDispatcher: No transactionId found in event payload.');
+                }
+
+                // Failure (false -> ES result contained failures)
+                // Failure (null -> catch was invoked in handler function)
+                if (success === false || success === null) {
+                    //
+                    // FIXME
+                    //
+                    // Broken because event-client default for nackMessage is requeue = true, meaning that
+                    // the message will be put back into the queue instead of being thrown away.
+                    // See @opuscapita/event-client #3
+                    this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
+
+                    await this.eventClient.nackMessage(msg);
+                }
+
+                // Success
+                if (success) {
+                    this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
+                    await this.eventClient.ackMessage(msg);
+                    this.logger.log('Finished job with result: \n' + success);
+                }
+            }
+        } catch (handleMessageError) {
+
+            this.logger.error(handleMessageError);
+
+            if (msg) {
+                try {
+                    // Requeu message
+                    await this.eventClient.nackMessage(msg);
+                } catch (nackErr) {
+                    this.logger.error(nackErr);
+                }
+            }
+        } finally {
+            // Restart the timer
+            this.archiveWaitDispatcherTimeout = setTimeout(this.archiveWaitDispatcher.bind(this), 1000);
         }
-      }
-    } finally {
-      // Restart the timer
-      this.archiveWaitDispatcherTimeout = setTimeout(this.archiveWaitDispatcher.bind(this), 1000);
     }
-  }
 
-  /**
-   * Callback method for @see EventClient.subscribe method.
-   *
-   * @param {Object} msg - Message received from MQ
-   * @returns {Boolean} - Indicates the success of the job processing
-   *
-   */
-  async logWaitDispatcher() {
-    let msg;
+    /**
+     * Callback method for @see EventClient.subscribe method.
+     *
+     * @param {Object} msg - Message received from MQ
+     * @returns {Boolean} - Indicates the success of the job processing
+     *
+     */
+    async logWaitDispatcher() {
+        let msg;
 
-    try {
-      let success = false;
-
-      msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newLogrotationJobQueueName, false); // Get single message, no auto ack
-
-      if (msg && msg.payload && msg.payload.type) {
-        let payload = msg.payload;
-
-        switch (payload.type) {
-          case MsgTypes.CREATE_GLOBAL_DAILY:
-            success = await this.archiver.handleCreateGlobalDaily();
-            break;
-          case MsgTypes.UPDATE_TENANT_MONTHLY:
-            success = await this.archiver.handleUpdateTenantMonthly(payload.tenantConfig);
-            break;
-          case MsgTypes.UPDATE_TENANT_YEARLY:
-            success = await this.archiver.handleUpdateTenantYearly(payload.tenantConfig);
-            break;
-          default:
-            this.logger.error('InvoiceArchiveWorker: No handle for msg.type ' + payload.type);
-            success = null; // Dismiss message from the MQ as the given type is not implemented.
-        }
-
-        // Failure (false -> ES result contained failures)
-        // Failure (null -> catch was invoked in handler function)
-        if (success === false || success === null) {
-          //
-          // FIXME
-          //
-          // Broken because event-client default for nackMessage is requeue = true, meaning that
-          // the message will be put back into the queue instead of being thrown away.
-          // See @opuscapita/event-client #3
-          this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
-
-          await this.eventClient.nackMessage(msg);
-        }
-
-        // Success
-        if (success) {
-          this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
-          await this.eventClient.ackMessage(msg);
-          this.logger.log('Finished job with result: \n' + success);
-        }
-      }
-    } catch (handleMessageError) {
-
-      this.logger.error(handleMessageError);
-
-      if (msg) {
         try {
-          // Requeu message
-          await this.eventClient.nackMessage(msg);
-        } catch (nackErr) {
-          this.logger.error(nackErr);
+            let success = false;
+
+            msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newLogrotationJobQueueName, false); // Get single message, no auto ack
+
+            if (msg && msg.payload && msg.payload.type) {
+                let payload = msg.payload;
+
+                switch (payload.type) {
+                    case MsgTypes.CREATE_GLOBAL_DAILY:
+                        success = await this.archiver.handleCreateGlobalDaily();
+                        break;
+                    case MsgTypes.UPDATE_TENANT_MONTHLY:
+                        success = await this.archiver.handleUpdateTenantMonthly(payload.tenantConfig);
+                        break;
+                    case MsgTypes.UPDATE_TENANT_YEARLY:
+                        success = await this.archiver.handleUpdateTenantYearly(payload.tenantConfig);
+                        break;
+                    default:
+                        this.logger.error('InvoiceArchiveWorker: No handle for msg.type ' + payload.type);
+                        success = null; // Dismiss message from the MQ as the given type is not implemented.
+                }
+
+                // Failure (false -> ES result contained failures)
+                // Failure (null -> catch was invoked in handler function)
+                if (success === false || success === null) {
+                    //
+                    // FIXME
+                    //
+                    // Broken because event-client default for nackMessage is requeue = true, meaning that
+                    // the message will be put back into the queue instead of being thrown away.
+                    // See @opuscapita/event-client #3
+                    this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
+
+                    await this.eventClient.nackMessage(msg);
+                }
+
+                // Success
+                if (success) {
+                    this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
+                    await this.eventClient.ackMessage(msg);
+                    this.logger.log('Finished job with result: \n' + success);
+                }
+            }
+        } catch (handleMessageError) {
+
+            this.logger.error(handleMessageError);
+
+            if (msg) {
+                try {
+                    // Requeu message
+                    await this.eventClient.nackMessage(msg);
+                } catch (nackErr) {
+                    this.logger.error(nackErr);
+                }
+            }
+        } finally {
+            // Restart the timer
+            this.logWaitDispatcherTimeout = setTimeout(this.logWaitDispatcher.bind(this), 1000);
         }
-      }
-    } finally {
-      // Restart the timer
-      this.logWaitDispatcherTimeout = setTimeout(this.logWaitDispatcher.bind(this), 1000);
     }
-  }
 
 }
 
