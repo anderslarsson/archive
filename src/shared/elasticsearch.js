@@ -10,15 +10,21 @@ const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 class Elasticsearch {
 
   constructor() {
-    this.logger = new Logger();
+      this.logger = new Logger();
 
-    this.conn = new Client({
-      apiVersion: '5.5',
-      hosts: [
-        ES_HOST
-      ]
-    });
+      this.defaultDocType = '_doc';
+
+      this.conn = new Client({
+          apiVersion: '5.5',
+          hosts: [
+              ES_HOST
+          ]
+      });
   }
+
+    get client() {
+        return this.conn;
+    }
 
   async printClusterHealth() {
     let res;
@@ -39,7 +45,7 @@ class Elasticsearch {
   async index(index, body) {
     return this.conn.index({
       index: index,
-      type: '_doc',
+      type: this.defaultDocType,
       body: body
     });
   }
