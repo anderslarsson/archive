@@ -44,7 +44,7 @@ const esMapping = {
                 sender: {
                     properties: {
                         physical: {
-                            type: 'keyword' 
+                            type: 'keyword'
                         },
                         originator: {
                             type: 'keyword'
@@ -57,7 +57,7 @@ const esMapping = {
                 receiver: {
                     properties: {
                         physical: {
-                            type: 'keyword' 
+                            type: 'keyword'
                         },
                         target: {
                             type: 'keyword'
@@ -89,7 +89,7 @@ const esMapping = {
                                 }
                             }
                         },
-                        inbound_attachments: {
+                        inboundAttachments: {
                             properties: {
                                 reference: {
                                     type: 'keyword'
@@ -106,7 +106,7 @@ const esMapping = {
                                 }
                             }
                         },
-                        outbound_attachments: {
+                        outboundAttachments: {
                             properties: {
                                 reference: {
                                     type: 'keyword'
@@ -121,7 +121,7 @@ const esMapping = {
             }
         }
     }
-}
+};
 
 class InvoiceArchiveConfig {
 
