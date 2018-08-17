@@ -18,6 +18,41 @@ class Mapper {
         });
     }
 
+    get owner() {
+        let owner = null;
+
+        let tOwners = this.items
+            .map((h) => {
+                if (h.customerId) {
+                    if (h.receiver && h.receiver.target && h.receiver.target === h.customerId) {
+                        // Invoice receiving
+                        return `c_${h.customerId}`;
+                    }
+                }
+
+                if (h.supplierId) {
+                    if (h.receiver && h.receiver.target && h.receiver.target === h.supplierId) {
+                        // Invoice sending
+                        return `s_${h.supplierId}`;
+                    }
+                }
+
+                return null;
+            })
+            .filter((o) => o !== null)
+            .filter((el, i, a) => i === a.indexOf(el));
+
+        if (tOwners.length !== 1) {
+            // Inform Sirius about failure state. TODO
+            this.logger.error('InvoiceArchiveMapper#_buildOwner: Multiple possible owners found.', tOwners);
+            throw new Error('Unable to detect owning tenantId');
+        } else {
+            owner = tOwners[0];
+        }
+
+        return owner;
+    }
+
     /**
      * @function do
      *
@@ -118,41 +153,6 @@ class Mapper {
                 return acc;
             }
         }, null);
-    }
-
-    _buildOwner() {
-        let owner = null;
-
-        let tOwners = this.items
-            .map((h) => {
-                if (h.customerId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === h.customerId) {
-                        // Invoice receiving
-                        return `c_${h.customerId}`;
-                    }
-                }
-
-                if (h.supplierId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === h.supplierId) {
-                        // Invoice sending
-                        return `s_${h.supplierId}`;
-                    }
-                }
-
-                return null;
-            })
-            .filter((o) => o !== null)
-            .filter((el, i, a) => i === a.indexOf(el));
-
-        if (tOwners.length !== 1) {
-            // Inform Sirius about failure state. TODO
-            this.logger.error('InvoiceArchiveMapper#_buildOwner: Multiple possible owners found.', tOwners);
-            throw new Error('Unable to detect owning tenantId');
-        } else {
-            owner = tOwners[0];
-        }
-
-        return owner;
     }
 
     _buildReceiver() {

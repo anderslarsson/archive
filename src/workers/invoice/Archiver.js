@@ -373,6 +373,7 @@ class Archiver {
 
         let es = this.elasticContext.client;
 
+        /* Find all documents that belong to the transaction */
         let result = await es.search({
             index: 'bn_tx_logs*',
             body: {
@@ -396,9 +397,14 @@ class Archiver {
 
             if (hits && hits.length > 0) {
                 let mapper = new Mapper(transactionId, hits);
+                let tenantId = mapper.owner;
+
+                // TODO check if tenantId has active archiving configuration
                 mappingResult = mapper.do();
 
                 // TODO check result, write to ES
+                // TODO write archive to ES
+
                 return true;
             }
 
