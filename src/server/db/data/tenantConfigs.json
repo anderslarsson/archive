@@ -1,10 +1,17 @@
 [
-  {
-    "customerId": "OC001",
-    "retentionPeriodHot": 30
-  },
-  {
-    "customerId": "OC002",
-    "retentionPeriodHot": 30
-  }
+    {
+        "tenantId": "OC001",
+        "type": "invoice_receiving",
+        "retentionPeriodHot": 30
+    },
+    {
+        "tenantId": "OC002",
+        "type": "invoice_receiving",
+        "retentionPeriodHot": 30
+    },
+    {
+        "tenantId": "c_nationalm0se000001",
+        "type": "invoice_receiving",
+        "retentionPeriodHot": 30
+    }
 ]

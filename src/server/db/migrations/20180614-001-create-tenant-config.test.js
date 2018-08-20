@@ -9,11 +9,11 @@
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
 module.exports.up = async function (db, config) {
-  let tenantConfigs = require('../data/tenantConfigs.json');
+    let tenantConfigs = require('../data/tenantConfigs.json');
 
-  tenantConfigs.forEach(c => c.createdOn = new Date());
+    tenantConfigs.forEach(c => c.createdOn = new Date());
 
-  return await db.queryInterface.bulkInsert('TenantConfig', tenantConfigs);
+    return await db.queryInterface.bulkInsert('TenantConfig', tenantConfigs);
 };
 
 /**
@@ -26,13 +26,13 @@ module.exports.up = async function (db, config) {
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
 module.exports.down = async function (db, config) {
-  let customerIds = [
-    'OC001', 'OC002'
-  ];
+    let customerIds = [
+        'OC001', 'OC002', 'c_nationalm0se000001'
+    ];
 
-  return await db.queryInterface.bulkDelete('TenantConfig', {
-    id: {
-      $in: customerIds
-    }
-  });
+    return await db.queryInterface.bulkDelete('TenantConfig', {
+        id: {
+            $in: customerIds
+        }
+    });
 };

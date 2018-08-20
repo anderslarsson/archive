@@ -11,50 +11,55 @@ const Sequelize = require('sequelize');
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
 module.exports.up = async function (db, config) {
-  return await db.queryInterface.createTable('TenantConfig', {
-    id: {
-      type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    supplierId: {
-      type: Sequelize.STRING(30),
-      allowNull: true
-    },
-    customerId: {
-      type: Sequelize.STRING(30),
-      allowNull: true
-    },
-    retentionPeriodHot: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      defaultValue: '30'
-    },
-    retentionPeriodLongTerm: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      defaultValue: '10'
-    },
-    createdBy: {
-      type: Sequelize.STRING(60),
-      allowNull: false,
-      defaultValue: 'Opuscapita user'
-    },
-    changedBy: {
-      type: Sequelize.STRING(60),
-      allowNull: false,
-      defaultValue: 'Opuscapita user'
-    },
-    createdOn: {
-      type: Sequelize.DATE(),
-      allowNull: false,
-      defaultValue: Sequelize.NOW
-    },
-    changedOn: {
-      type: Sequelize.DATE(),
-      allowNull: true
-    }
-  });
+    await db.queryInterface.createTable('TenantConfig', {
+        id: {
+            type: Sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        tenantId: {
+            type: Sequelize.STRING(30),
+            allowNull: true
+        },
+        type: {
+            type: Sequelize.STRING(30),
+            allowNull: false
+        },
+        retentionPeriodHot: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: '30'
+        },
+        retentionPeriodLongTerm: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: '10'
+        },
+        createdBy: {
+            type: Sequelize.STRING(60),
+            allowNull: false,
+            defaultValue: 'Opuscapita user'
+        },
+        changedBy: {
+            type: Sequelize.STRING(60),
+            allowNull: false,
+            defaultValue: 'Opuscapita user'
+        },
+        createdOn: {
+            type: Sequelize.DATE(),
+            allowNull: false,
+            defaultValue: Sequelize.NOW
+        },
+        changedOn: {
+            type: Sequelize.DATE(),
+            allowNull: true
+        }
+    });
+
+    return await db.queryInterface.addConstraint('TenantConfig', ['tenantId', 'type'], {
+        type: 'unique',
+        name: 'custom_unique_constraint_tenantId_type'
+    });
 };
 
 /**
@@ -66,6 +71,6 @@ module.exports.up = async function (db, config) {
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.down = async function(db, config) {
-  return await db.queryInterface.dropTable('TenantConfig');
-}
+module.exports.down = async function (db, config) {
+    return await db.queryInterface.dropTable('TenantConfig');
+};
