@@ -15,27 +15,27 @@ const indicesHandler = require('./api/indices/');
  */
 module.exports.init = async function (app, db) {
 
-  let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
+    let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
-  app.get('/hello', async (req, res) => res.send('Hello world!'));
-  app.post('/hello', async (req, res) => res.send('Hello world!'));
+    app.get('/hello', async (req, res) => res.send('Hello world!'));
+    app.post('/hello', async (req, res) => res.send('Hello world!'));
 
-  /* *** TenantConfig *** */
-  app.post('/api/tenantconfig', notImplementedFn);
+    /* *** TenantConfig *** */
+    app.post('/api/tenantconfig', notImplementedFn);
 
-  /* *** Invoice archive *** */
-  app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
-  app.post('/api/archive/invoice', notImplementedFn);
+    /* *** Invoice archive *** */
+    app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
+    app.post('/api/archive/invoice', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
 
-  // --- Info
-  app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
+    // --- Info
+    app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
 
-  // --- Indices
-  app.get('/api/indices/:type', (req, res) => indicesHandler.listAllByType(req, res));
-  app.get('/api/indices/:tenantId/:type', (req, res) => indicesHandler.listByTenantAndType(req, res));
-  app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
+    // --- Indices
+    app.get('/api/indices/:type', (req, res) => indicesHandler.listAllByType(req, res));
+    app.get('/api/indices/:tenantId/:type', (req, res) => indicesHandler.listByTenantAndType(req, res));
+    app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
 
-  // --- Entries
-  app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);
+    // --- Entries
+    app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);
 
 };

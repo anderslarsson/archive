@@ -8,7 +8,9 @@ class Mapper {
         this.items = items || [];
 
         this.transactionId = transactionId;
-        this.document = {};
+        this.document = {
+            transactionId
+        };
 
         this.logger = new Logger({
             context: {

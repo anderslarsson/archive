@@ -426,6 +426,7 @@ class Archiver {
 
             if (hits && hits.length > 0) {
                 let mapper = new Mapper(transactionId, hits);
+
                 let tenantId = mapper.owner;
 
                 if (tenantId) {
