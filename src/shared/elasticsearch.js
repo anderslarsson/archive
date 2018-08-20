@@ -1,5 +1,4 @@
 const {Client} = require('elasticsearch');
-const moment = require('moment');
 
 const Logger = require('ocbesbn-logger');
 
@@ -12,7 +11,7 @@ class Elasticsearch {
     constructor() {
         this.logger = new Logger();
 
-        this.defaultDocType = '_doc';
+        this.defaultDocType = 'doc';
 
         this.conn = new Client({
             apiVersion: '5.5',
@@ -252,7 +251,7 @@ class Elasticsearch {
      * @throws  Throws if the index could not be openend
      *
      */
-    async openIndex(indexName, create = false) {
+    async openIndex(indexName, create = false, opts = null) {
         let exists = false;
         let error = null;
 
@@ -286,7 +285,17 @@ class Elasticsearch {
             // Create index or throw
 
             if (create) {
-                return await this.conn.indices.create({index: indexName});
+                await this.conn.indices.create({index: indexName});
+
+                if (opts && opts.mapping && typeof opts.mapping === 'object') {
+                    await this.conn.indices.putMapping({
+                        body: opts.mapping,
+                        index: indexName,
+                        type: this.defaultDocType
+                    });
+                }
+
+                return true;
             } else {
                 return false;
             }

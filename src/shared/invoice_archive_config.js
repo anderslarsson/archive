@@ -1,5 +1,8 @@
 'use strict';
 
+const moment = require('moment');
+const elasticContext = require('./elasticsearch');
+
 const MsgTypes = {
     CREATE_GLOBAL_DAILY: 'create_global_daily',
     UPDATE_TENANT_MONTHLY: 'update_tenant_monthly',
@@ -135,6 +138,20 @@ class InvoiceArchiveConfig {
 
     static get indexPrefix() {
         return 'archive_invoice_';
+    }
+
+    static monthlyTenantArchiveName(tenantId) {
+        let tId = elasticContext.normalizeTenantId(tenantId);
+        let fmtMonth = moment().format('YYYY.MM');
+
+        return `${this.indexPrefix}tenant_monthly-${tId}-${fmtMonth}`;
+    }
+
+    static yearlyTenantArchiveName(tenantId) {
+        let tId = elasticContext.normalizeTenantId(tenantId);
+        let fmtYear = moment().format('YYYY');
+
+        return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
     }
 
     static get newArchiveTransactionJobQueueName() {

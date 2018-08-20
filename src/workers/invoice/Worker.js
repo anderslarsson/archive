@@ -99,14 +99,12 @@ class Worker {
                     // TODO do the magic
                     let result = await this.archiver.archiveTransaction(payload.transactionId);
 
-                    success = result || false;
+                    success = result;
                 } else {
                     success = false;
                     this.logger.error('Archive - Worker#archiveWaitDispatcher: No transactionId found in event payload.');
                 }
 
-                // Failure (false -> ES result contained failures)
-                // Failure (null -> catch was invoked in handler function)
                 if (success === false || success === null) {
                     //
                     // FIXME

@@ -69,8 +69,6 @@ class Mapper {
         let fields = Object.keys(InvoiceArchiveConfig.esMapping.mappings._doc.properties);
 
         try {
-            this.document.tenantId = this._buildOwner();
-
             fields.forEach((field) => {
                 let upper = field.replace(/^\w/, c => c.toUpperCase());
 

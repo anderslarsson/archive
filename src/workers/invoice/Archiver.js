@@ -1,6 +1,7 @@
 'use strict';
 const moment = require('moment');
 
+const dbInit = require('@opuscapita/db-init'); // Database
 const Logger = require('ocbesbn-logger');
 
 const elasticContext = require('../../shared/elasticsearch');
@@ -15,8 +16,9 @@ class Archiver {
     constructor(eventClient, logger) {
 
         this.elasticContext = elasticContext;
-
         this.eventClient = eventClient;
+
+        this.db = null;
 
         this.logger = logger || new Logger({
             context: {
@@ -24,6 +26,17 @@ class Archiver {
             }
         });
 
+    }
+
+    async init() {
+        try {
+            this.db = await dbInit.init(); // FIXME should await on the result
+        } catch (e) {
+            /* handle error */
+            this.logger.error('InvoiceArchiver#init: Failed to initialize.' , e);
+        }
+
+        return true;
     }
 
     /**
@@ -369,9 +382,25 @@ class Archiver {
         return result;
     }
 
+    /**
+     * @function archiveTransaction
+     *
+     * Archives a single transaction identified by the first param.
+     *
+     * 1. Find all documents belonging to the transaction
+     * 2. Map the result set to a new archive entry
+     * 3. Detect the owning tenantId
+     * 4. Create or open the tenants monthly index
+     * 5. Write the entry to the tenant index
+     *
+     * @param {String} transactionId
+     *
+     * @return {Boolean} Indicates the success or failure of the operation.
+     */
     async archiveTransaction(transactionId) {
 
         let es = this.elasticContext.client;
+        let retVal = false;
 
         /* Find all documents that belong to the transaction */
         let result = await es.search({
@@ -391,25 +420,86 @@ class Archiver {
         });
 
         if (result && result.hits && result.hits.total > 0) {
-            let mappingResult;
 
+            /* Extract events from ES result set */
             let hits = result.hits.hits.map((h) => h._source && h._source.event);
 
             if (hits && hits.length > 0) {
                 let mapper = new Mapper(transactionId, hits);
                 let tenantId = mapper.owner;
 
-                // TODO check if tenantId has active archiving configuration
-                mappingResult = mapper.do();
+                if (tenantId) {
+                    let tenantConfigModel;
+                    let tenantConfig;
 
-                // TODO check result, write to ES
-                // TODO write archive to ES
+                    try {
+                        if (!this.db) await this.init();
 
-                return true;
+                        /* Check if owning tenantId has valid archive configuration */
+                        tenantConfigModel = await this.db.modelManager.getModel('TenantConfig');
+                        tenantConfig = await tenantConfigModel.findOne({
+                            where: {
+                                tenantId: tenantId
+                            }
+                        });
+                    } catch (e) {
+                        this.logger.error('InvoiceArchiver#archiveTransaction: Failed to get config from SQL.', e);
+                    }
+
+                    if (tenantConfig) {
+
+                        let mappingResult = mapper.do();
+
+                        if (mappingResult) {
+                            /* Write archive to monthly ES */
+
+                            let archiveName = InvoiceArchiveConfig.monthlyTenantArchiveName(tenantId);
+
+                            try {
+                                /* Open existing index or create new with mapping */
+                                let indexOpened = await elasticContext.openIndex(archiveName, true, {mapping: elasticContext.esMapping});
+
+                                if (indexOpened) {
+                                    let createResult;
+
+                                    try {
+                                        createResult = await elasticContext.client.create({
+                                            index: archiveName,
+                                            id: transactionId,
+                                            type: elasticContext.defaultDocType,
+                                            body: mappingResult
+                                        });
+
+                                        if (createResult) {
+                                            retVal = true;
+                                        }
+                                    } catch (e) {
+                                        if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
+                                            this.logger.error(`InvoiceArchiver#archiveTransaction: Transaction has already been written to index  ${archiveName}. (TX id: ${transactionId})`, e);
+                                            retVal =  true; // FIXME
+                                        } else {
+                                            this.logger.error(`InvoiceArchiver#archiveTransaction: Failed to create archive document in ${archiveName}. (TX id: ${transactionId})`, e);
+                                            retVal = false;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                this.logger.error(`InvoiceArchiver#archiveTransaction: Unable to open index ${archiveName}. (TX id: ${transactionId})`, e);
+                            }
+                        }
+
+                    } else {
+                        this.logger.info(`InvoiceArchiver#archiveTransaction: owning tenant ${tenantId} is not configured for archiving. (TX id: ${transactionId})`);
+                    }
+                } else {
+                    this.logger.error(`InvoiceArchiver#archiveTransaction: Unable to extract owning tenantId from transaction ${transactionId}`);
+                }
             }
-
+        } else {
+            this.logger.error(`InvoiceArchiver#archiveTransaction: No documents found for transaction ${transactionId}`);
         }
 
+        return retVal;
     }
 
 }
