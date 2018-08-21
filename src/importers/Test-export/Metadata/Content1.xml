@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content xml:space="preserve">
+  <capabilities value="2">
+    <HasDocFiles value="2" />
+  </capabilities>
+  <object guid="{E1117C68-2254-4FD2-A18F-FCB6CF2112A7}">
+    <objid objtype="0" id="28639" />
+    <objidOriginal id="28639" objtype="0" vault="{E8B011D8-41B2-4426-AFA9-E3755CE9E068}" />
+    <status checkedout="false" at="2018-04-13T00:40:40.320Z" />
+    <properties>
+      <property datatype="Timestamp" empty="false" id="20" name="Created">2018-04-12T23:57:36.000Z</property>
+      <property datatype="Lookup" empty="false" id="25" name="Created by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+      <property datatype="Integer" empty="false" id="31" name="Size on server (all versions)">465772</property>
+      <property datatype="Boolean" empty="false" id="32" name="Marked for archiving">false</property>
+      <property datatype="Timestamp" empty="false" id="89" name="Object changed">2018-04-13T00:40:40.320Z</property>
+    </properties>
+    <version value="1" guid="{7AE7E08E-B237-47F3-AB44-CCAA75FF7381}" lci="true" statuschanged="2018-04-13T00:40:40.320Z">
+      <properties>
+        <property datatype="Text" empty="false" id="0" name="Name or title">To IKEA Business Service Center Sp. z o.o. 13.04.2018 02:57 (7541199)</property>
+        <property datatype="Timestamp" empty="false" id="21" name="Last modified">2018-04-12T23:57:36.000Z</property>
+        <property datatype="Boolean" empty="false" id="22" name="Single file">true</property>
+        <property datatype="Lookup" empty="false" id="23" name="Last modified by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+        <property datatype="Timestamp" empty="false" id="24" name="Status changed">2018-04-13T00:40:40.320Z</property>
+        <property datatype="Integer" empty="false" id="30" name="Size on server (this version)">465772</property>
+        <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="101" name="Class groups" />
+        <property datatype="MultiSelectLookup" empty="false" id="1019" name="Customer">IKEA AB<lookup deleted="false" extidstatus="Internal" guid="{69E9EEDB-8A31-49C4-98FF-A3B2D9DEB5C7}" id="6" otid="101" value="IKEA AB" version="-1" /></property>
+        <property datatype="Text" empty="false" id="1020" name="To">5340_IKEA.PL.P.100069-4@docinbound.com</property>
+        <property datatype="Text" empty="false" id="1021" name="From">pl.nad@tnt.com</property>
+        <property datatype="Date" empty="false" id="1022" name="Date">2018-04-12</property>
+        <property datatype="Date" empty="false" id="1041" name="Archiving ends">2024-12-31</property>
+        <property datatype="Text" empty="false" id="1058" name="MailID">7541199</property>
+        <property datatype="MultiSelectLookup" empty="false" id="1062" name="Buyer">IKEA Business Service Center Sp. z o.o.<lookup deleted="false" extidstatus="Internal" guid="{F75CB45B-380B-4EF6-B760-78F694D7737C}" id="8" otid="108" value="IKEA Business Service Center Sp. z o.o." version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="1065" name="Purchase Invoices" />
+        <property datatype="Text" empty="false" id="1071" name="Subject">Faktura elektroniczna z firmy TNT Express numer 06799195, numer klienta 000315960</property>
+        <property datatype="Date" empty="false" id="1072" name="SendDate">2018-04-12</property>
+        <property datatype="Time" empty="false" id="1073" name="SendTime">02:57:00</property>
+      </properties>
+      <acl ignorelci="false">
+        <aclcomponent candeactivate="false" id="Local" status="Active" type="ObjectSpecific">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+        <aclcomponent candeactivate="true" id="100-3" status="Active" type="Automatic">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <aclcomponentkey>
+            <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+          </aclcomponentkey>
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+      </acl>
+      <docfiles>
+        <docfile id="28639" version="1" guid="{75FDBC8E-962D-47C7-B055-4EA819699DDE}" title="To IKEA Business Service Center Sp. z o.o. 13.04.2018 02:57 (7541199)" ext="eml" size="465772" creationtime="2018-04-12T23:57:35.673Z" lastaccesstime="2018-04-12T23:57:35.673Z" lastwritetime="2018-04-12T23:57:36.229Z" changetime="2018-04-12T23:57:36.229Z" datafileversion="1" pathfrombase="Files\E8B011D8-41B2-4426-AFA9-E3755CE9E068\0\28000-28999\28639\L\L\To IKEA Business Service Center Sp. z o.o. 13.04.2018 02{3}57 (7541199) (ID 28639).eml" />
+      </docfiles>
+    </version>
+  </object>
+  <object guid="{24D752F5-39CF-48E0-8A4D-E8D4DFCFAF24}">
+    <objid objtype="0" id="28640" />
+    <objidOriginal id="28640" objtype="0" vault="{E8B011D8-41B2-4426-AFA9-E3755CE9E068}" />
+    <status checkedout="false" at="2018-04-13T02:30:48.800Z" />
+    <properties>
+      <property datatype="Timestamp" empty="false" id="20" name="Created">2018-04-13T01:35:07.000Z</property>
+      <property datatype="Lookup" empty="false" id="25" name="Created by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+      <property datatype="Integer" empty="false" id="31" name="Size on server (all versions)">257035</property>
+      <property datatype="Boolean" empty="false" id="32" name="Marked for archiving">false</property>
+      <property datatype="Timestamp" empty="false" id="89" name="Object changed">2018-04-13T02:30:48.800Z</property>
+    </properties>
+    <version value="1" guid="{C769E92C-8C58-4A4A-B95F-CC160514AA0C}" lci="true" statuschanged="2018-04-13T02:30:48.800Z">
+      <properties>
+        <property datatype="Text" empty="false" id="0" name="Name or title">To IKEA Distribution Services SA 13.04.2018 04:34 (7541512)</property>
+        <property datatype="Timestamp" empty="false" id="21" name="Last modified">2018-04-13T01:35:08.000Z</property>
+        <property datatype="Boolean" empty="false" id="22" name="Single file">true</property>
+        <property datatype="Lookup" empty="false" id="23" name="Last modified by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+        <property datatype="Timestamp" empty="false" id="24" name="Status changed">2018-04-13T02:30:48.800Z</property>
+        <property datatype="Integer" empty="false" id="30" name="Size on server (this version)">257035</property>
+        <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="101" name="Class groups" />
+        <property datatype="MultiSelectLookup" empty="false" id="1019" name="Customer">IKEA AB<lookup deleted="false" extidstatus="Internal" guid="{69E9EEDB-8A31-49C4-98FF-A3B2D9DEB5C7}" id="6" otid="101" value="IKEA AB" version="-1" /></property>
+        <property datatype="Text" empty="false" id="1020" name="To">5320_IKEA.PL.P.100065-2@docinbound.com</property>
+        <property datatype="Text" empty="false" id="1021" name="From">CFO@dell.com</property>
+        <property datatype="Date" empty="false" id="1022" name="Date">2018-04-13</property>
+        <property datatype="Date" empty="false" id="1041" name="Archiving ends">2024-12-31</property>
+        <property datatype="Text" empty="false" id="1058" name="MailID">7541512</property>
+        <property datatype="MultiSelectLookup" empty="false" id="1062" name="Buyer">IKEA Distribution Services SA<lookup deleted="false" extidstatus="Internal" guid="{E6F9A5B2-C2E0-4F02-A6C4-76C5BCEEBCB7}" id="9" otid="108" value="IKEA Distribution Services SA" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="1065" name="Purchase Invoices" />
+        <property datatype="Text" empty="false" id="1071" name="Subject">Dell GCPR, 30 Days Inv., Faktura # 1400990088;PL2568242</property>
+        <property datatype="Date" empty="false" id="1072" name="SendDate">2018-04-13</property>
+        <property datatype="Time" empty="false" id="1073" name="SendTime">04:34:00</property>
+      </properties>
+      <acl ignorelci="false">
+        <aclcomponent candeactivate="false" id="Local" status="Active" type="ObjectSpecific">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+        <aclcomponent candeactivate="true" id="100-3" status="Active" type="Automatic">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <aclcomponentkey>
+            <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+          </aclcomponentkey>
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+      </acl>
+      <docfiles>
+        <docfile id="28640" version="1" guid="{C50AF449-6A02-420D-B82E-54F007E901B3}" title="To IKEA Distribution Services SA 13.04.2018 04:34 (7541512)" ext="eml" size="257035" creationtime="2018-04-13T01:35:07.179Z" lastaccesstime="2018-04-13T01:35:07.179Z" lastwritetime="2018-04-13T01:35:07.595Z" changetime="2018-04-13T01:35:07.595Z" datafileversion="1" pathfrombase="Files\E8B011D8-41B2-4426-AFA9-E3755CE9E068\0\28000-28999\28640\L\L\To IKEA Distribution Services SA 13.04.2018 04{3}34 (7541512) (ID 28640).eml" />
+      </docfiles>
+    </version>
+  </object>
+  <object guid="{ACB609D0-F304-4649-AAF2-122C6BF0D140}">
+    <objid objtype="0" id="28641" />
+    <objidOriginal id="28641" objtype="0" vault="{E8B011D8-41B2-4426-AFA9-E3755CE9E068}" />
+    <status checkedout="false" at="2018-04-13T02:35:58.800Z" />
+    <properties>
+      <property datatype="Timestamp" empty="false" id="20" name="Created">2018-04-13T01:35:06.000Z</property>
+      <property datatype="Lookup" empty="false" id="25" name="Created by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+      <property datatype="Integer" empty="false" id="31" name="Size on server (all versions)">257036</property>
+      <property datatype="Boolean" empty="false" id="32" name="Marked for archiving">false</property>
+      <property datatype="Timestamp" empty="false" id="89" name="Object changed">2018-04-13T02:35:58.800Z</property>
+    </properties>
+    <version value="1" guid="{2FC0AFAD-6AC1-4508-B866-503DA9095E5F}" lci="true" statuschanged="2018-04-13T02:35:58.800Z">
+      <properties>
+        <property datatype="Text" empty="false" id="0" name="Name or title">To IKEA Distribution Services SA 13.04.2018 04:34 (7541511)</property>
+        <property datatype="Timestamp" empty="false" id="21" name="Last modified">2018-04-13T01:35:06.000Z</property>
+        <property datatype="Boolean" empty="false" id="22" name="Single file">true</property>
+        <property datatype="Lookup" empty="false" id="23" name="Last modified by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+        <property datatype="Timestamp" empty="false" id="24" name="Status changed">2018-04-13T02:35:58.800Z</property>
+        <property datatype="Integer" empty="false" id="30" name="Size on server (this version)">257036</property>
+        <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="101" name="Class groups" />
+        <property datatype="MultiSelectLookup" empty="false" id="1019" name="Customer">IKEA AB<lookup deleted="false" extidstatus="Internal" guid="{69E9EEDB-8A31-49C4-98FF-A3B2D9DEB5C7}" id="6" otid="101" value="IKEA AB" version="-1" /></property>
+        <property datatype="Text" empty="false" id="1020" name="To">5320_IKEA.PL.P.100065-2@docinbound.com</property>
+        <property datatype="Text" empty="false" id="1021" name="From">CFO@dell.com</property>
+        <property datatype="Date" empty="false" id="1022" name="Date">2018-04-13</property>
+        <property datatype="Date" empty="false" id="1041" name="Archiving ends">2024-12-31</property>
+        <property datatype="Text" empty="false" id="1058" name="MailID">7541511</property>
+        <property datatype="MultiSelectLookup" empty="false" id="1062" name="Buyer">IKEA Distribution Services SA<lookup deleted="false" extidstatus="Internal" guid="{E6F9A5B2-C2E0-4F02-A6C4-76C5BCEEBCB7}" id="9" otid="108" value="IKEA Distribution Services SA" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="1065" name="Purchase Invoices" />
+        <property datatype="Text" empty="false" id="1071" name="Subject">Dell GCPR, 30 Days Inv., Faktura # 1400990226;PL2568242</property>
+        <property datatype="Date" empty="false" id="1072" name="SendDate">2018-04-13</property>
+        <property datatype="Time" empty="false" id="1073" name="SendTime">04:34:00</property>
+      </properties>
+      <acl ignorelci="false">
+        <aclcomponent candeactivate="false" id="Local" status="Active" type="ObjectSpecific">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+        <aclcomponent candeactivate="true" id="100-3" status="Active" type="Automatic">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <aclcomponentkey>
+            <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+          </aclcomponentkey>
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+      </acl>
+      <docfiles>
+        <docfile id="28641" version="1" guid="{60223097-88E8-48B4-B80B-A94DB99E32BD}" title="To IKEA Distribution Services SA 13.04.2018 04:34 (7541511)" ext="eml" size="257036" creationtime="2018-04-13T01:35:05.741Z" lastaccesstime="2018-04-13T01:35:05.741Z" lastwritetime="2018-04-13T01:35:06.142Z" changetime="2018-04-13T01:35:06.142Z" datafileversion="1" pathfrombase="Files\E8B011D8-41B2-4426-AFA9-E3755CE9E068\0\28000-28999\28641\L\L\To IKEA Distribution Services SA 13.04.2018 04{3}34 (7541511) (ID 28641).eml" />
+      </docfiles>
+    </version>
+  </object>
+  <object guid="{F72F3D86-D58F-4652-9080-6A074DD8E8A9}">
+    <objid objtype="0" id="28642" />
+    <objidOriginal id="28642" objtype="0" vault="{E8B011D8-41B2-4426-AFA9-E3755CE9E068}" />
+    <status checkedout="false" at="2018-04-13T02:36:02.800Z" />
+    <properties>
+      <property datatype="Timestamp" empty="false" id="20" name="Created">2018-04-13T01:34:57.000Z</property>
+      <property datatype="Lookup" empty="false" id="25" name="Created by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+      <property datatype="Integer" empty="false" id="31" name="Size on server (all versions)">255098</property>
+      <property datatype="Boolean" empty="false" id="32" name="Marked for archiving">false</property>
+      <property datatype="Timestamp" empty="false" id="89" name="Object changed">2018-04-13T02:36:02.800Z</property>
+    </properties>
+    <version value="1" guid="{2DEE0223-E289-48EE-87BC-04A89C15B831}" lci="true" statuschanged="2018-04-13T02:36:02.800Z">
+      <properties>
+        <property datatype="Text" empty="false" id="0" name="Name or title">To IKEA Retail Sp. z o.o. 13.04.2018 04:34 (7541510)</property>
+        <property datatype="Timestamp" empty="false" id="21" name="Last modified">2018-04-13T01:34:57.000Z</property>
+        <property datatype="Boolean" empty="false" id="22" name="Single file">true</property>
+        <property datatype="Lookup" empty="false" id="23" name="Last modified by">SA_M-Files_Server<lookup deleted="false" guid="{20D0F20C-57F4-499B-BCC1-E2B6068F61E8}" id="22" otid="6" value="SA_M-Files_Server" version="-1" /></property>
+        <property datatype="Timestamp" empty="false" id="24" name="Status changed">2018-04-13T02:36:02.800Z</property>
+        <property datatype="Integer" empty="false" id="30" name="Size on server (this version)">255098</property>
+        <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="101" name="Class groups" />
+        <property datatype="MultiSelectLookup" empty="false" id="1019" name="Customer">IKEA AB<lookup deleted="false" extidstatus="Internal" guid="{69E9EEDB-8A31-49C4-98FF-A3B2D9DEB5C7}" id="6" otid="101" value="IKEA AB" version="-1" /></property>
+        <property datatype="Text" empty="false" id="1020" name="To">5330_IKEA.PL.P.100067-8@docinbound.com</property>
+        <property datatype="Text" empty="false" id="1021" name="From">CFO@dell.com</property>
+        <property datatype="Date" empty="false" id="1022" name="Date">2018-04-13</property>
+        <property datatype="Date" empty="false" id="1041" name="Archiving ends">2024-12-31</property>
+        <property datatype="Text" empty="false" id="1058" name="MailID">7541510</property>
+        <property datatype="MultiSelectLookup" empty="false" id="1062" name="Buyer">IKEA Retail Sp. z o.o.<lookup deleted="false" extidstatus="Internal" guid="{59D4ACBB-A506-45D3-BFB6-3EC17BFA0A95}" id="5" otid="108" value="IKEA Retail Sp. z o.o." version="-1" /></property>
+        <property datatype="MultiSelectLookup" empty="true" id="1065" name="Purchase Invoices" />
+        <property datatype="Text" empty="false" id="1071" name="Subject">Dell GCPR, 30 Days Inv., Faktura # 1400990171;PL2000750</property>
+        <property datatype="Date" empty="false" id="1072" name="SendDate">2018-04-13</property>
+        <property datatype="Time" empty="false" id="1073" name="SendTime">04:34:00</property>
+      </properties>
+      <acl ignorelci="false">
+        <aclcomponent candeactivate="false" id="Local" status="Active" type="ObjectSpecific">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+        <aclcomponent candeactivate="true" id="100-3" status="Active" type="Automatic">
+          <namedacl aliases="" builtin="false" guid="{184F7265-8115-4E8A-9839-51867D0CC5DD}" id="1" name="Customer document class access" type="Normal" />
+          <aclcomponentkey>
+            <property datatype="Lookup" empty="false" id="100" name="Class">Email<lookup deleted="false" extidstatus="Internal" guid="{DF417A29-CA54-4AF6-A00C-1F0AE1074E3F}" id="3" otid="1" value="Email" version="-1" /></property>
+          </aclcomponentkey>
+          <ace id="-1">
+            <usersandgroups>
+              <group id="1" name="All internal users" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="Allowed" />
+              <changepermissions pos="3" value="Allowed" />
+              <delete pos="4" value="Allowed" />
+            </rights>
+          </ace>
+          <ace id="OT101PD1074">
+            <pseudouserelements>
+              <pseudouserelement id="101" name="Customer" pos="1" type="ObjectType" />
+              <pseudouserelement id="1074" name="UserGroups" pos="2" type="PropertyDef" />
+            </pseudouserelements>
+            <usersandgroups>
+              <group id="104" name="IKEA AB" />
+            </usersandgroups>
+            <rights>
+              <read pos="1" value="Allowed" />
+              <edit pos="2" value="NotDefined" />
+              <changepermissions pos="3" value="NotDefined" />
+              <delete pos="4" value="NotDefined" />
+            </rights>
+          </ace>
+        </aclcomponent>
+      </acl>
+      <docfiles>
+        <docfile id="28642" version="1" guid="{01DBAE15-0FBC-4BCF-BE34-DA2E77E48C90}" title="To IKEA Retail Sp. z o.o. 13.04.2018 04:34 (7541510)" ext="eml" size="255098" creationtime="2018-04-13T01:34:56.691Z" lastaccesstime="2018-04-13T01:34:56.691Z" lastwritetime="2018-04-13T01:34:56.981Z" changetime="2018-04-13T01:34:56.981Z" datafileversion="1" pathfrombase="Files\E8B011D8-41B2-4426-AFA9-E3755CE9E068\0\28000-28999\28642\L\L\To IKEA Retail Sp. z o.o. 13.04.2018 04{3}34 (7541510) (ID 28642).eml" />
+      </docfiles>
+    </version>
+  </object>
+ </content>
