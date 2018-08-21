@@ -67,7 +67,7 @@ class Archiver {
             }
         } else {
             // ES returned null or undefined
-            this.logger.error('Failed to create archive. Got unvalid result from elasticContext.');
+            this.logger.error('Failed to create archive. Got invalid result from elasticContext.');
             returnValue = false;
         }
 
