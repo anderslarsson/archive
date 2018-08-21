@@ -6,7 +6,7 @@ const fs  = require('fs');
 const simpleParser = require('mailparse').simpleParser;
 
 const homeDir = require('os').homedir();
-const dataDir = `${homeDir}/tmp/Test-export`;
+const dataDir = `${homeDir}/tmp/SIE_export`;
 
 const options = {
   attributeNamePrefix: '@_',
@@ -23,7 +23,7 @@ const options = {
   localeRange: '', //To support non english character in tag/attribute values.
 };
 
-function main() {
+async function main() {
 
   let indexXml = fs.readFileSync(`${dataDir}/Index.xml`);
   let archive = xml.parse(indexXml.toString(), options)
@@ -47,23 +47,35 @@ function main() {
     let existingFiles = files
       .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
-    existingFiles.forEach(async (f) => {
-      console.log(f.path);
+    // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
+    let t = [];
+    for (const f of existingFiles) {
       let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
 
-      console.log(`// ------------------- ${f.path}`);
+      // console.log(`// ------------------- ${f.path}`);
 
       let mail = await simpleParser(eml);
 
-      debugger;
-    });
+      if (mail) {
+        if (mail.attachments) {
+          t.push([f.path, mail.attachments.length]);
+        } else {
+          t.push([f.path, 'NOTHING']);
+        }
 
+      } else {
+        t.push([f.path, 'PARSING ERROR']);
+      }
+    }
+
+    for (const entry of t) {
+      console.log(entry[0], ',', entry[1]);
+    }
     // TODO
     // - get email text from eml for ES indexing
     // - put file to blob storage
     // - create archive entry
-
   }
 
 
@@ -77,6 +89,7 @@ function main() {
  * @return {Array} - List of object entries
  */
 function readContentXml(entityName) {
+  entityName = entityName.trim();
   let capitalizedEntityName = entityName.replace(/^\w/, c => c.toUpperCase());
 
   let contentXml = fs.readFileSync(`${dataDir}/Metadata/${capitalizedEntityName}.xml`);
@@ -86,10 +99,20 @@ function readContentXml(entityName) {
 }
 
 function parseObjectMeta(obj) {
-  let path = obj.version.docfiles.docfile.attr['@_pathfrombase']
+  // TODO Implement reading all versions
+
+  let docIsVersioned = Array.isArray(obj.version);
+
+  // if (docIsVersioned) {
+  //   debugger;
+  // }
+
+  let latestVersion =  docIsVersioned ? obj.version.pop() : obj.version;
+
+  let path = latestVersion.docfiles.docfile.attr['@_pathfrombase']
     .replace(/\\/g, '/');
 
-  let props = obj.version.properties.property;
+  let props = latestVersion.properties.property;
   let from = props
     .find((p) => p.attr['@_name'] === 'From') // TODO assert only one name property in XML
     ['#text'];
