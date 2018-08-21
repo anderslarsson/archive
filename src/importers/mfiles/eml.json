@@ -1,0 +1,61 @@
+{
+  attachments:
+  [
+    {
+      type: 'attachment',
+      content: <Buffer 25 50 44 46 2d 31 2e 34 0a 25 e2 e3 cf d3 0a 33 20 30 20 6f 62 6a 0a 3c 3c 2f 46 54 2f 53 69 67 2f 54 28 53 69 67 6e 61 74 75 72 65 31 29 2f 56 20 31 ... >,
+      contentType: 'application/pdf',
+      release: null,
+      contentDisposition: 'attachment',
+      filename: 'Invoice_PL_REL_GCPR_1400990171_2018-04-11.pdf',
+      headers: [Object],
+      checksum: '0ff807f872a782c8dad943c8285af7b0',
+      size: 182897
+    }
+  ],
+  headers: Map {
+    'received' => [
+      'from 10.231.32.220 ([10.231.32.220]) by DIGI-PROD-BE33 (JAMES SMTP Server 2.3.2) with SMTP ID 674 for <5330_IKEA.PL.P.100067-8@docinbound.com>; Fri, 13 Apr 2018 04:34:26 +0300 (EEST)',
+      'from smtp.elma.fi (haikara.elma.fi [192.89.233.79]) by smtp.elma.fi (Postfix) with ESMTP id D253D603CE for <5330_IKEA.PL.P.100067-8@docinbound.com>; Fri, 13 Apr 2018 04:34:21 +0300 (EEST)',
+      'from mx2.tucaas.com (mx2.tucaas.com [131.207.55.39]) by smtp.elma.fi (Postfix) with ESMTPS id BD9D9603CC for <5330_IKEA.PL.P.100067-8@docinbound.com>; Fri, 13 Apr 2018 04:34:21 +0300 (EEST)',
+      'from aussmtpmrkps312.us.dell.com (aussmtpmrkps312.us.dell.com [143.166.224.212]) (using TLS with cipher RC4-SHA (128/128 bits)) (Client did not present a certificate) by mx2.tucaas.com (SMTP Mailer) with SMTP id 07.2D.02633.4E800DA5; Fri, 13 Apr 2018 04:33:26 +0300 (EEST)'
+    ],
+    'x-auditid' => '83cf3727-f2fff70000000a49-c7-5ad008e3df03',
+    'dkim-signature' => { value: 'v=1', params: [Object] },
+    'x-loopcount0' => 'from 10.143.17.55',
+    'date' => 2018-04-13T01:34:17.000Z,
+    'from' => {
+      value: [Array],
+      html: '<span class="mp_address_group"><a href="mailto:CFO@dell.com" class="mp_address_email">CFO@dell.com</a></span>',
+      text: 'CFO@dell.com'
+    },
+    'to' => {
+      value: [Array],
+      html: '<span class="mp_address_group"><a href="mailto:5330_IKEA.PL.P.100067-8@docinbound.com" class="mp_address_email">5330_IKEA.PL.P.100067-8@docinbound.com</a></span>',
+      text: '5330_IKEA.PL.P.100067-8@docinbound.com'
+    },
+    'message-id' => '<1789824498.49353.1523583257228.JavaMail.oracle@u2vmqtcpmwap06.us.dell.com>',
+    'subject' => 'Dell GCPR, 30 Days Inv., Faktura # 1400990171;PL2000750',
+    'mime-version' => '1.0',
+    'content-type' => { value: 'multipart/mixed', params: [Object] },
+    'nondeliveredmail' => '!#!PL_1400990171,,1!#!',
+    'authentication-results' => 'symauth.id.89tfd1!re4',
+    'x-brightmail-tracker' => 'H4sIAAAAAAAAA11Ta0wUVxjl7iy7l3UvDLMC1xFqnTahrgEf1eArlDTWmD7S1kDajKiMMLIr s7s4M4ugicGQNHHZ2iYgjzWxa42ktKUWkzbEGn9sYyNGkBhMaqRWCr7wVR+xJWrae3dncdY/ k2/O+b57vnPuDGS4jgweyo26rPolRbA5rF/0XB0tug5HxMXH/5u74sj+DqYMrB/ad435CIiO NTWy4m2Q1UWlVQ5P8/DnTP3lY1mNZ04tbwYtzzJDIANidhl+0r+PCQEH5NioBbfd7LbRFyvb x+CBG2PWRNc83Bm9n05rK7sQtw53AFrbWA4Pd1yN98xm3fjO41EbrRH7Cb70ez9DaxdbhsdH DzIJPBsPdk/G+xm2Ap8enIyfmcm+gScefUZqCAFbhCd+2fwlQBHTRMQ0ESFdDFuIjx3iEvBC 3HP4NpOoy3FLV8io5+P21nF7ohbx10enbVFg/xZk+hqXFuvBaknSiqsDvuOAxNhyvqRwAPwz tjIGWAgEJ5q+eV7k0qUGrckXA3XQIuSg/koCZW4N1DR5JM2zRQ0qsibMRmMDBEYz8NagUifw 6E3biMi5ZlC/vFNTZJ3cm/AK2vvVkMjlzXBaUKv3VnsDQW1LUFVi4HWy7l8/fjcCeKs/4JeJ ROcElaiRmnbJaiAhHANzoVXIQ+4dZ0SOrZV0uU6W62U1yVqgPQZ2Qihg9LGdrJKtyrVy4zav oid7yPCBe8Nk2MzEty9AIRshcs2EycB8tOqDcyLHm+mXPVhgBn04YqAWOomDMvKFckirl3ya t9bQd6HTfxBfziQa156DLtLkuCRo0i1AO6IkuNwklap5FrQCGL4VDjMwer89zHDx8Pg8VEHt s3TIE/TPuOdzUTc9LctE0AX4fPTOQ2I+x4S/2IF/FUmUnWNiU9dI/pMXQAHvQiAtLY1zkmvx eXXDtcFPgWrynbnQSbqd0+vXX+TCoT9pBLMMMB4LRg6aYLaBmVLJRzr1kWMwqdtMkfgtJP7f 3j9H49cl3Rw/pIPOJGrEz1CQS4Ip8VsT8RtUqhLfDNrzH5T8/R5a/+vl7N6Nvj3ShhPqmt62 qgXRwVJ57e4Tpbf253VtLN8wXdIy9LwrvfBK0fZP2/w5xd/3lLtr7G/tDr+rHFnEbxpaeqi3 uWDdz5Hxu1mB166c/eZfsXfqZOXkww+3Va1ed5AV3q4MuS8+OLo8curSMov6U8Xjp4UNPxxW +voEq+aRlrgZVZP+B9XgmZ4pBQAA'
+  },
+  text: '\nSzanowni Państwo, \n\nFaktura do Państwa zamówienia Dell jest załączona do niniejszej wiadomości.\n\nJeśli nie mogą Państwo otworzyć załącznika, proszę pobrać i zainstalować Adobe(R) Acrobat(TM) Reader ze strony: http://www.adobe.com/products/acrobat/readstep.html\n\nZ wyrazami szacunku,\n\nDell Credit Control\n\n*********************************\nUwaga: Wiadomość została wygenerowana automatycznie przez dział Dell Credit Control.\n*********************************\nAdobe oraz Acrobat są zarejestrowanymi znakami towarowymi lub zarejestrowanymi znakami towarowymi Adobe Systems Incorporated w USA lub w innych krajach.\n\n\n\nDell Sp. z o.o. Gdański Business Center Budynek A Ul. Inflancka 4A, 00-189 Warszawa, NIP: PL-526-020-67-12, GIOŚ E0002005WZBW, REGON: 010562374, Bank Handlowy warszawie  41 103015 080000000 500061-006, SĄD REJONOWY  dla miasta st. Warszawy, XIII Wydzial Gospodarczy Krajowejgo Rejestru Sądowego,  KRS 0000058844; Kapitał zakładowy: PLZ 102,623.4062',
+  textAsHtml: '<p>Szanowni Pa&nacute;stwo,</p><p>Faktura do Pa&nacute;stwa zam&oacute;wienia Dell jest za&lstrok;&aogon;czona do niniejszej wiadomo&sacute;ci.</p><p>Je&sacute;li nie mog&aogon; Pa&nacute;stwo otworzy&cacute; za&lstrok;&aogon;cznika, prosz&eogon; pobra&cacute; i zainstalowa&cacute; Adobe(R) Acrobat(TM) Reader ze strony: <a href="http://www.adobe.com/products/acrobat/readstep.html">http://www.adobe.com/products/acrobat/readstep.html</a></p><p>Z wyrazami szacunku,</p><p>Dell Credit Control</p><p>*********************************<br/>Uwaga: Wiadomo&sacute;&cacute; zosta&lstrok;a wygenerowana automatycznie przez dzia&lstrok; Dell Credit Control.<br/>*********************************<br/>Adobe oraz Acrobat s&aogon; zarejestrowanymi znakami towarowymi lub zarejestrowanymi znakami towarowymi Adobe Systems Incorporated w USA lub w innych krajach.</p><p>Dell Sp. z o.o. Gda&nacute;ski Business Center Budynek A Ul. Inflancka 4A, 00-189 Warszawa, NIP: PL-526-020-67-12, GIO&Sacute; E0002005WZBW, REGON: 010562374, Bank Handlowy warszawie  41 103015 080000000 500061-006, S&Aogon;D REJONOWY  dla miasta st. Warszawy, XIII Wydzial Gospodarczy Krajowejgo Rejestru S&aogon;dowego,  KRS 0000058844; Kapita&lstrok; zak&lstrok;adowy: PLZ 102,623.4062</p>',
+  subject: 'Dell GCPR, 30 Days Inv., Faktura # 1400990171;PL2000750',
+  date: 2018-04-13T01:34:17.000Z,
+  to: {
+    value: [ [Object] ],
+    html: '<span class="mp_address_group"><a href="mailto:5330_IKEA.PL.P.100067-8@docinbound.com" class="mp_address_email">5330_IKEA.PL.P.100067-8@docinbound.com</a></span>',
+    text: '5330_IKEA.PL.P.100067-8@docinbound.com'
+  },
+  from: {
+    value: [ [Object] ],
+    html: '<span class="mp_address_group"><a href="mailto:CFO@dell.com" class="mp_address_email">CFO@dell.com</a></span>',
+    text: 'CFO@dell.com'
+  },
+  messageId: '<1789824498.49353.1523583257228.JavaMail.oracle@u2vmqtcpmwap06.us.dell.com>',
+  html: false
+}
