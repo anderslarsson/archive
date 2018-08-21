@@ -2,7 +2,6 @@
 
 const xml = require('fast-xml-parser');
 const fs  = require('fs');
-
 const simpleParser = require('mailparse').simpleParser;
 
 const homeDir = require('os').homedir();
@@ -38,6 +37,7 @@ async function main() {
     .map((e) => e.replace(/&|;/g, ''));
 
   if (vaultId && contentXmls.length) {
+
     let objects = contentXmls
       .map(readContentXml)
       .reduce((acc, val) => acc.concat(val), []); // Flatten array
@@ -49,7 +49,8 @@ async function main() {
 
     // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
-    let t = [];
+    /* Parse found EML files */
+    let result = [];
     for (const f of existingFiles) {
       let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
 
@@ -58,20 +59,20 @@ async function main() {
       let mail = await simpleParser(eml);
 
       if (mail) {
-        if (mail.attachments) {
-          t.push([f.path, mail.attachments.length]);
-        } else {
-          t.push([f.path, 'NOTHING']);
-        }
-
+        result.push(Object.assign(f, {parsedEml: mail}));
       } else {
-        t.push([f.path, 'PARSING ERROR']);
+        result.push(Object.assign(f, {parsedEml: {attachments: []}}));
+      }
+
+    }
+
+    /* Do sth with the result */
+    for (const entry of result) {
+      if (entry && entry.parsedEml && entry.parsedEml.attachments) {
+        console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
       }
     }
 
-    for (const entry of t) {
-      console.log(entry[0], ',', entry[1]);
-    }
     // TODO
     // - get email text from eml for ES indexing
     // - put file to blob storage
@@ -116,11 +117,15 @@ function parseObjectMeta(obj) {
   let from = props
     .find((p) => p.attr['@_name'] === 'From') // TODO assert only one name property in XML
     ['#text'];
+  let to = props
+    .find((p) => p.attr['@_name'] === 'To') // TODO assert only one name property in XML
+    ['#text'];
 
   return {
     path,
     metadata: {
-      from
+      from,
+      to
     }
   };
 }
