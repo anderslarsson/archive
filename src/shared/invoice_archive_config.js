@@ -33,10 +33,10 @@ const esMapping = {
                     type: 'keyword'
                 },
                 customerId: {
-                    type: 'keyword'
+                    type: 'keyword' // tenantId
                 },
                 supplierId: {
-                    type: 'keyword'
+                    type: 'keyword' // tenantId
                 },
                 msgType: {
                     type: 'keyword'
@@ -50,7 +50,7 @@ const esMapping = {
                             type: 'keyword'
                         },
                         originator: {
-                            type: 'keyword'
+                            type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
                             type: 'object'
@@ -63,7 +63,7 @@ const esMapping = {
                             type: 'keyword'
                         },
                         target: {
-                            type: 'keyword'
+                            type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
                             type: 'object'

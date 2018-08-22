@@ -4,8 +4,13 @@ const xml = require('fast-xml-parser');
 const fs  = require('fs');
 const simpleParser = require('mailparse').simpleParser;
 
+const Mapper = require('./Mapper');
+
 const homeDir = require('os').homedir();
 const dataDir = `${homeDir}/tmp/SIE_export`;
+
+const moduleIdentifier = 'MFilesImporter';
+
 
 const options = {
     attributeNamePrefix: '@_',
@@ -24,39 +29,34 @@ const options = {
 
 async function main() {
 
-    let indexXml = fs.readFileSync(`${dataDir}/Index.xml`);
-    let archive = xml.parse(indexXml.toString(), options)
-        .archive;
+    try {
 
-    // Fetch vault ID from archive to get the file path
-    let vaultId = archive.vault.attr['@_guid'].replace(/{|}/g, '');
+        /* Stage 1: Preprocessing */
 
-    let contentXmls = archive['#text']
-        .split('\n')
-        .filter((e) => e.match(/content/))
-        .map((e) => e.replace(/&|;/g, ''));
+        let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
+        let archiveElem     = fetchArchiveElement(indexXml);
+        let contentXmlNames = findContentXmlNames(archiveElem);
+        let objectElements  = fetchObjectElements(contentXmlNames);
 
-    if (vaultId && contentXmls.length) {
+        /* Stage 2: Create mapping */
 
-        let objects = contentXmls
-            .map(readContentXml)
-            .reduce((acc, val) => acc.concat(val), []); // Flatten array
-
-        let files = objects.map(parseObjectMeta);
+        let files = objectElements.map(parseObjectMeta);
 
         let existingFiles = files
             .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
         // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
-        /* Parse found EML files */
+        /* Stage 3: Fetch owner information (tenantId) */
+        // TODO
+
+        /* Stage 4: Parse EML files, upload extracted files to blob */
         let result = [];
         for (const f of existingFiles) {
-            let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
+            // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
 
-            // console.log(`// ------------------- ${f.path}`);
-
-            let mail = await simpleParser(eml);
+            // let mail = await simpleParser(eml);
+            let mail = null;
 
             if (mail) {
                 result.push(Object.assign(f, {parsedEml: mail}));
@@ -66,19 +66,17 @@ async function main() {
 
         }
 
-        /* Do sth with the result */
+        /* Stage 5: Store in ES */
+
         for (const entry of result) {
             if (entry && entry.parsedEml && entry.parsedEml.attachments) {
                 console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
             }
         }
 
-        // TODO
-        // - get email text from eml for ES indexing
-        // - put file to blob storage
-        // - create archive entry
+    } catch (e) {
+        console.log(e);
     }
-
 
 }
 
@@ -101,30 +99,64 @@ function readContentXml(entityName) {
 }
 
 function parseObjectMeta(obj) {
-    // TODO Implement reading all versions
+    let mapper = new Mapper(obj);
+    let result = mapper.do();
 
-    let docIsVersioned = Array.isArray(obj.version);
+    return result;
+}
 
-    let latestVersion =  docIsVersioned ? obj.version.pop() : obj.version;
+function readEntrypointXml(path) {
+    let result;
+    try {
+        result = fs.readFileSync(path);
+    } catch (e) {
+        result = null;
+    }
 
-    let path = latestVersion.docfiles.docfile.attr['@_pathfrombase']
-        .replace(/\\/g, '/');
+    if (result) {
+        return result;
+    } else {
+        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${path}`);
+    }
+}
 
-    let props = latestVersion.properties.property;
-    let from = props
-        .find((p) => p.attr['@_name'] === 'From') // TODO assert only one name property in XML
-        ['#text'];
-    let to = props
-        .find((p) => p.attr['@_name'] === 'To') // TODO assert only one name property in XML
-        ['#text'];
+function fetchArchiveElement(indexXml) {
+    let parsedXml = xml.parse(indexXml.toString(), options);
 
-    return {
-        path,
-        metadata: {
-            from,
-            to
-        }
-    };
+    if (parsedXml && parsedXml.archive) {
+        return parsedXml.archive;
+    } else {
+        throw new Error(`${moduleIdentifier}#readArchiveElement: Failed to read the archive element.`);
+    }
+
+}
+
+/**
+ * @function findContentXmlNames
+ *
+ * Retrieves all content XML names from the toplevel archive element.
+ *
+ * @param {XMLNode} archiveElem
+ *
+ * @returns {Array}
+ */
+function findContentXmlNames(archiveElem) {
+    let result = archiveElem['#text']
+        .split('\n')
+        .filter((e) => e.match(/content/))
+        .map((e) => e.replace(/&|;/g, ''));
+
+    if (!Array.isArray(result) || result.length <= 0) {
+        throw new Error(`${moduleIdentifier}#findContentXmlNames: Failed to parse the content XML names from archive element.`);
+    } else {
+        return result;
+    }
+}
+
+function fetchObjectElements(contentXmlNames) {
+    return contentXmlNames
+        .map(readContentXml)
+        .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
 }
 
 main();
