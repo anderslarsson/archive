@@ -3,3 +3,11 @@ services:
   main:
     image: opuscapita/archive:dev
     command: 'npm run dev'
+
+  blob:
+    environment:
+      BLOB_ACCOUNT: ${BLOB_ACCOUNT}
+      BLOB_KEY: ${BLOB_KEY}
+
+
+    
