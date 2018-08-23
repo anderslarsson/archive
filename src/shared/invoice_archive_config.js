@@ -155,17 +155,17 @@ class InvoiceArchiveConfig {
     }
 
     static get newArchiveTransactionJobQueueName() {
-        return 'archive.invoice.archive.job.created';
+        return 'archive.invoice.archiveTransactionJob.created';
     }
     static get finishedArchiveTransactionJobQueueName() {
-        return 'archive.invoice.archive.job.finished';
+        return 'archive.invoice.archiveTransactionJob.finished';
     }
 
     static get newLogrotationJobQueueName() {
-        return 'archive.invoice.logrotation.job.created';
+        return 'archive.invoice.logrotationJob.created';
     }
     static get finishedLogrotationJobQueueName() {
-        return 'archive.invoice.logrotation.job.finished';
+        return 'archive.invoice.logrotationJob.finished';
     }
 
     static get esMapping() {
