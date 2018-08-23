@@ -1,8 +1,11 @@
 'use strict';
 
-const xml = require('fast-xml-parser');
-const fs  = require('fs');
-const simpleParser = require('mailparse').simpleParser;
+const request       = require('superagent');
+const xml           = require('fast-xml-parser');
+const fs            = require('fs');
+const path          = require('path');
+const simpleParser  = require('mailparse').simpleParser;
+const dotenv        = require('dotenv').config({path: path.resolve(process.cwd(), '.env.local')});
 
 const Mapper = require('./Mapper');
 
@@ -11,6 +14,7 @@ const dataDir = `${homeDir}/tmp/SIE_export`;
 
 const moduleIdentifier = 'MFilesImporter';
 
+console.log(dotenv.parsed);
 
 const options = {
     attributeNamePrefix: '@_',
@@ -40,39 +44,55 @@ async function main() {
 
         /* Stage 2: Create mapping */
 
-        let files = objectElements.map(parseObjectMeta);
+        let archiveEntries = objectElements.map(parseObjectMeta);
 
-        let existingFiles = files
-            .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
+        // let existingFiles = files
+        //     .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
         // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
         /* Stage 3: Fetch owner information (tenantId) */
-        
+
         // TODO Not yet decided how to do the mapping.
 
         /* Stage 4: Parse EML files, upload extracted files to blob */
 
-        let result = [];
-        for (const f of existingFiles) {
-            // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
+        // let result = [];
+        // for (const f of archiveEntries) {
+        //     // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
 
-            // let mail = await simpleParser(eml);
-            let mail = null;
+        //     // let mail = await simpleParser(eml);
+        //     let mail = null;
 
-            if (mail) {
-                result.push(Object.assign(f, {parsedEml: mail}));
-            } else {
-                result.push(Object.assign(f, {parsedEml: {attachments: []}}));
-            }
+        //     if (mail) {
+        //         result.push(Object.assign(f, {parsedEml: mail}));
+        //     } else {
+        //         result.push(Object.assign(f, {parsedEml: {attachments: []}}));
+        //     }
 
-        }
+        // }
 
         /* Stage 5: Store in ES */
 
-        for (const entry of result) {
-            if (entry && entry.parsedEml && entry.parsedEml.attachments) {
-                console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
+        let accessToken = await fetchApiAccessToken();
+        for (const entry of archiveEntries) {
+
+            // if (entry && entry.parsedEml && entry.parsedEml.attachments) {
+            //     console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
+            // }
+
+            entry.customerId = entry.receiver.target = 'OC001';
+            entry.end = '2001-10-28';
+
+            try {
+                let result =  await request.post('http://localhost:8080/archive/api/archive/invoice')
+                    .set('Authorization', 'Bearer ' + accessToken)
+                    .set('Content-Type', 'application/json')
+                    .send(entry);
+
+                debugger;
+            } catch (e) {
+                debugger;
             }
         }
 
@@ -107,10 +127,10 @@ function parseObjectMeta(obj) {
     return result;
 }
 
-function readEntrypointXml(path) {
+function readEntrypointXml(filePath) {
     let result;
     try {
-        result = fs.readFileSync(path);
+        result = fs.readFileSync(filePath);
     } catch (e) {
         result = null;
     }
@@ -159,6 +179,26 @@ function fetchObjectElements(contentXmlNames) {
     return contentXmlNames
         .map(readContentXml)
         .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
+}
+
+async function fetchApiAccessToken() {
+    let result;
+    try {
+        result = await request.post('http://localhost:8080/auth/token')
+            .set('Content-Type', 'application/x-www-form-urlencoded')
+            .set('Authorization', `Basic ${process.env.TOKEN_AUTH_BEARER}`)
+            .send({
+                'grant_type': 'password',
+                username: process.env.TOKEN_AUTH_USERNAME,
+                password: process.env.TOKEN_AUTH_PASSWORD,
+                scope: 'email phone userInfo roles'
+            });
+    } catch (e) {
+        /* handle error */
+        return null;
+    }
+
+    return result.body.access_token;
 }
 
 main();
