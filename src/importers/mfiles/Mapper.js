@@ -48,7 +48,14 @@ class Mapper {
     }
 
     _buildFiles() {
-        let path = this.latestVersion
+        /*
+         * Fetch the path to the EML file and store it
+         * temporary to the inbound struct.
+         * This will be removed after the EML
+         * has been parsed and the PDFs are stored to
+         * the inboundAttachments field.
+         */
+        let pathToEml = this.latestVersion
             .docfiles
             .docfile
             .attr['@_pathfrombase']
@@ -56,7 +63,7 @@ class Mapper {
 
         return {
             inbound: {
-                path,
+                pathToEml,
                 reference: null
             },
             inboundAttachments: [],

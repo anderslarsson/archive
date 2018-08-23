@@ -48,9 +48,11 @@ async function main() {
         // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
         /* Stage 3: Fetch owner information (tenantId) */
-        // TODO
+        
+        // TODO Not yet decided how to do the mapping.
 
         /* Stage 4: Parse EML files, upload extracted files to blob */
+
         let result = [];
         for (const f of existingFiles) {
             // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
