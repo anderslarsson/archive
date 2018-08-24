@@ -147,9 +147,9 @@ class InvoiceArchiveConfig {
         return `${this.indexPrefix}tenant_monthly-${tId}-${fmtMonth}`;
     }
 
-    static yearlyTenantArchiveName(tenantId) {
+    static yearlyTenantArchiveName(tenantId, date) {
         let tId = elasticContext.normalizeTenantId(tenantId);
-        let fmtYear = moment().format('YYYY');
+        let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
     }

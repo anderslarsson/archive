@@ -118,7 +118,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     // FIXME Check date of doc to find the target index instead of using the current month. This
     // is needed for M-Files import of existing data. So for example a doc with timestamp 2017-09-28
     // needs to be put to the yearly index not to the current monthly index.
-    let archiveName = InvoiceArchiveConfig.monthlyTenantArchiveName(tenantId);
+    let archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
 
     let msg, success;
     try {
