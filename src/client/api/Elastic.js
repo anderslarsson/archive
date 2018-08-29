@@ -4,7 +4,7 @@ class Elastic extends ApiBase {
 
     getTenantOptions() {
         // TODO fetch tenant IDs
-        return this.ajax.get('/dummy-elastic/tenants').then(res => res.body).catch(this.getErrorFromResponse);
+        return this.ajax.get('/archive/api/tenantconfig/invoice_receiving').then(res => res.body).catch(this.getErrorFromResponse);
     }
 
     getYearOptions(tenantId) {

@@ -1,8 +1,9 @@
 'use strict';
 
 const invoiceArchiveHandler = require('./api/invoice_archive/');
-const infoHandler = require('./api/info/');
-const indicesHandler = require('./api/indices/');
+const infoHandler           = require('./api/info/');
+const indicesHandler        = require('./api/indices/');
+const tenantConfigHandler   = require('./api/tenantconfig/');
 
 /**
  * Initializes all routes for RESTful access.
@@ -17,11 +18,9 @@ module.exports.init = async function (app, db) {
 
     let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
-    app.get('/hello', async (req, res) => res.send('Hello world!'));
-    app.post('/hello', async (req, res) => res.send('Hello world!'));
-
     /* *** TenantConfig *** */
     app.post('/api/tenantconfig', notImplementedFn);
+    app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
 
     /* *** Invoice archive *** */
     app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));

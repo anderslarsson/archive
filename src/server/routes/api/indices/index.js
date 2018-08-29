@@ -3,8 +3,8 @@
 const elasticContext = require('../../../../shared/elasticsearch');
 
 const validTypes = [
-  'monthly',
-  'yearly'
+    'monthly',
+    'yearly'
 ];
 
 /**

@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import ReactTable from 'react-table';
 import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
@@ -10,24 +11,24 @@ import 'react-select/dist/react-select.css';
 
 export default class Archive extends Components.ContextComponent {
 
-    state = {
-        loading: false,
-        files: [],
-        selectedValues: {
-            tenant: null,
-            year: null,
-            from: null,
-            to: null,
-            text: null
-        },
-        availableOptions: {
-            tenants: [],
-            years: []
-        },
-    };
-
     constructor(props, context) {
         super(props);
+
+        this.state = {
+            loading: false,
+            files: [],
+            selectedValues: {
+                tenant: null,
+                year: null,
+                from: null,
+                to: null,
+                text: null
+            },
+            availableOptions: {
+                tenants: [],
+                years: []
+            },
+        };
 
         this.elasticApi = new Elastic();
         context.i18n.register('Archive', translations);
@@ -41,7 +42,7 @@ export default class Archive extends Components.ContextComponent {
         this.elasticApi.getTenantOptions()
             .then(response => {
                 const {availableOptions} = this.state;
-                availableOptions.tenants = response.data;
+                availableOptions.tenants = response;
                 this.setState({availableOptions});
             })
             .catch((err) => {
@@ -67,7 +68,7 @@ export default class Archive extends Components.ContextComponent {
         if (!availableOptions || !availableOptions.tenants) {
             return [];
         }
-        return availableOptions.tenants.map(tenant => ({value: tenant.id, label: tenant.id}));
+        return availableOptions.tenants.map(tenant => ({value: tenant, label: tenant}));
     }
 
     getYearSelectOptions() {
@@ -121,7 +122,7 @@ export default class Archive extends Components.ContextComponent {
         this.loading = true;
         this.elasticApi.queryInvoiceArchive(selectedValues)
             .then(response => {
-                this.setState({files : response.data});
+                this.setState({files: response.data});
             })
             .catch((err) => {
                 this.context.showNotification(err.message, 'error', 10);
@@ -176,48 +177,48 @@ export default class Archive extends Components.ContextComponent {
                     </div>
                     {
                         selectedValues.year &&
-                        <span>
-                            <div className="row">
-                                <div className="col-md-6">
-                                    <div className="form-group">
-                                        <div className="col-md-4">
-                                            <label className="control-label">
-                                                {i18n.getMessage('Archive.forms.labels.from')}
-                                            </label>
+                            <span>
+                                <div className="row">
+                                    <div className="col-md-6">
+                                        <div className="form-group">
+                                            <div className="col-md-4">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.from')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-2 col-md-6">
+                                                <input type="text" className="form-control"/>
+                                            </div>
                                         </div>
-                                        <div className="offset-md-2 col-md-6">
-                                            <input type="text" className="form-control"/>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="form-group">
+                                            <div className="col-md-4">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.to')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-2 col-md-6">
+                                                <input type="text" className="form-control"/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="col-md-6">
-                                    <div className="form-group">
-                                        <div className="col-md-4">
-                                            <label className="control-label">
-                                                {i18n.getMessage('Archive.forms.labels.to')}
-                                            </label>
-                                        </div>
-                                        <div className="offset-md-2 col-md-6">
-                                            <input type="text" className="form-control"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-md-12">
-                                    <div className="form-group">
-                                        <div className="col-md-2">
-                                            <label className="control-label">
-                                                {i18n.getMessage('Archive.forms.labels.textSearch')}
-                                            </label>
-                                        </div>
-                                        <div className="offset-md-1 col-md-9">
-                                            <input type="text" className="form-control"/>
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="form-group">
+                                            <div className="col-md-2">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.textSearch')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-1 col-md-9">
+                                                <input type="text" className="form-control"/>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </span>
+                            </span>
                     }
                 </div>
                 <div className="form-submit text-right">
@@ -230,59 +231,59 @@ export default class Archive extends Components.ContextComponent {
                 </div>
                 <hr/>
                 <ReactTable className="user-list-table"
-                            data={files}
-                            minRows={0}
-                            loading={loading}
-                            defaultSorted={[{id: 'transactionId', desc: false}]}
+                    data={files}
+                    minRows={0}
+                    loading={loading}
+                    defaultSorted={[{id: 'transactionId', desc: false}]}
 
-                            loadingText={i18n.getMessage('Archive.table.loading')}
-                            noDataText={i18n.getMessage('Archive.table.empty')}
-                            previousText={i18n.getMessage('Archive.table.pagination.previous')}
-                            nextText={i18n.getMessage('Archive.table.pagination.next')}
-                            pageText={i18n.getMessage('Archive.table.pagination.page')}
-                            ofText={i18n.getMessage('Archive.table.pagination.of')}
-                            rowsText={i18n.getMessage('Archive.table.pagination.rows')}
+                    loadingText={i18n.getMessage('Archive.table.loading')}
+                    noDataText={i18n.getMessage('Archive.table.empty')}
+                    previousText={i18n.getMessage('Archive.table.pagination.previous')}
+                    nextText={i18n.getMessage('Archive.table.pagination.next')}
+                    pageText={i18n.getMessage('Archive.table.pagination.page')}
+                    ofText={i18n.getMessage('Archive.table.pagination.of')}
+                    rowsText={i18n.getMessage('Archive.table.pagination.rows')}
 
-                            columns={[
-                                {
-                                    accessor: 'transactionId',
-                                    Header: i18n.getMessage('Archive.table.columns.id.title')
-                                },
-                                {
-                                    accessor: 'invoiceNo',
-                                    Header: i18n.getMessage('Archive.table.columns.no.title')
-                                },
-                                {
-                                    accessor: 'from',
-                                    Header: i18n.getMessage('Archive.table.columns.from.title')
-                                },
-                                {
-                                    accessor: 'to',
-                                    Header: i18n.getMessage('Archive.table.columns.to.title')
-                                },
-                                {
-                                    id: 'startDate',
-                                    accessor: file => moment(file.startDate).format('YYYY-MM-DD'),
-                                    Header: i18n.getMessage('Archive.table.columns.startDate.title')
-                                },
-                                {
-                                    id: 'endDate',
-                                    accessor: file => moment(file.endDate).format('YYYY-MM-DD'),
-                                    Header: i18n.getMessage('Archive.table.columns.endDate.title')
-                                },
-                                {
-                                    id: 'actions',
-                                    accessor: user => user,
-                                    width: 100,
-                                    Cell: ({value}) =>
-                                        <nobr>
-                                            <button type="button" className="btn btn-sm btn-default">
-                                                <span className="icon glyphicon glyphicon-doc"/>&nbsp;
-                                                {i18n.getMessage('Archive.table.columns.actions.detail')}
-                                            </button>
-                                        </nobr>
-                                }
-                            ]}
+                    columns={[
+                        {
+                            accessor: 'transactionId',
+                            Header: i18n.getMessage('Archive.table.columns.id.title')
+                        },
+                        {
+                            accessor: 'invoiceNo',
+                            Header: i18n.getMessage('Archive.table.columns.no.title')
+                        },
+                        {
+                            accessor: 'from',
+                            Header: i18n.getMessage('Archive.table.columns.from.title')
+                        },
+                        {
+                            accessor: 'to',
+                            Header: i18n.getMessage('Archive.table.columns.to.title')
+                        },
+                        {
+                            id: 'startDate',
+                            accessor: file => moment(file.startDate).format('YYYY-MM-DD'),
+                            Header: i18n.getMessage('Archive.table.columns.startDate.title')
+                        },
+                        {
+                            id: 'endDate',
+                            accessor: file => moment(file.endDate).format('YYYY-MM-DD'),
+                            Header: i18n.getMessage('Archive.table.columns.endDate.title')
+                        },
+                        {
+                            id: 'actions',
+                            accessor: user => user,
+                            width: 100,
+                            Cell: ({value}) =>
+                                <nobr>
+                                    <button type="button" className="btn btn-sm btn-default">
+                                        <span className="icon glyphicon glyphicon-doc"/>&nbsp;
+                                        {i18n.getMessage('Archive.table.columns.actions.detail')}
+                                    </button>
+                                </nobr>
+                        }
+                    ]}
                 />
             </div>
         );
