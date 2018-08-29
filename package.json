@@ -27,6 +27,7 @@
     "@opuscapita/web-init": "^3.0.57",
     "accept-language-parser": "^1.5.0",
     "bee-queue": "^1.2.2",
+    "dotenv": "^6.0.0",
     "elasticsearch": "^15.0.0",
     "fast-xml-parser": "^3.11.1",
     "mailparse": "^2.2.2",
@@ -38,7 +39,7 @@
     "webpack-config": "^7.5.0"
   },
   "devDependencies": {
-    "@opuscapita/service-base-ui": "^1.1.26",
+    "@opuscapita/service-base-ui": "^1.1.44",
     "@types/elasticsearch": "^5.0.25",
     "@types/superagent": "^3.8.1",
     "babel-core": "^6.26.0",

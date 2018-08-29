@@ -271,6 +271,28 @@ services:
       SERVICE_IGNORE: 'true'  # Do not add any of Consul's services to Consul's service discovery registry.
     command: [agent, '-server', '-ui', '-bootstrap', '-client=0.0.0.0']
 
+  blob:
+    image: opuscapita/blob:dev
+    depends_on:
+      - mysql
+      - consul
+      - registrator
+    labels:
+      SERVICE_NAME: 'blob'
+      SERVICE_TAGS: 'external,kong'
+    environment:
+        SERVICE_3012_CHECK_HTTP: /api/health/check
+        SERVICE_3012_CHECK_TIMEOUT: 3s
+        SERVICE_3012_CHECK_INTERVAL: 15s
+        RABBITMQ_USER: ${RABBITMQ_USER}
+        RABBITMQ_PASS: ${RABBITMQ_PASS}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        REDIS_AUTH: ${REDIS_AUTH}
+    ports:
+      - '3012:3012'
+    command: 'npm run dev'
+
 volumes:
   esdata1:
     driver: local

@@ -67,7 +67,7 @@ class Archiver {
             }
         } else {
             // ES returned null or undefined
-            this.logger.error('Failed to create archive. Got unvalid result from elasticContext.');
+            this.logger.error('Failed to create archive. Got invalid result from elasticContext.');
             returnValue = false;
         }
 
@@ -426,8 +426,15 @@ class Archiver {
 
             if (hits && hits.length > 0) {
                 let mapper = new Mapper(transactionId, hits);
+                let tenantId;
 
-                let tenantId = mapper.owner;
+                try {
+                    tenantId = mapper.owner;
+                } catch (e) {
+                    /* handle error */
+                    console.log(e);
+                    tenantId = null;
+                }
 
                 if (tenantId) {
                     let tenantConfigModel;
@@ -454,7 +461,7 @@ class Archiver {
                         if (mappingResult) {
                             /* Write archive to monthly ES */
 
-                            let archiveName = InvoiceArchiveConfig.monthlyTenantArchiveName(tenantId);
+                            let archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, mappingResult.end);
 
                             try {
                                 /* Open existing index or create new with mapping */
@@ -476,7 +483,7 @@ class Archiver {
                                         }
                                     } catch (e) {
                                         if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
-                                            this.logger.error(`InvoiceArchiver#archiveTransaction: Transaction has already been written to index  ${archiveName}. (TX id: ${transactionId})`, e);
+                                            this.logger.info(`InvoiceArchiver#archiveTransaction: (Version conflict) Transaction has already been written to index  ${archiveName}. (TX id: ${transactionId})`, e);
                                             retVal =  true; // FIXME
                                         } else {
                                             this.logger.error(`InvoiceArchiver#archiveTransaction: Failed to create archive document in ${archiveName}. (TX id: ${transactionId})`, e);

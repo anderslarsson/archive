@@ -33,10 +33,10 @@ const esMapping = {
                     type: 'keyword'
                 },
                 customerId: {
-                    type: 'keyword'
+                    type: 'keyword' // tenantId
                 },
                 supplierId: {
-                    type: 'keyword'
+                    type: 'keyword' // tenantId
                 },
                 msgType: {
                     type: 'keyword'
@@ -50,7 +50,7 @@ const esMapping = {
                             type: 'keyword'
                         },
                         originator: {
-                            type: 'keyword'
+                            type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
                             type: 'object'
@@ -63,7 +63,7 @@ const esMapping = {
                             type: 'keyword'
                         },
                         target: {
-                            type: 'keyword'
+                            type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
                             type: 'object'
@@ -147,25 +147,25 @@ class InvoiceArchiveConfig {
         return `${this.indexPrefix}tenant_monthly-${tId}-${fmtMonth}`;
     }
 
-    static yearlyTenantArchiveName(tenantId) {
+    static yearlyTenantArchiveName(tenantId, date) {
         let tId = elasticContext.normalizeTenantId(tenantId);
-        let fmtYear = moment().format('YYYY');
+        let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
     }
 
     static get newArchiveTransactionJobQueueName() {
-        return 'archive.invoice.archive.job.created';
+        return 'archive.invoice.archiveTransactionJob.created';
     }
     static get finishedArchiveTransactionJobQueueName() {
-        return 'archive.invoice.archive.job.finished';
+        return 'archive.invoice.archiveTransactionJob.finished';
     }
 
     static get newLogrotationJobQueueName() {
-        return 'archive.invoice.logrotation.job.created';
+        return 'archive.invoice.logrotationJob.created';
     }
     static get finishedLogrotationJobQueueName() {
-        return 'archive.invoice.logrotation.job.finished';
+        return 'archive.invoice.logrotationJob.finished';
     }
 
     static get esMapping() {

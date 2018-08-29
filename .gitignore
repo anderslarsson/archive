@@ -7,3 +7,4 @@ src/server/static/bundle.js
 src/server/static/components/
 tags
 .idea/
+.env.local
