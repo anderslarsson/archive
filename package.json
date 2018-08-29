@@ -62,6 +62,8 @@
     "react-dom": "^15.4.2",
     "react-router": "^3.2.0",
     "react-virtualized": "^9.18.5",
+    "react-table": "^6.8.6",
+    "@opuscapita/react-select": "^1.0.0-rc.5-oc.6",
     "rimraf": "^2.6.2",
     "style-loader": "^0.19.0",
     "superagent": "^3.8.3",
