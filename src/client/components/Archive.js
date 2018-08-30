@@ -80,12 +80,12 @@ export default class Archive extends Components.ContextComponent {
         return availableOptions.years.map(year => ({value: year, label: year}));
     }
 
-    handleTenantSelection(value) {
+    handleTenantSelection(data) {
         const {selectedValues} = this.state;
-        selectedValues.tenant = value;
+        selectedValues.tenant = data.value;
         this.setState({selectedValues});
 
-        this.fetchYearOptions(value);
+        this.fetchYearOptions(data.value);
     }
 
     handleYearSelection(value) {

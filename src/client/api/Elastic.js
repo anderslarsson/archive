@@ -9,7 +9,7 @@ class Elastic extends ApiBase {
 
     getYearOptions(tenantId) {
         // TODO fetch archive years of tenant
-        return this.ajax.get(`/dummy-elastic/${tenantId}/years`).then(res => res.body).catch(this.getErrorFromResponse);
+        return this.ajax.get(`/archive/api/indices/invoice/${tenantId}`).then(res => res.body).catch(this.getErrorFromResponse);
     }
 
     queryInvoiceArchive(queryParams) {
