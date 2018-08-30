@@ -1,8 +1,13 @@
 'use strict';
 
-const invoiceArchiveHandler = require('./api/invoice_archive/');
-const infoHandler = require('./api/info/');
-const indicesHandler = require('./api/indices/');
+const invoiceArchiveHandler     = require('./api/invoice_archive/');
+const infoHandler               = require('./api/info/');
+const tenantConfigHandler       = require('./api/tenantconfig/');
+
+const {
+    indicesInvoiceHandler,
+    indicesCmdHandler
+} = require('./api/indices/');
 
 /**
  * Initializes all routes for RESTful access.
@@ -17,11 +22,9 @@ module.exports.init = async function (app, db) {
 
     let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
-    app.get('/hello', async (req, res) => res.send('Hello world!'));
-    app.post('/hello', async (req, res) => res.send('Hello world!'));
-
     /* *** TenantConfig *** */
     app.post('/api/tenantconfig', notImplementedFn);
+    app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
 
     /* *** Invoice archive *** */
     app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
@@ -31,11 +34,61 @@ module.exports.init = async function (app, db) {
     app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
 
     // --- Indices
-    app.get('/api/indices/:type', (req, res) => indicesHandler.listAllByType(req, res));
-    app.get('/api/indices/:tenantId/:type', (req, res) => indicesHandler.listByTenantAndType(req, res));
-    app.post('/api/indices/open_request', (req, res) => indicesHandler.openIndex(req, res));
+    app.get('/api/indices/invoice/:tenantId', tenantIdFilter, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
+    app.post('/api/indices/open_request', (req, res) => indicesCmdHandler.openIndex(req, res));
 
     // --- Entries
     app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);
 
 };
+
+function handle(req, res, app, db, handlerFn) {
+    try {
+        handlerFn(req, res, app, db);
+    } catch (e) {
+        res.json({
+            success: false,
+            message: e.message || 'Unknown error'
+        });
+    }
+}
+
+async function tenantIdFilter(req, res, next) {
+    if (!req.params.tenantId) {
+        res.status(400).json({
+            success: false,
+            message: 'No tenantId found in params.'
+        });
+    }
+
+    let allowed = false;
+    let tenants = [];
+
+    try {
+        tenants = (await req.opuscapita.getUserTenants());
+
+        let hasAll = tenants.find(t => t === '*');
+        if (hasAll) {
+            allowed = true;
+        }
+
+        let hasTenant = tenants.find(t => t === req.params.tenantId);
+        if (hasTenant) {
+            allowed = true;
+        }
+    } catch (e) {
+        res.status(400).json({
+            success: false,
+            message: 'Failed to fetch user tenants.'
+        });
+    }
+
+    if (allowed) {
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'This tenant is not assigned to your user.'
+        });
+    }
+}

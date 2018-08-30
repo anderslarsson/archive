@@ -1,8 +1,17 @@
+'use strict';
+
 const {Client} = require('elasticsearch');
 
 const Logger = require('ocbesbn-logger');
 
-const ErrCodes = require('../shared/error_codes');
+const {
+    ErrCodes,
+    InvoiceArchiveConfig
+} = require('./invoice_archive_config');
+
+const {
+    normalizeTenantId
+} = require('./helpers');
 
 const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
 
@@ -19,6 +28,8 @@ class Elasticsearch {
                 ES_HOST
             ]
         });
+
+        this.InvoiceArchiveConfig = InvoiceArchiveConfig;
     }
 
     get client() {
@@ -41,11 +52,54 @@ class Elasticsearch {
         return this.conn.count(conf);
     }
 
-    async index(index, body) {
+    /**
+     * Put a document into an index.
+     *
+     * @async
+     * @function index
+     * @param {object} data - document data to index
+     */
+    async index(index, data) {
         return this.conn.index({
             index: index,
             type: this.defaultDocType,
-            body: body
+            body: data
+        });
+    }
+
+    /**
+     * List all indices for the given tenant and type.
+     *
+     * @async
+     * @function listIndices
+     * @param {String} tenantId
+     * @param {String} type - The index type (invoice, order, ...)
+     * @return {Promise<Array>}
+     */
+    async listIndices(tenantId, type) {
+        if (!tenantId) {
+            throw new Error('Can not build query w/o tenantId.');
+        }
+        if (!type) {
+            throw new Error('Can not build query w/o type.');
+        }
+
+        let normalizedTenantId = normalizeTenantId(tenantId);
+
+        let indicesPattern = '';
+
+        switch (type) {
+            case 'invoice':
+                indicesPattern = `${InvoiceArchiveConfig.indexPrefix}tenant_yearly-${normalizedTenantId}-*`;
+                break;
+
+            default:
+                throw new Error('Index type unknown');
+        }
+
+        return this.conn.indices.get({
+            expandWildcards: 'all',
+            index: indicesPattern
         });
     }
 
@@ -140,8 +194,8 @@ class Elasticsearch {
         try {
 
             let dstHasSrcMapping,
-                statusSrcIndex,
-                statusDstIndex;
+                    statusSrcIndex,
+                    statusDstIndex;
 
             statusSrcIndex = await this.openIndex(srcIndexName, false);
             if (statusSrcIndex === false) {
@@ -222,12 +276,12 @@ class Elasticsearch {
             throw new Error('Can not query w/o tenantId.');
         }
 
-        let normalizedTenantId = this.normalizeTenantId(tenantId);
+        let normalizedTenantId = normalizeTenantId(tenantId);
 
-        let indicesPattern = 'archive_tenant_';
+        let indicesPattern = InvoiceArchiveConfig.indexPrefix;
 
         if (type === 'monthly' || type === 'yearly') {
-            indicesPattern = `${indicesPattern}${type}-${normalizedTenantId}-*`;
+            indicesPattern = `${indicesPattern}tenant_${type}-${normalizedTenantId}-*`;
         } else {
             indicesPattern = `${indicesPattern}*-${normalizedTenantId}-*`;
         }
@@ -239,11 +293,12 @@ class Elasticsearch {
     }
 
     /**
-     * @function openIndex
      *
      * Opens an existing index.
      * Will @throws if index does not exist or opening does not work.
      *
+     * @async
+     * @function openIndex
      * @params {String} indexName - Name of the Elasticsearch index
      * @params {Boolean} create=true - Create the index if it does not yeat exist.
      * @returns {Boolean}
@@ -347,25 +402,6 @@ class Elasticsearch {
 
     search(query) {
         return this.conn.search(query);
-    }
-
-    /**
-     * Normalize a tenantId (to lower case) so we can use
-     * it as part of the ES index name.
-     *
-     * ES only allows lower case index names and tenantId
-     * are persisted in a case-insensitive manner -> convert to lower.
-     *
-     *
-     */
-    normalizeTenantId(tenantId) {
-        let normalizedTenantId = tenantId;
-
-        if (tenantId && tenantId.toLowerCase) {
-            normalizedTenantId = tenantId.toLowerCase();
-        }
-
-        return normalizedTenantId;
     }
 
 }
