@@ -1,7 +1,9 @@
 'use strict';
 
 const moment = require('moment');
-const elasticContext = require('./elasticsearch');
+const {
+    normalizeTenantId
+} = require('./helpers');
 
 const MsgTypes = {
     CREATE_GLOBAL_DAILY: 'create_global_daily',
@@ -141,14 +143,14 @@ class InvoiceArchiveConfig {
     }
 
     static monthlyTenantArchiveName(tenantId) {
-        let tId = elasticContext.normalizeTenantId(tenantId);
+        let tId = normalizeTenantId(tenantId);
         let fmtMonth = moment().format('YYYY.MM');
 
         return `${this.indexPrefix}tenant_monthly-${tId}-${fmtMonth}`;
     }
 
     static yearlyTenantArchiveName(tenantId, date) {
-        let tId = elasticContext.normalizeTenantId(tenantId);
+        let tId = normalizeTenantId(tenantId);
         let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
