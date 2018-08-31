@@ -35,7 +35,7 @@ module.exports.init = async function (app, db) {
 
     // --- Indices
     app.get('/api/indices/invoice/:tenantId', tenantIdFilter, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
-    app.post('/api/indices/open_request', (req, res) => indicesCmdHandler.openIndex(req, res));
+    app.post('/api/indices/open', (req, res) => indicesCmdHandler.openIndex(req, res));
 
     // --- Entries
     app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);

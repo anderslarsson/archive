@@ -70,19 +70,23 @@ module.exports.listAllByTenantAndType =  async function listAllByTenantAndType(r
 
 };
 
+/**
+ * Open the given ES index and return the success of this operation.
+ *
+ * @async
+ * @function openIndex
+ */
 module.exports.openIndex = async function openIndex(req, res) {
     let index = req.body && req.body.index;
+
+    // TODO validate permission based on tenantId
 
     if (index) {
         try {
             let result = await elasticContext.openIndex(index, false);
 
             if (result) {
-                // TODO emit delayed close job
-
-                res
-                    .status(200)
-                    .json({success: true});
+                res.status(200).json({success: true});
             } else {
                 throw new Error(`Unable to open index ${index}`);
             }
@@ -90,16 +94,12 @@ module.exports.openIndex = async function openIndex(req, res) {
             req.opuscapita.logger.error(e);
 
             // Server error
-            res
-                .status(500)
-                .json({sucess: false});
+            res.status(500).json({sucess: false});
         }
     }
 
     // Client error
-    res
-        .status(400)
-        .json({success: false});
+    res.status(400).json({success: false});
 };
 
 async function fetchIndicesFromEs(tenantId, type = '*') {

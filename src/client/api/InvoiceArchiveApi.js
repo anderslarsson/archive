@@ -1,14 +1,12 @@
 import ApiBase from './ApiBase';
 
-class Elastic extends ApiBase {
+class InvoiceArchiveApi extends ApiBase {
 
     getTenantOptions() {
-        // TODO fetch tenant IDs
         return this.ajax.get('/archive/api/tenantconfig/invoice_receiving').then(res => res.body).catch(this.getErrorFromResponse);
     }
 
     getYearOptions(tenantId) {
-        // TODO fetch archive years of tenant
         return this.ajax.get(`/archive/api/indices/invoice/${tenantId}`).then(res => res.body).catch(this.getErrorFromResponse);
     }
 
@@ -18,4 +16,4 @@ class Elastic extends ApiBase {
     }
 }
 
-export default Elastic;
+export default InvoiceArchiveApi;

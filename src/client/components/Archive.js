@@ -4,7 +4,7 @@ import ReactTable from 'react-table';
 import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
 
-import {Elastic} from '../api';
+import {InvoiceArchiveApi} from '../api';
 import translations from './i18n';
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
@@ -30,7 +30,7 @@ export default class Archive extends Components.ContextComponent {
             },
         };
 
-        this.elasticApi = new Elastic();
+        this.elasticApi = new InvoiceArchiveApi();
         context.i18n.register('Archive', translations);
     }
 
@@ -77,21 +77,36 @@ export default class Archive extends Components.ContextComponent {
         if (!availableOptions || !availableOptions.years) {
             return [];
         }
-        return availableOptions.years.map(year => ({value: year, label: year}));
+        return availableOptions.years.map(year => {
+            let y = year.split('-').pop();
+
+            return {value: year, label: y};
+        });
     }
 
     handleTenantSelection(data) {
         const {selectedValues} = this.state;
         selectedValues.tenant = data.value;
+
         this.setState({selectedValues});
 
         this.fetchYearOptions(data.value);
     }
 
-    handleYearSelection(value) {
+    handleYearSelection({value}) {
         const {selectedValues} = this.state;
         selectedValues.year = value;
-        this.setState({selectedValues});
+
+        this.elasticApi.openArchive(value).
+            then((data) => {
+                this.setState({loading: false});
+
+                if (!data || !data.success || data.success !== true) {
+                    this.context.showNotification('Failed to open archive', 'info', 10);
+                }
+            });
+
+        this.setState({loading: true, selectedValues});
     }
 
     resetSearchForm(e) {

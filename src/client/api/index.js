@@ -1,4 +1,4 @@
-import Elastic from './Elastic';
+import InvoiceArchiveApi from './InvoiceArchiveApi';
 
-export {Elastic};
-export default {Elastic};
+export {InvoiceArchiveApi};
+export default {InvoiceArchiveApi};
