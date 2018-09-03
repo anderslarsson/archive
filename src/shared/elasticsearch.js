@@ -308,53 +308,71 @@ class Elasticsearch {
      */
     async openIndex(indexName, create = false, opts = null) {
         let exists = false;
-        let error = null;
+        let status = null;
+        let error  = null;
 
         try {
-            exists = await this.conn.indices.exists({index: indexName});
+            status = await this.conn.cat.indices({
+                index: indexName,
+                h: ['status'],
+                format: 'json'
+            });
+
+            exists = true; // If it does not exists, cat.indices throws.
+
+            if (status && status.length === 1 && status[0].status) {
+                status = status[0].status;
+            }
         } catch (e) {
+            exists = false;
             error = new Error(`Index ${indexName} does not exist`);
             error.code = ErrCodes.ERR_INDEX_DOES_NOT_EXIST;
         }
 
-        if (exists === true && error === null) {
-            // Open the index if it exists.
-
-            try {
-                let openResult = await this.conn.indices.open({
-                    index: indexName
-                });
-
-                return openResult;
-            } catch (e) {
-                // Throw error if index can not be opened
-
-                error = new Error(`Can not open index ${indexName}.`);
-                error.code = ErrCodes.ERR_INDEX_OPEN_FAILED;
-                error.indexName = indexName;
-
-                throw error;
-            }
-
+        if (exists && status === 'open') {
+            // Index exists and is open
+            return true;
         } else {
-            // Create index or throw
+            if (exists === true && error === null && status !== 'open') {
+                // Open the index if it exists.
 
-            if (create) {
-                await this.conn.indices.create({index: indexName});
-
-                if (opts && opts.mapping && typeof opts.mapping === 'object') {
-                    await this.conn.indices.putMapping({
-                        body: opts.mapping,
-                        index: indexName,
-                        type: this.defaultDocType
+                try {
+                    let openResult = await this.conn.indices.open({
+                        index: indexName
                     });
+
+                    return openResult;
+                } catch (e) {
+                    // Throw error if index can not be opened
+
+                    error = new Error(`Can not open index ${indexName}.`);
+                    error.code = ErrCodes.ERR_INDEX_OPEN_FAILED;
+                    error.indexName = indexName;
+
+                    throw error;
                 }
 
-                return true;
             } else {
-                return false;
+                // Create index or throw
+
+                if (create) {
+                    await this.conn.indices.create({index: indexName});
+
+                    if (opts && opts.mapping && typeof opts.mapping === 'object') {
+                        await this.conn.indices.putMapping({
+                            body: opts.mapping,
+                            index: indexName,
+                            type: this.defaultDocType
+                        });
+                    }
+
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
+
 
     }
 
