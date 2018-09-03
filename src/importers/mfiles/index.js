@@ -1,20 +1,17 @@
 'use strict';
 
-const request       = require('superagent');
 const xml           = require('fast-xml-parser');
 const fs            = require('fs');
-const path          = require('path');
-const simpleParser  = require('mailparse').simpleParser;
-const dotenv        = require('dotenv').config({path: path.resolve(process.cwd(), '.env.local')});
 
-const Mapper = require('./Mapper');
+const Mapper        = require('./Mapper');
+const FileProcessor = require('./FileProcessor');
+const api           = require('./Api');
 
 const homeDir = require('os').homedir();
-const dataDir = `${homeDir}/tmp/SIE_export`;
+const dataDir = `${homeDir}/tmp/SIE_redux`;
 
 const moduleIdentifier = 'MFilesImporter';
 
-console.log(dotenv.parsed);
 
 const options = {
     attributeNamePrefix: '@_',
@@ -32,9 +29,9 @@ const options = {
 };
 
 async function main() {
+    await api.init();
 
     try {
-
         /* Stage 1: Preprocessing */
 
         let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
@@ -44,60 +41,43 @@ async function main() {
 
         /* Stage 2: Create mapping */
 
-        let archiveEntries = objectElements.map(parseObjectMeta);
+        let archiveEntries = objectElements
+            .map(parseObjectMeta)           // Run the mapper
+            .map((e) => {
+                e._errors = {       // Create container for errors on every entry
+                    stage: {
+                        fileProcessing: [],
+                        persistToEs: []
+                    }
+                };
+
+                return e;
+            });
 
         // let existingFiles = files
         //     .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
-
-        // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
 
         /* Stage 3: Fetch owner information (tenantId) */
 
         // TODO Not yet decided how to do the mapping.
 
+        // !!!!!! FIXME - for testing purposes only
+        for (let i = 0, len = archiveEntries.length; i < len; i++) {
+            archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
+            archiveEntries[i].end = '2015-10-28';
+        }
+
         /* Stage 4: Parse EML files, upload extracted files to blob */
 
-        // let result = [];
-        // for (const f of archiveEntries) {
-        //     // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
-
-        //     // let mail = await simpleParser(eml);
-        //     let mail = null;
-
-        //     if (mail) {
-        //         result.push(Object.assign(f, {parsedEml: mail}));
-        //     } else {
-        //         result.push(Object.assign(f, {parsedEml: {attachments: []}}));
-        //     }
-
-        // }
+        archiveEntries = await processAttachments(archiveEntries);
 
         /* Stage 5: Store in ES */
 
-        let accessToken = await fetchApiAccessToken();
-        for (const entry of archiveEntries) {
+        let esResult = await persistToEs(archiveEntries);
 
-            // if (entry && entry.parsedEml && entry.parsedEml.attachments) {
-            //     console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
-            // }
-
-            entry.customerId = entry.receiver.target = 'OC001';
-            entry.end = '2001-10-28';
-
-            try {
-                let result =  await request.post('http://localhost:8080/archive/api/archive/invoice')
-                    .set('Authorization', 'Bearer ' + accessToken)
-                    .set('Content-Type', 'application/json')
-                    .send(entry);
-
-                debugger;
-            } catch (e) {
-                debugger;
-            }
-        }
-
+        console.error(esResult.failed);
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 
 }
@@ -138,7 +118,7 @@ function readEntrypointXml(filePath) {
     if (result) {
         return result;
     } else {
-        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${path}`);
+        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${filePath}`);
     }
 }
 
@@ -181,24 +161,45 @@ function fetchObjectElements(contentXmlNames) {
         .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
 }
 
-async function fetchApiAccessToken() {
-    let result;
-    try {
-        result = await request.post('http://localhost:8080/auth/token')
-            .set('Content-Type', 'application/x-www-form-urlencoded')
-            .set('Authorization', `Basic ${process.env.TOKEN_AUTH_BEARER}`)
-            .send({
-                'grant_type': 'password',
-                username: process.env.TOKEN_AUTH_USERNAME,
-                password: process.env.TOKEN_AUTH_PASSWORD,
-                scope: 'email phone userInfo roles'
-            });
-    } catch (e) {
-        /* handle error */
-        return null;
+async function persistToEs(archiveEntries) {
+    let done = [];
+    let failed = [].concat(archiveEntries.failed);
+
+    for (const entry of archiveEntries.done) {
+
+        let cleanedEntry = Object.assign({}, entry);
+        if (cleanedEntry._errors) {
+            delete cleanedEntry._errors;
+        }
+
+        try {
+            let result = await api.postJson('http://localhost:8080/archive/api/archive/invoice', cleanedEntry);
+
+            if (result && result.success === true) {
+                done.push(entry);
+            } else {
+                entry._errors.stage.persistToEs.push({
+                    message: result.error || 'API error without message.'
+                });
+                failed.push(entry);
+                console.error('Failed to persist to ES', entry);
+            }
+        } catch (e) {
+            failed.push(entry);
+            console.error('Failed to persist to ES with exception: ', e, entry);
+        }
     }
 
-    return result.body.access_token;
+    return {
+        done,
+        failed
+    };
+}
+
+async function processAttachments(archiveEntries) {
+    let processor = new FileProcessor(dataDir);
+    let result = await processor.parse(archiveEntries);
+    return result;
 }
 
 main();
