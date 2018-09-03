@@ -1,19 +1,28 @@
 {
-  "Archive": {
-    "nav": {
-      "shortterm": "Short term archive",
-      "longterm": "Long term",
-      "settings": "Settings"
-    },
-    "forms": {
-      "tenantIndexSelect": {
-        "selectArchive": "2. Select archive",
-        "archiveSelect": "Please choose ...",
-        "archiveSelectEmpty": "Not available",
-        "selectTenantId": "1. Select a tenant",
-        "tenantIdSelect": "Please choose ...",
-        "tenantIdSelectEmpty": "Not available"
-      }
-    }
-  }
+  "Archive.title": "Invoice Searching",
+  "Archive.subtitle": "Select a tenant first then choose an archive to init the query",
+
+  "Archive.forms.labels.tenant": "Tenant",
+  "Archive.forms.labels.years": "Archives",
+  "Archive.forms.labels.from": "From",
+  "Archive.forms.labels.to": "To",
+  "Archive.forms.labels.textSearch": "Text Search",
+  "Archive.forms.buttons.reset": "Reset",
+  "Archive.forms.buttons.search": "Search",
+
+  "Archive.table.loading": "Loading...",
+  "Archive.table.empty": "No file found",
+  "Archive.table.pagination.next": "Next",
+  "Archive.table.pagination.previous": "Previous",
+  "Archive.table.pagination.page": "Page",
+  "Archive.table.pagination.of": "of",
+  "Archive.table.pagination.rows": "rows",
+
+  "Archive.table.columns.id.title": "Transaction Id",
+  "Archive.table.columns.no.title": "Invoice No",
+  "Archive.table.columns.from.title": "From",
+  "Archive.table.columns.to.title": "To",
+  "Archive.table.columns.startDate.title": "Start Date",
+  "Archive.table.columns.endDate.title": "End Date",
+  "Archive.table.columns.actions.detail": "Details"
 }
