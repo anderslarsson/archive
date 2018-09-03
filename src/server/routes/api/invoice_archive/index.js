@@ -73,7 +73,6 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
 
 /**
  * @function createDocument
- *
  * @param {express.Request} req
  * @param {object} req.body - POST data
  * @param {express.Response} res
@@ -156,11 +155,11 @@ module.exports.createDocument = async function (req, res, app, db) {
     }
 
     if (success) {
-        res.status(200).send({
+        res.status(200).json({
             success: true
         });
     } else {
-        res.status(400).send({
+        res.status(400).json({
             success: false,
             error: msg || 'Failed to write document.'
         });
