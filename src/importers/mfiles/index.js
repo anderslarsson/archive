@@ -1,13 +1,14 @@
 'use strict';
 
-const xml = require('fast-xml-parser');
-const fs  = require('fs');
-const simpleParser = require('mailparse').simpleParser;
+const xml           = require('fast-xml-parser');
+const fs            = require('fs');
 
-const Mapper = require('./Mapper');
+const Mapper        = require('./Mapper');
+const FileProcessor = require('./FileProcessor');
+const api           = require('./Api');
 
 const homeDir = require('os').homedir();
-const dataDir = `${homeDir}/tmp/SIE_export`;
+const dataDir = `${homeDir}/tmp/SIE_redux`;
 
 const moduleIdentifier = 'MFilesImporter';
 
@@ -28,9 +29,9 @@ const options = {
 };
 
 async function main() {
+    await api.init();
 
     try {
-
         /* Stage 1: Preprocessing */
 
         let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
@@ -40,44 +41,43 @@ async function main() {
 
         /* Stage 2: Create mapping */
 
-        let files = objectElements.map(parseObjectMeta);
+        let archiveEntries = objectElements
+            .map(parseObjectMeta)           // Run the mapper
+            .map((e) => {
+                e._errors = {       // Create container for errors on every entry
+                    stage: {
+                        fileProcessing: [],
+                        persistToEs: []
+                    }
+                };
 
-        let existingFiles = files
-            .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
+                return e;
+            });
 
-        // console.info('[INFO] No. of files missing: ' + (files.length - existingFiles.length));
+        // let existingFiles = files
+        //     .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
 
         /* Stage 3: Fetch owner information (tenantId) */
-        
+
         // TODO Not yet decided how to do the mapping.
+
+        // !!!!!! FIXME - for testing purposes only
+        for (let i = 0, len = archiveEntries.length; i < len; i++) {
+            archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
+            archiveEntries[i].end = '2015-10-28';
+        }
 
         /* Stage 4: Parse EML files, upload extracted files to blob */
 
-        let result = [];
-        for (const f of existingFiles) {
-            // let eml = fs.readFileSync(`${dataDir}/${f.path}`, 'utf8');
-
-            // let mail = await simpleParser(eml);
-            let mail = null;
-
-            if (mail) {
-                result.push(Object.assign(f, {parsedEml: mail}));
-            } else {
-                result.push(Object.assign(f, {parsedEml: {attachments: []}}));
-            }
-
-        }
+        archiveEntries = await processAttachments(archiveEntries);
 
         /* Stage 5: Store in ES */
 
-        for (const entry of result) {
-            if (entry && entry.parsedEml && entry.parsedEml.attachments) {
-                console.log(`${entry.metadata.from},${entry.metadata.to},${entry.path},${entry.parsedEml.attachments.length}`);
-            }
-        }
+        let esResult = await persistToEs(archiveEntries);
 
+        console.error(esResult.failed);
     } catch (e) {
-        console.log(e);
+        console.error(e);
     }
 
 }
@@ -107,10 +107,10 @@ function parseObjectMeta(obj) {
     return result;
 }
 
-function readEntrypointXml(path) {
+function readEntrypointXml(filePath) {
     let result;
     try {
-        result = fs.readFileSync(path);
+        result = fs.readFileSync(filePath);
     } catch (e) {
         result = null;
     }
@@ -118,7 +118,7 @@ function readEntrypointXml(path) {
     if (result) {
         return result;
     } else {
-        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${path}`);
+        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${filePath}`);
     }
 }
 
@@ -159,6 +159,47 @@ function fetchObjectElements(contentXmlNames) {
     return contentXmlNames
         .map(readContentXml)
         .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
+}
+
+async function persistToEs(archiveEntries) {
+    let done = [];
+    let failed = [].concat(archiveEntries.failed);
+
+    for (const entry of archiveEntries.done) {
+
+        let cleanedEntry = Object.assign({}, entry);
+        if (cleanedEntry._errors) {
+            delete cleanedEntry._errors;
+        }
+
+        try {
+            let result = await api.postJson('http://localhost:8080/archive/api/archive/invoice', cleanedEntry);
+
+            if (result && result.success === true) {
+                done.push(entry);
+            } else {
+                entry._errors.stage.persistToEs.push({
+                    message: result.error || 'API error without message.'
+                });
+                failed.push(entry);
+                console.error('Failed to persist to ES', entry);
+            }
+        } catch (e) {
+            failed.push(entry);
+            console.error('Failed to persist to ES with exception: ', e, entry);
+        }
+    }
+
+    return {
+        done,
+        failed
+    };
+}
+
+async function processAttachments(archiveEntries) {
+    let processor = new FileProcessor(dataDir);
+    let result = await processor.parse(archiveEntries);
+    return result;
 }
 
 main();

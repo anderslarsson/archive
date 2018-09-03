@@ -116,11 +116,23 @@ class Mapper {
         return this._fetchFromPropsByName('Date');
     }
 
+    /**
+     * The supplier ID is unknown for data imported from M-FILES
+     * @method _buildSupplierId
+     * @return null
+     */
     _buildSupplierId() {
-        // Unknown
         return null;
     }
 
+    /**
+     * Returns a virtual transaction ID for documents imported
+     * from M-FILES based on their GUID as they are not assigned
+     * to a real transaction known to the BNP.
+     *
+     * @method _buildTransactionId
+     * @return {UUID}
+     */
     _buildTransactionId() {
         return this.objectElem.attr['@_guid'].replace(/{|}/g, '');
     }
