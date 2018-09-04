@@ -13,8 +13,11 @@ class FileProcessor {
     async parse(archiveEntries) {
         let done   = [];
         let failed = [];
+        let i      = 0;
 
         for (const entry of archiveEntries) {
+            console.log(`Parsing EML  ${i++}/${archiveEntries.length} `);
+
             let eml = fs.readFileSync(`${this.dataDir}/${entry.files.inbound.pathToEml}`, 'utf8');
 
             let parsedMail;
@@ -34,8 +37,11 @@ class FileProcessor {
             }
 
             if (parsedMail.attachments) {
+                console.log(`Uploading attachments to Blob storage ${i}/${archiveEntries.length} `);
+
                 let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 
+                /* Push entries with failed uploads to the fail queue */
                 if (uploadResult.failed.length > 0) {
                     entry._errors.stage.fileProcessing.push({
                         type: 'blob_upload_failed',
@@ -43,19 +49,19 @@ class FileProcessor {
                         data: uploadResult.failed
                     });
                     failed.push(entry);
+                } else {
+                    /* Map result from Blog storage to archive schema. */
+                    let inboundAttachments = uploadResult.done.map((e) => {
+                        return {
+                            reference: e.path,
+                            name: e.name
+                        };
+                    });
+
+                    entry.files.inboundAttachments = entry.files.inboundAttachments.concat(inboundAttachments);
+
+                    done.push(entry);
                 }
-
-                // Map result from Blog storage to archive schema.
-                let inboundAttachments = uploadResult.done.map((e) => {
-                    return {
-                        reference: e.path,
-                        name: e.name
-                    };
-                });
-
-                entry.files.inboundAttachments = entry.files.inboundAttachments.concat(inboundAttachments);
-
-                done.push(entry);
             }
         }
 
@@ -86,9 +92,19 @@ class FileProcessor {
         return {done, failed};
     }
 
+    /**
+     * Uploads a single file by calling the Blob API
+     *
+     * @function
+     * @param {Object} data
+     * @param {String} transactionId
+     * @param {String} tenantId
+     * @param {filename}
+     * @return {Promise <Obkect>}
+     */
     uploadFile(data, transactionId, tenantId, filename) {
-        filename = escape(filename);
-        return api.putChunked(`http://localhost:8080/blob/api/${tenantId}/files/archive/invoice/${transactionId}/${filename}?createMissing=true`, data);
+        filename = encodeURI(filename);
+        return api.putChunked(`http://localhost:8080/blob/api/${tenantId}/files/private/archive_b/invoice/${transactionId}/${filename}?createMissing=true`, data);
     }
 
 }

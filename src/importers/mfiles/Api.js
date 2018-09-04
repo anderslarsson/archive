@@ -4,8 +4,6 @@ const path          = require('path');
 const dotenv        = require('dotenv').config({path: path.resolve(process.cwd(), '.env.local')});
 const request       = require('request');
 
-console.log(dotenv.parsed);
-
 class Api {
 
     constructor() {
@@ -64,7 +62,8 @@ class Api {
                 url: url,
                 method: 'PUT',
                 headers: {
-                    'Authorization': 'Bearer ' + this.accessToken
+                    'Authorization': 'Bearer ' + this.accessToken,
+                    'Content-Type': 'applicatoin/json'
                 },
                 body: buffer
             };
@@ -79,6 +78,7 @@ class Api {
                             parsed = JSON.parse(body);
                             resolve(parsed);
                         } catch (e) {
+                            console.error('Api#putChunked: Malformed JSON received.');
                             reject(e);
                         }
                     } else {
@@ -119,24 +119,6 @@ class Api {
             });
 
         });
-
-        // let result;
-        // try {
-        //     result = await request.post('http://localhost:8080/auth/token')
-        //         .set('Content-Type', 'application/x-www-form-urlencoded')
-        //         .set('Authorization', `Basic ${process.env.TOKEN_AUTH_BEARER}`)
-        //         .send({
-        //             'grant_type': 'password',
-        //             username: process.env.TOKEN_AUTH_USERNAME,
-        //             password: process.env.TOKEN_AUTH_PASSWORD,
-        //             scope: 'email phone userInfo roles'
-        //         });
-        // } catch (e) {
-        //     /* handle error */
-        //     return null;
-        // }
-
-        // return result.body.access_token;
     }
 
 }

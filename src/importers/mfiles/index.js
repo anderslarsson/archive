@@ -8,7 +8,8 @@ const FileProcessor = require('./FileProcessor');
 const api           = require('./Api');
 
 const homeDir = require('os').homedir();
-const dataDir = `${homeDir}/tmp/SIE_redux`;
+const dataDir = `${homeDir}/tmp/SIE_export`;
+// const dataDir = `${homeDir}/tmp/SIE_redux`;
 
 const moduleIdentifier = 'MFilesImporter';
 
@@ -32,50 +33,49 @@ async function main() {
     await api.init();
 
     try {
-        /* Stage 1: Preprocessing */
+        /* STAGE 1: Preprocessing */
+
+        console.log('--- STAGE 1 ---');
 
         let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
         let archiveElem     = fetchArchiveElement(indexXml);
         let contentXmlNames = findContentXmlNames(archiveElem);
         let objectElements  = fetchObjectElements(contentXmlNames);
 
-        /* Stage 2: Create mapping */
+        /* STAGE 2: Create mapping */
 
-        let archiveEntries = objectElements
-            .map(parseObjectMeta)           // Run the mapper
-            .map((e) => {
-                e._errors = {       // Create container for errors on every entry
-                    stage: {
-                        fileProcessing: [],
-                        persistToEs: []
-                    }
-                };
+        console.log('--- STAGE 2 ---');
 
-                return e;
-            });
+        let archiveEntries = xmlToArchiveMapping(objectElements);
 
-        // let existingFiles = files
-        //     .filter((f) => fs.existsSync(`${dataDir}/${f.path}`));
+        /* STAGE 3: Fetch owner information (tenantId) */
 
-        /* Stage 3: Fetch owner information (tenantId) */
+        console.log('--- STAGE 3 ---');
 
         // TODO Not yet decided how to do the mapping.
 
         // !!!!!! FIXME - for testing purposes only
         for (let i = 0, len = archiveEntries.length; i < len; i++) {
             archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
-            archiveEntries[i].end = '2015-10-28';
+            archiveEntries[i].end = '2016-10-28';
         }
 
-        /* Stage 4: Parse EML files, upload extracted files to blob */
+        /* STAGE 4: Parse EML files, upload extracted files to blob */
+
+        console.log('--- STAGE 4 ---');
 
         archiveEntries = await processAttachments(archiveEntries);
 
-        /* Stage 5: Store in ES */
+        /* STAGE 5: Store in ES */
 
-        let esResult = await persistToEs(archiveEntries);
+        console.log('--- STAGE 5 ---');
 
-        console.error(esResult.failed);
+        await persistToEs(archiveEntries);
+
+        debugger;
+
+        // TODO handle archiveEntries.failed
+
     } catch (e) {
         console.error(e);
     }
@@ -98,6 +98,22 @@ function readContentXml(entityName) {
     let content = xml.parse(contentXml.toString(), options).content;
 
     return content.object;
+}
+
+function xmlToArchiveMapping(objectElements) {
+    let result = objectElements
+        .map(parseObjectMeta)           // Run the mapper
+        .map((e) => {
+            e._errors = {       // Create container for errors on every entry
+                stage: {
+                    fileProcessing: [],
+                    persistToEs: []
+                }
+            };
+
+            return e;
+        });
+    return result;
 }
 
 function parseObjectMeta(obj) {
@@ -161,12 +177,25 @@ function fetchObjectElements(contentXmlNames) {
         .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
 }
 
+/**
+ * Write the result from previous mapping stages to Elasticsearch.
+ *
+ * @async
+ * @function persistToEs
+ * @param {Object} archiveEntries
+ * @param {Array} archiveEntries.done - List of successful mappings
+ * @param {Array} archiveEntries.failed - List of failed mappings
+ * @return {Object} Object  of successful and failed mappings
+ */
 async function persistToEs(archiveEntries) {
     let done = [];
     let failed = [].concat(archiveEntries.failed);
 
+    let i = 0;
     for (const entry of archiveEntries.done) {
+        console.log(`Creating ES document ${++i}/${archiveEntries.done.length} `);
 
+        /* Remove uneccessary data before writing to ES */
         let cleanedEntry = Object.assign({}, entry);
         if (cleanedEntry._errors) {
             delete cleanedEntry._errors;
@@ -179,12 +208,17 @@ async function persistToEs(archiveEntries) {
                 done.push(entry);
             } else {
                 entry._errors.stage.persistToEs.push({
-                    message: result.error || 'API error without message.'
+                    message: result.error || 'API error without message.',
+                    data: result
                 });
                 failed.push(entry);
-                console.error('Failed to persist to ES', entry);
+                console.error('Failed to persist to ES');
             }
         } catch (e) {
+            entry._errors.stage.persistToEs.push({
+                message: 'Failed to persist to ES with exception',
+                data: e
+            });
             failed.push(entry);
             console.error('Failed to persist to ES with exception: ', e, entry);
         }
