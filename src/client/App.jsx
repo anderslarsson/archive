@@ -4,9 +4,9 @@ import {Route} from 'react-router';
 import Archive from './components/Archive';
 
 const App = () =>
-  <Containers.ServiceLayout serviceName="archive">
-    <Route path={'/'} component={Archive}/>
-  </Containers.ServiceLayout>;
+    <Containers.ServiceLayout serviceName="archive">
+        <Route path={'/'} component={Archive}/>
+    </Containers.ServiceLayout>;
 
 export default App;
 

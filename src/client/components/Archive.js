@@ -16,7 +16,15 @@ export default class Archive extends Components.ContextComponent {
 
         this.state = {
             loading: false,
-            files: [],
+            search: {
+                docs: [],
+                total: 0,
+                pages: 0,
+                currentPage: 0,
+                currentDocs: [],
+                pageSize: 20,
+                scrollId: null
+            },
             selectedValues: {
                 tenant: null,
                 year: null,
@@ -30,7 +38,7 @@ export default class Archive extends Components.ContextComponent {
             },
         };
 
-        this.elasticApi = new InvoiceArchiveApi();
+        this.api = new InvoiceArchiveApi();
         context.i18n.register('Archive', translations);
     }
 
@@ -39,7 +47,7 @@ export default class Archive extends Components.ContextComponent {
     }
 
     fetchTenantOptions() {
-        this.elasticApi.getTenantOptions()
+        this.api.getTenantOptions()
             .then(response => {
                 const {availableOptions} = this.state;
                 availableOptions.tenants = response;
@@ -51,7 +59,7 @@ export default class Archive extends Components.ContextComponent {
     }
 
     fetchYearOptions(tenantId) {
-        this.elasticApi.getYearOptions(tenantId)
+        this.api.getYearOptions(tenantId)
             .then(response => {
                 const {availableOptions} = this.state;
                 availableOptions.years = response.data;
@@ -97,7 +105,7 @@ export default class Archive extends Components.ContextComponent {
         const {selectedValues} = this.state;
         selectedValues.year = value;
 
-        this.elasticApi.openArchive(value).
+        this.api.openArchive(value).
             then((data) => {
                 this.setState({loading: false});
 
@@ -109,7 +117,17 @@ export default class Archive extends Components.ContextComponent {
         this.setState({loading: true, selectedValues});
     }
 
+    handleFullTextQueryChange(event) {
+        let value = event.target.value;
+
+        const {selectedValues} = this.state;
+        selectedValues.fullTextQuery = value;
+
+        this.setState({selectedValues});
+    }
+
     resetSearchForm(e) {
+        // TODO delete scroll on ES
         e.preventDefault();
 
         const selectedValues = {
@@ -125,29 +143,53 @@ export default class Archive extends Components.ContextComponent {
     }
 
     handleSearch(e) {
+        // TODO clear old scroll
+
         e && e.preventDefault();
 
-        const {selectedValues} = this.state;
+        const {search, selectedValues} = this.state;
 
         if (!selectedValues.tenant || !selectedValues.year) {
-            this.setState({files: []});
+            search.docs = [];
+            this.setState({search});
             return;
         }
 
-        this.loading = true;
-        this.elasticApi.queryInvoiceArchive(selectedValues)
+        let queryOptions = {
+            index: selectedValues.year,
+            query: selectedValues.fullTextQuery,
+            pageSize: search.pageSize
+        };
+
+        this.setState({loading: true});
+
+        this.api.queryInvoiceArchive(queryOptions)
             .then(response => {
-                this.setState({files: response.data});
+                let result = response.data;
+
+                let searchUpdate = Object.assign({},this.state.search, {
+                    docs: result.hits.hits,
+                    currentPage: 0,
+                    currentDocs: result.hits.hits,
+                    total: result.hits.total,
+                    pages: Math.ceil(result.hits.total / search.pageSize),
+                    pageSize: search.pageSize,
+                    scrollId: result.scrollId
+                });
+
+                this.setState({
+                    loading: false,
+                    search: searchUpdate
+                });
             })
             .catch((err) => {
                 this.context.showNotification(err.message, 'error', 10);
-            })
-            .then(() => this.loading = false);
+            });
     }
 
     render() {
         const {i18n} = this.context;
-        const {loading, files, availableOptions, selectedValues} = this.state;
+        const {loading, search, availableOptions, selectedValues} = this.state;
 
         return (
             <div>
@@ -228,7 +270,7 @@ export default class Archive extends Components.ContextComponent {
                                                 </label>
                                             </div>
                                             <div className="offset-md-1 col-md-9">
-                                                <input type="text" className="form-control"/>
+                                                <input type="text" value={this.state.fullTextQuery} onChange={value => this.handleFullTextQueryChange(value)} className="form-control" />
                                             </div>
                                         </div>
                                     </div>
@@ -246,9 +288,48 @@ export default class Archive extends Components.ContextComponent {
                 </div>
                 <hr/>
                 <ReactTable className="user-list-table"
-                    data={files}
-                    minRows={0}
+                    data={search.currentDocs}
+
                     loading={loading}
+
+                    manual
+                    pages={search.pages}
+                    defaultPageSize={20}
+                    showPageSizeOptions={false}
+                    showPageJump={false}
+
+                    onFetchData={(state) => {
+                        if (this.state.search.docs.length <= 0) {
+                            return;
+                        }
+
+                        let isBackNav = state.page < this.state.search.currentPage;
+                        let alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
+
+                        if (isBackNav || alreadyFetched) {
+                            let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
+                            let searchUpdate = Object.assign({}, this.state.search, {
+                                currentPage: state.page,
+                                currentDocs
+                            });
+                            this.setState({search: searchUpdate});
+                        } else {
+                            /* Forware navigation. Fetch next result from ES */
+                            this.api.getInvoiceArchiveSearch(this.state.search)
+                                .then((res) => {
+                                    let hits = res.data.hits.hits;
+
+                                    let searchUpdate = Object.assign({}, this.state.search, {
+                                        currentPage: state.page,
+                                        docs: this.state.search.docs.concat(hits),
+                                        currentDocs: hits
+                                    });
+
+                                    this.setState({search: searchUpdate});
+                                });
+                        }
+                    }}
+
                     defaultSorted={[{id: 'transactionId', desc: false}]}
 
                     loadingText={i18n.getMessage('Archive.table.loading')}
@@ -261,45 +342,22 @@ export default class Archive extends Components.ContextComponent {
 
                     columns={[
                         {
-                            accessor: 'transactionId',
+                            accessor: '_source.transactionId',
                             Header: i18n.getMessage('Archive.table.columns.id.title')
                         },
                         {
-                            accessor: 'invoiceNo',
-                            Header: i18n.getMessage('Archive.table.columns.no.title')
-                        },
-                        {
-                            accessor: 'from',
-                            Header: i18n.getMessage('Archive.table.columns.from.title')
-                        },
-                        {
-                            accessor: 'to',
-                            Header: i18n.getMessage('Archive.table.columns.to.title')
-                        },
-                        {
                             id: 'startDate',
-                            accessor: file => moment(file.startDate).format('YYYY-MM-DD'),
+                            accessor: doc => moment(doc._source.start).format('YYYY-MM-DD'),
                             Header: i18n.getMessage('Archive.table.columns.startDate.title')
                         },
                         {
                             id: 'endDate',
-                            accessor: file => moment(file.endDate).format('YYYY-MM-DD'),
+                            accessor: doc => moment(doc._source.end).format('YYYY-MM-DD'),
                             Header: i18n.getMessage('Archive.table.columns.endDate.title')
-                        },
-                        {
-                            id: 'actions',
-                            accessor: user => user,
-                            width: 100,
-                            Cell: ({value}) =>
-                                <nobr>
-                                    <button type="button" className="btn btn-sm btn-default">
-                                        <span className="icon glyphicon glyphicon-doc"/>&nbsp;
-                                        {i18n.getMessage('Archive.table.columns.actions.detail')}
-                                    </button>
-                                </nobr>
                         }
                     ]}
                 />
+
             </div>
         );
     }

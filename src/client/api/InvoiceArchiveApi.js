@@ -2,6 +2,10 @@ import ApiBase from './ApiBase';
 
 class InvoiceArchiveApi extends ApiBase {
 
+    constructor() {
+        super();
+    }
+
     getTenantOptions() {
         return this.ajax.get('/archive/api/tenantconfig/invoice_receiving').then(res => res.body).catch(this.getErrorFromResponse);
     }
@@ -11,8 +15,18 @@ class InvoiceArchiveApi extends ApiBase {
     }
 
     queryInvoiceArchive(queryParams) {
-        // TODO query table data with selectedValues...
-        return this.ajax.post('/dummy-elastic/query').send(queryParams).then(res => res.body).catch(this.getErrorFromResponse);
+        return this.ajax.post('/archive/api/archive/invoice/searches')
+            .send(queryParams)
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
+    }
+
+    getInvoiceArchiveSearch(params) {
+        let scrollId = params.scrollId;
+
+        return this.ajax.get(`/archive/api/archive/invoice/searches/${scrollId}`)
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
     }
 }
 
