@@ -169,12 +169,88 @@ module.exports.createDocument = async function (req, res, app, db) {
 };
 
 /**
- * @function
+ * Search in a given index
  *
+ * @async
+ * @function search
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.transactionId - ID of the transaction to archive
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ */
+module.exports.search = async function search(req, res) {
+    let {index, query, pageSize} = req.body;
+
+    let es = elasticContext.client;
+
+    try {
+        let result = await es.search({
+            index,
+            q: query,
+            size: pageSize,
+            scroll: '30m'
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                hits: result.hits,
+                scrollId: result._scroll_id
+            }
+        });
+
+    } catch (e) {
+        res.status(400).json({success: false});
+    }
+};
+
+/**
+ * Scroll for a given scrollId
+ *
+ * @async
+ * @function search
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.scrollId - ID of the scroll API
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ */
+module.exports.scroll = async function scroll(req, res) {
+    debugger;
+
+    let scrollId = req.params.id;
+
+    let es = elasticContext.client;
+
+    try {
+        let result = await es.scroll({
+            scrollId,
+            scroll: '30m'
+        });
+
+        debugger;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                hits: result.hits,
+                scrollId: result._scroll_id
+            }
+        });
+
+    } catch (e) {
+        res.status(400).json({success: false});
+    }
+};
+
+/**
  * Extract the owner information from a archive document.
  *
+ * @function
  * @params {object} doc
- *
  * @returns {String} tenantId
  */
 function extractOwnerFromDocument(doc) {

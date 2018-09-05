@@ -28,6 +28,8 @@ module.exports.init = async function (app, db) {
 
     /* *** Invoice archive *** */
     app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
+    app.post('/api/archive/invoice/searches', (req, res) => invoiceArchiveHandler.search(req, res, app, db));
+    app.get('/api/archive/invoice/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
     app.post('/api/archive/invoice', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
 
     // --- Info
@@ -61,6 +63,8 @@ async function tenantIdFilter(req, res, next) {
         });
     }
 
+    let tenantId = req.params.tenantId;
+
     let allowed = false;
     let tenants = [];
 
@@ -72,7 +76,7 @@ async function tenantIdFilter(req, res, next) {
             allowed = true;
         }
 
-        let hasTenant = tenants.find(t => t === req.params.tenantId);
+        let hasTenant = tenants.find(t => t === tenantId);
         if (hasTenant) {
             allowed = true;
         }
@@ -88,7 +92,7 @@ async function tenantIdFilter(req, res, next) {
     } else {
         res.status(403).json({
             success: false,
-            message: 'This tenant is not assigned to your user.'
+            message: ` Access denied for tenantId ${tenantId}`
         });
     }
 }

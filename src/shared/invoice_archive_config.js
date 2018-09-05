@@ -100,7 +100,13 @@ const esMapping = {
                                     type: 'keyword'
                                 },
                                 name: {
-                                    type: 'keyword'
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            'ignore_above': 256
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -117,7 +123,13 @@ const esMapping = {
                                     type: 'keyword'
                                 },
                                 name: {
-                                    type: 'keyword'
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            'ignore_above': 256
+                                        }
+                                    }
                                 }
                             }
                         }
