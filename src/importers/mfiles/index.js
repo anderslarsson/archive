@@ -57,7 +57,6 @@ async function main() {
         // !!!!!! FIXME - for testing purposes only
         for (let i = 0, len = archiveEntries.length; i < len; i++) {
             archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
-            archiveEntries[i].end = '2016-10-28';
         }
 
         /* STAGE 4: Parse EML files, upload extracted files to blob */
@@ -70,7 +69,7 @@ async function main() {
 
         console.log('--- STAGE 5 ---');
 
-        await persistToEs(archiveEntries);
+        let esResult = await persistToEs(archiveEntries);
 
         debugger;
 
@@ -202,7 +201,7 @@ async function persistToEs(archiveEntries) {
         }
 
         try {
-            let result = await api.postJson('http://localhost:8080/archive/api/archive/invoice', cleanedEntry);
+            let result = await api.postJson('http://localhost:8080/archive/api/archive/invoices', cleanedEntry);
 
             if (result && result.success === true) {
                 done.push(entry);
