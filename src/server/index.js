@@ -40,6 +40,7 @@ async function init() {
 
             indexFilePath: process.cwd() + '/src/server/static/index.html',
             staticFilePath: process.cwd() + '/src/server/static/',
+            indexFileRoutes: ['/', '/invoices'],
 
             webpack: {
                 useWebpack: !isProduction,

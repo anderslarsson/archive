@@ -9,7 +9,7 @@ import translations from './i18n';
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
 
-export default class Archive extends Components.ContextComponent {
+export default class InvoiceArchive extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);
