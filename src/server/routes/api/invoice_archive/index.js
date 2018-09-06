@@ -188,27 +188,46 @@ module.exports.search = async function search(req, res) {
 
     let queryOptions = {
         query: {
-            match: {
-                '_all': {
-                    query: query.fullText || '',
-                    'zero_terms_query': 'all'
-                }
+            bool: {
+                must: {
+                    match: {
+                        '_all': {
+                            query: query.fullText || '',
+                            'zero_terms_query': 'all'
+                        }
 
+                    }
+                }
             }
         }
     };
 
     if (query.from || query.to) {
-        queryOptions.query.range = {};
+        queryOptions.query.bool.filter = {
+            bool: {
+                must: []
+            }
+        };
+
         if (query.from) {
-            queryOptions.query.range.start = {
-                gte: query.from
-            };
+            queryOptions.query.bool.filter.bool.must.push({
+                range: {
+                    start: {
+                        gte: query.from,
+                        lte: query.to
+                    }
+                }
+            });
         }
         if (query.to) {
-            queryOptions.query.range.end = {
-                lte: query.to
-            };
+            queryOptions.query.bool.filter.bool.must.push({
+                range: {
+                    end: {
+                        gte: query.from,
+                        lte: query.to
+                    }
+                }
+            });
         }
 
     }
@@ -220,8 +239,6 @@ module.exports.search = async function search(req, res) {
             size: pageSize,
             scroll: '30m'
         });
-
-        debugger;
 
         res.status(200).json({
             success: true,

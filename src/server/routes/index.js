@@ -29,7 +29,7 @@ module.exports.init = async function (app, db) {
     /* *** Invoice archive *** */
     app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
 
-    app.post('/api/archive/invoice/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
+    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
 
     /* *** Info *** */
     app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
@@ -37,14 +37,11 @@ module.exports.init = async function (app, db) {
     /* *** Indices *** */
     app.get('/api/indices', tenantIdFilter, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
     app.post('/api/indices/:id/open', (req, res) => indicesCmdHandler.openIndex(req, res));
+    app.get('/api/indices/:indexId/transactions/:id', notImplementedFn);
 
     /* *** Searches *** */
     app.post('/api/searches', (req, res) => invoiceArchiveHandler.search(req, res, app, db));
     app.get('/api/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
-
-
-    /* *** Entries *** */
-    app.get('/api/entries/:tenantId/:year/:month', notImplementedFn);
 
 };
 
