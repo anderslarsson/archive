@@ -1,7 +1,5 @@
 'use strict';
 
-const Sequelize = require('sequelize');
-
 /**
  * TenantConfig API handlers
  */
@@ -17,6 +15,8 @@ const validTypes = [
 // };
 
 module.exports.get = async function (req, res, app, db) {
+    const Sequelize = db.Sequelize;
+
     try {
         let type = req.params.type;
         if (!validTypes.includes(type)) {

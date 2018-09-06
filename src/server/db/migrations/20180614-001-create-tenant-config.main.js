@@ -1,5 +1,3 @@
-const Sequelize = require('sequelize');
-
 /**
  * Applies migrations for databse tables and data.
  * If all migrations were successul, this method will never be executed again.
@@ -11,6 +9,8 @@ const Sequelize = require('sequelize');
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
 module.exports.up = async function (db, config) {
+    let Sequelize = db.Sequelize;
+
     await db.queryInterface.createTable('TenantConfig', {
         id: {
             type: Sequelize.INTEGER,
@@ -56,10 +56,12 @@ module.exports.up = async function (db, config) {
         }
     });
 
-    return await db.queryInterface.addConstraint('TenantConfig', ['tenantId', 'type'], {
+    await db.queryInterface.addConstraint('TenantConfig', ['tenantId', 'type'], {
         type: 'unique',
         name: 'custom_unique_constraint_tenantId_type'
     });
+
+    return true;
 };
 
 /**

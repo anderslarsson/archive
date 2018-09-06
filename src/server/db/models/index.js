@@ -1,5 +1,3 @@
-const Sequelize = require('sequelize');
-
 const TenantConfig = require('./TenantConfig');
 
 /**
@@ -10,10 +8,9 @@ const TenantConfig = require('./TenantConfig');
  * @returns {Promise} JavaScript Promise object.
  * @see [Creating database models]{@link https://github.com/OpusCapita/db-init#creating-database-models}
  */
-module.exports.init = async function(db, config)
-{
+module.exports.init = async function (db, config) {
     // Register Sequelize database models
     return Promise.all([
         TenantConfig.init(db, config)
     ]);
-}
+};

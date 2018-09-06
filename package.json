@@ -37,7 +37,6 @@
     "ocbesbn-logger": "^1.0.9",
     "react-bootstrap": "^0.32.3",
     "request": "^2.88.0",
-    "sequelize": "^4.38.0",
     "typescript": "^3.0.3",
     "webpack-config": "^7.5.0"
   },
