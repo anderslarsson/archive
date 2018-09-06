@@ -191,6 +191,38 @@ export default class InvoiceArchive extends Components.ContextComponent {
             });
     }
 
+    scrollSearch(state) {
+        if (this.state.search.docs.length <= 0) {
+            return;
+        }
+
+        let isBackNav = state.page < this.state.search.currentPage;
+        let alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
+
+        if (isBackNav || alreadyFetched) {
+            let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
+            let searchUpdate = Object.assign({}, this.state.search, {
+                currentPage: state.page,
+                currentDocs
+            });
+            this.setState({search: searchUpdate});
+        } else {
+            /* Forward navigation. Fetch next result from ES */
+            this.api.getInvoiceArchiveSearch(this.state.search)
+                .then((res) => {
+                    let hits = res.data.hits.hits;
+
+                    let searchUpdate = Object.assign({}, this.state.search, {
+                        currentPage: state.page,
+                        docs: this.state.search.docs.concat(hits),
+                        currentDocs: hits
+                    });
+
+                    this.setState({search: searchUpdate});
+                });
+        }
+    }
+
     render() {
         const {i18n} = this.context;
         const {loading, search, availableOptions, selectedValues} = this.state;
@@ -322,37 +354,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                     showPageSizeOptions={false}
                     showPageJump={false}
 
-                    onFetchData={(state) => {
-                        if (this.state.search.docs.length <= 0) {
-                            return;
-                        }
-
-                        let isBackNav = state.page < this.state.search.currentPage;
-                        let alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
-
-                        if (isBackNav || alreadyFetched) {
-                            let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
-                            let searchUpdate = Object.assign({}, this.state.search, {
-                                currentPage: state.page,
-                                currentDocs
-                            });
-                            this.setState({search: searchUpdate});
-                        } else {
-                            /* Forware navigation. Fetch next result from ES */
-                            this.api.getInvoiceArchiveSearch(this.state.search)
-                                .then((res) => {
-                                    let hits = res.data.hits.hits;
-
-                                    let searchUpdate = Object.assign({}, this.state.search, {
-                                        currentPage: state.page,
-                                        docs: this.state.search.docs.concat(hits),
-                                        currentDocs: hits
-                                    });
-
-                                    this.setState({search: searchUpdate});
-                                });
-                        }
-                    }}
+                    onFetchData={(state) => this.scrollSearch(state) }
 
                     defaultSorted={[{id: 'transactionId', desc: false}]}
 
@@ -367,7 +369,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
                     columns={[
                         {
                             accessor: '_source.transactionId',
-                            Header: i18n.getMessage('Archive.table.columns.id.title')
+                            Header: i18n.getMessage('Archive.table.columns.id.title'),
+                            Cell: (row) => {
+                                let indexName = btoa(this.state.selectedValues.year);
+                                return <a target="blank" href={`/archive/invoices/${indexName}/transactions/${row.value}`}>{row.value}</a>;
+                            }
                         },
                         {
                             id: 'startDate',
@@ -378,6 +384,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             id: 'endDate',
                             accessor: doc => moment(doc._source.end).format('YYYY-MM-DD'),
                             Header: i18n.getMessage('Archive.table.columns.endDate.title')
+                        },
+                        {
+                            id: 'from',
+                            accessor: '_source.receiver.protocolAttributes.from',
+                            Header: i18n.getMessage('Archive.table.columns.from.title')
                         }
                     ]}
                 />

@@ -1,6 +1,6 @@
 'use strict';
 
-const { fork } = require('child_process');
+const {fork} = require('child_process');
 const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
@@ -40,7 +40,10 @@ async function init() {
 
             indexFilePath: process.cwd() + '/src/server/static/index.html',
             staticFilePath: process.cwd() + '/src/server/static/',
-            indexFileRoutes: ['/', '/invoices'],
+            indexFileRoutes: [
+                '/',
+                '/invoices*'
+            ],
 
             webpack: {
                 useWebpack: !isProduction,

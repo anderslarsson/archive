@@ -24,5 +24,6 @@
   "Archive.table.columns.to.title": "To",
   "Archive.table.columns.startDate.title": "Start Date",
   "Archive.table.columns.endDate.title": "End Date",
+  "Archive.table.columns.from.title": "Absender E-Mail",
   "Archive.table.columns.actions.detail": "Details"
 }
