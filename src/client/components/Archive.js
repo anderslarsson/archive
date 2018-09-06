@@ -157,13 +157,17 @@ export default class Archive extends Components.ContextComponent {
 
         let queryOptions = {
             index: selectedValues.year,
-            query: selectedValues.fullTextQuery,
+            query: {
+                from: selectedValues.from,
+                to: selectedValues.to,
+                fullText: selectedValues.fullTextQuery
+            },
             pageSize: search.pageSize
         };
 
         this.setState({loading: true});
 
-        this.api.queryInvoiceArchive(queryOptions)
+        this.api.createSearch(queryOptions)
             .then(response => {
                 let result = response.data;
 
@@ -244,7 +248,17 @@ export default class Archive extends Components.ContextComponent {
                                                 </label>
                                             </div>
                                             <div className="offset-md-2 col-md-6">
-                                                <input type="text" className="form-control"/>
+                                                <Components.DatePicker
+                                                    className='form-control'
+                                                    showIcon={false}
+                                                    onChange={(event) => {
+                                                        let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
+                                                            from: event.date
+                                                        });
+                                                        this.setState({selectedValues: selectedValuesUpdate});
+                                                    }}
+                                                    value={this.state.selectedValues.from}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -256,7 +270,17 @@ export default class Archive extends Components.ContextComponent {
                                                 </label>
                                             </div>
                                             <div className="offset-md-2 col-md-6">
-                                                <input type="text" className="form-control"/>
+                                                <Components.DatePicker
+                                                    className='form-control'
+                                                    showIcon={false}
+                                                    onChange={(event) => {
+                                                        let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
+                                                            to: event.date
+                                                        });
+                                                        this.setState({selectedValues: selectedValuesUpdate});
+                                                    }}
+                                                    value={this.state.selectedValues.to}
+                                                />
                                             </div>
                                         </div>
                                     </div>

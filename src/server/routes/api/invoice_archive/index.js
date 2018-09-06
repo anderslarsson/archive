@@ -181,17 +181,47 @@ module.exports.createDocument = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.search = async function search(req, res) {
-    let {index, query, pageSize} = req.body;
+    let index = req.query.index;
+    let {query, pageSize} = req.body;
 
     let es = elasticContext.client;
+
+    let queryOptions = {
+        query: {
+            match: {
+                '_all': {
+                    query: query.fullText || '',
+                    'zero_terms_query': 'all'
+                }
+
+            }
+        }
+    };
+
+    if (query.from || query.to) {
+        queryOptions.query.range = {};
+        if (query.from) {
+            queryOptions.query.range.start = {
+                gte: query.from
+            };
+        }
+        if (query.to) {
+            queryOptions.query.range.end = {
+                lte: query.to
+            };
+        }
+
+    }
 
     try {
         let result = await es.search({
             index,
-            q: query,
+            body: queryOptions,
             size: pageSize,
             scroll: '30m'
         });
+
+        debugger;
 
         res.status(200).json({
             success: true,
@@ -219,8 +249,6 @@ module.exports.search = async function search(req, res) {
  * @param {Sequelize} db
  */
 module.exports.scroll = async function scroll(req, res) {
-    debugger;
-
     let scrollId = req.params.id;
 
     let es = elasticContext.client;
@@ -230,8 +258,6 @@ module.exports.scroll = async function scroll(req, res) {
             scrollId,
             scroll: '30m'
         });
-
-        debugger;
 
         res.status(200).json({
             success: true,

@@ -7,15 +7,19 @@ class InvoiceArchiveApi extends ApiBase {
     }
 
     getTenantOptions() {
-        return this.ajax.get('/archive/api/tenantconfig/invoice_receiving').then(res => res.body).catch(this.getErrorFromResponse);
+        return this.ajax.get('/archive/api/tenantconfig/invoice_receiving')
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
     }
 
     getYearOptions(tenantId) {
-        return this.ajax.get(`/archive/api/indices/invoice/${tenantId}`).then(res => res.body).catch(this.getErrorFromResponse);
+        return this.ajax.get(`/archive/api/indices?type=invoice&tenantId=${tenantId}`)
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
     }
 
-    queryInvoiceArchive(queryParams) {
-        return this.ajax.post('/archive/api/archive/invoice/searches')
+    createSearch(queryParams) {
+        return this.ajax.post(`/archive/api/searches?index=${queryParams.index}`)
             .send(queryParams)
             .then(res => res.body)
             .catch(this.getErrorFromResponse);
@@ -24,7 +28,7 @@ class InvoiceArchiveApi extends ApiBase {
     getInvoiceArchiveSearch(params) {
         let scrollId = params.scrollId;
 
-        return this.ajax.get(`/archive/api/archive/invoice/searches/${scrollId}`)
+        return this.ajax.get(`/archive/api/searches/${scrollId}`)
             .then(res => res.body)
             .catch(this.getErrorFromResponse);
     }

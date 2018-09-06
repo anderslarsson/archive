@@ -14,7 +14,7 @@ class ApiBase {
      * @param {String} archiveName
      */
     openArchive(archiveName) {
-        return this.ajax.post('/archive/api/indices/open')
+        return this.ajax.post(`/archive/api/indices/${archiveName}/open`)
             .send({index: archiveName})
             .then(res => res.body)
             .catch(this.getErrorFromResponse);

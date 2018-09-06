@@ -9,9 +9,17 @@ const elasticContext = require('../../../../shared/elasticsearch');
  *
  */
 module.exports.get = async function get(req, res) {
-    let tenantId = req.params.tenantId;
+    let tenantId = req.query.tenantId;
+    let type = req.query.type;
 
-    let result = await elasticContext.listIndices(tenantId, 'invoice');
+    if (type !== 'invoice') {
+        res.status(400).json({
+            success: false,
+            message: 'Not implmented'
+        });
+    }
+
+    let result = await elasticContext.listIndices(tenantId, type);
 
     let indexNames = [];
     for (let name in result) {

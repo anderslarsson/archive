@@ -77,7 +77,7 @@ module.exports.listAllByTenantAndType =  async function listAllByTenantAndType(r
  * @function openIndex
  */
 module.exports.openIndex = async function openIndex(req, res) {
-    let index = req.body && req.body.index;
+    let index = req.params && req.params.id;
 
     // TODO validate permission based on tenantId
 
