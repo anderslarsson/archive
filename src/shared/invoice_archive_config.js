@@ -20,7 +20,7 @@ const ErrCodes = {
 
 const esMapping = {
     mappings: {
-        '_doc': {
+        'doc': {
             properties: {
                 transactionId: {
                     type: 'keyword'

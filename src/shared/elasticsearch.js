@@ -360,7 +360,7 @@ class Elasticsearch {
 
                     if (opts && opts.mapping && typeof opts.mapping === 'object') {
                         await this.conn.indices.putMapping({
-                            body: opts.mapping,
+                            body: opts.mapping.mappings.doc,
                             index: indexName,
                             type: this.defaultDocType
                         });

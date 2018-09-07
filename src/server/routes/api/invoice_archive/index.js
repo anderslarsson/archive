@@ -122,7 +122,9 @@ module.exports.createDocument = async function (req, res, app, db) {
     let msg, success;
     try {
         /* Open existing index or create new with mapping */
-        let indexOpened = await elasticContext.openIndex(archiveName, true, {mapping: elasticContext.esMapping});
+        let indexOpened = await elasticContext.openIndex(archiveName, true, {
+            mapping: elasticContext.InvoiceArchiveConfig.esMapping
+        });
 
         if (indexOpened) {
             let createResult;
