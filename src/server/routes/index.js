@@ -6,7 +6,8 @@ const tenantConfigHandler       = require('./api/tenantconfig/');
 
 const {
     indicesInvoiceHandler,
-    indicesCmdHandler
+    indicesCmdHandler,
+    documentsHandler 
 } = require('./api/indices/');
 
 /**
@@ -37,7 +38,7 @@ module.exports.init = async function (app, db) {
     /* *** Indices *** */
     app.get('/api/indices', tenantIdFilter, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
     app.post('/api/indices/:id/open', (req, res) => indicesCmdHandler.openIndex(req, res));
-    app.get('/api/indices/:indexId/transactions/:id', notImplementedFn);
+    app.get('/api/indices/:index/documents/:id', (req, res) => documentsHandler.get(req, res));
 
     /* *** Searches *** */
     app.post('/api/searches', (req, res) => invoiceArchiveHandler.search(req, res, app, db));
