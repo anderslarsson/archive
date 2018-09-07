@@ -7,7 +7,7 @@ import InvoiceArchiveDocument from './components/InvoiceArchiveDocument.jsx';
 const App = () =>
     <Containers.ServiceLayout serviceName="archive">
         <Route exact path='/invoices' component={InvoiceArchive}/>
-        <Route path='/invoices/:indexName/transactions/:id' component={InvoiceArchiveDocument} />
+        <Route path='/invoices/:index/documents/:id' component={InvoiceArchiveDocument} />
 
         <Redirect from='/' to='invoices' />
     </Containers.ServiceLayout>;

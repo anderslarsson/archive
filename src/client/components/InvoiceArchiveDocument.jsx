@@ -10,8 +10,8 @@ export default class InvoiceTransaction extends Components.ContextComponent {
         super(props);
 
         this.state = {
-            indexName: null,
-            transactionId: null,
+            index: null, // ES index name
+            id: null,    // ES document ID
             doc: null
         };
 
@@ -19,13 +19,22 @@ export default class InvoiceTransaction extends Components.ContextComponent {
         context.i18n.register('Archive', translations);
     }
 
+    fetchDocument() {
+        this.api.getDocument(this.state.index, this.state.id)
+            .then((data) => {
+                this.setState({
+                    doc: data
+                });
+            });
+    }
+
     componentDidMount() {
-        // TODO fetch transaction
-        const {indexName, id} = this.context.router.params;
+        const {index, id} = this.context.router.params;
+
         this.setState({
-            indexName: atob(indexName),
-            transactionId: id
-        });
+            index: atob(index),
+            id
+        }, () => this.fetchDocument());
     }
 
     render() {
@@ -33,8 +42,8 @@ export default class InvoiceTransaction extends Components.ContextComponent {
 
         return (
             <div>
-                <p>{this.state.indexName}</p>
-                <p>{this.state.transactionId}</p>
+                <p>{this.state.index}</p>
+                <p>{this.state.id}</p>
             </div>
         );
     }

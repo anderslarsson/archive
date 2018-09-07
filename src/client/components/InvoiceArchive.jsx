@@ -372,7 +372,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             Header: i18n.getMessage('Archive.table.columns.id.title'),
                             Cell: (row) => {
                                 let indexName = btoa(this.state.selectedValues.year);
-                                return <a target="blank" href={`/archive/invoices/${indexName}/transactions/${row.value}`}>{row.value}</a>;
+                                return (
+                                    <a target="blank" href={`/archive/invoices/${indexName}/documents/${row.original._id}`}>
+                                        {row.value}
+                                    </a>
+                                );
                             }
                         },
                         {

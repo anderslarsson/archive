@@ -26,7 +26,7 @@ module.exports.get = async function get(req, res) {
     // TODO check if user is allowed to view index
 
     let index = req.params.index;
-    let transactionId = req.params.id;
+    let id = req.params.id;
 
     try {
         await elasticContext.openIndex(index, false);
@@ -38,15 +38,10 @@ module.exports.get = async function get(req, res) {
     try {
         const es = elasticContext.client;
 
-        let result = await es.search({
+        let result = await es.get({
             index,
-            body: {
-                query: {
-                    term: {
-                        transactionId
-                    }
-                }
-            }
+            type: elasticContext.defaultDocType,
+            id
         });
 
         res.status(200).json({success: true, data: result});
