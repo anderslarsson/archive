@@ -8,7 +8,7 @@
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.up = async function (db, config) {
+module.exports.up = async function (db) {
     let Sequelize = db.Sequelize;
 
     await db.queryInterface.createTable('TenantConfig', {
@@ -56,10 +56,7 @@ module.exports.up = async function (db, config) {
         }
     });
 
-    await db.queryInterface.addConstraint('TenantConfig', ['tenantId', 'type'], {
-        type: 'unique',
-        name: 'custom_unique_constraint_tenantId_type'
-    });
+    await db.query('ALTER TABLE TenantConfig ADD CONSTRAINT custom_unique_constraint_tenantId_type UNIQUE (tenantId, type);');
 
     return true;
 };
