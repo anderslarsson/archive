@@ -27,14 +27,14 @@ export default class InvoiceArchive extends Components.ContextComponent {
             },
             selectedValues: {
                 tenant: null,
-                year: null,
+                index: null,
                 from: null,
                 to: null,
                 text: null
             },
             availableOptions: {
                 tenants: [],
-                years: []
+                indices: []
             },
         };
 
@@ -62,7 +62,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
         this.api.getYearOptions(tenantId)
             .then(response => {
                 const {availableOptions} = this.state;
-                availableOptions.years = response.data;
+                availableOptions.indices = response.data;
                 this.setState({availableOptions});
             })
             .catch((err) => {
@@ -82,13 +82,13 @@ export default class InvoiceArchive extends Components.ContextComponent {
     getYearSelectOptions() {
         const {availableOptions} = this.state;
 
-        if (!availableOptions || !availableOptions.years) {
+        if (!availableOptions || !availableOptions.indices) {
             return [];
         }
-        return availableOptions.years.map(year => {
-            let y = year.split('-').pop();
+        return availableOptions.indices.map(index => {
+            let y = index.split('-').pop();
 
-            return {value: year, label: y};
+            return {value: index, label: y};
         });
     }
 
@@ -103,7 +103,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     handleYearSelection({value}) {
         const {selectedValues} = this.state;
-        selectedValues.year = value;
+        selectedValues.index = value;
 
         this.api.openArchive(value).
             then((data) => {
@@ -132,11 +132,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
         const selectedValues = {
             tenant: null,
-            year: null,
+            index: null,
         };
 
         const availableOptions = {
-            years: []
+            indices: []
         };
 
         this.setState({selectedValues, availableOptions}, () => this.handleSearch());
@@ -149,14 +149,14 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
         const {search, selectedValues} = this.state;
 
-        if (!selectedValues.tenant || !selectedValues.year) {
+        if (!selectedValues.tenant || !selectedValues.index) {
             search.docs = [];
             this.setState({search});
             return;
         }
 
         let queryOptions = {
-            index: selectedValues.year,
+            index: selectedValues.index,
             query: {
                 from: selectedValues.from,
                 to: selectedValues.to,
@@ -253,23 +253,23 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             <div className="form-group">
                                 <div className="col-md-4">
                                     <label className="control-label">
-                                        {i18n.getMessage('Archive.forms.labels.years')}
+                                        {i18n.getMessage('Archive.forms.labels.indices')}
                                     </label>
                                 </div>
                                 <div className="offset-md-2 col-md-6">
                                     <Select
                                         placeholder=""
                                         className="react-select"
-                                        value={selectedValues.year}
+                                        value={selectedValues.index}
                                         options={this.getYearSelectOptions()}
                                         onChange={value => this.handleYearSelection(value)}
-                                        disabled={!availableOptions.years || !availableOptions.years.length}/>
+                                        disabled={!availableOptions.indices || !availableOptions.indices.length}/>
                                 </div>
                             </div>
                         </div>
                     </div>
                     {
-                        selectedValues.year &&
+                        selectedValues.index &&
                             <span>
                                 <div className="row">
                                     <div className="col-md-6">
@@ -371,7 +371,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             accessor: '_source.transactionId',
                             Header: i18n.getMessage('Archive.table.columns.id.title'),
                             Cell: (row) => {
-                                let indexName = btoa(this.state.selectedValues.year);
+                                let indexName = btoa(this.state.selectedValues.index);
                                 return (
                                     <a target="blank" href={`/archive/invoices/${indexName}/documents/${row.original._id}`}>
                                         {row.value}

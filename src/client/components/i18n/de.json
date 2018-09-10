@@ -3,7 +3,7 @@
   "Archive.subtitle": "Select a tenant first then choose an archive to init the query",
 
   "Archive.forms.labels.tenant": "Tenant",
-  "Archive.forms.labels.years": "Archives",
+  "Archive.forms.labels.indices": "Archives",
   "Archive.forms.labels.from": "From",
   "Archive.forms.labels.to": "To",
   "Archive.forms.labels.textSearch": "Text Search",
