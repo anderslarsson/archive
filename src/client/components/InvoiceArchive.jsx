@@ -5,6 +5,7 @@ import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
 
 import {InvoiceArchiveApi} from '../api';
+import InvoiceArchiveDocument from './InvoiceArchiveDocument.jsx';
 import translations from './i18n';
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
@@ -16,6 +17,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
         this.state = {
             loading: false,
+            showModal: false,
+            selectedDoc: {
+                id: null,
+                doc: null
+            },
             search: {
                 docs: [],
                 total: 0,
@@ -225,10 +231,26 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     render() {
         const {i18n} = this.context;
+        const t = this.context.i18n.getMessage;
         const {loading, search, availableOptions, selectedValues} = this.state;
 
         return (
             <div>
+                {
+                    this.state.showModal &&
+                        <Components.ModalDialog
+                            visible={true}
+                            title={t('Archive.invoice.page.title')}
+                            buttons={{'ok': 'OK'}}
+                            onButtonClick={() => this.setState({showModal: false})}
+                        >
+                            <InvoiceArchiveDocument
+                                showedInModal={true}
+                                data={this.state.selectedDoc}
+                            />
+                        </Components.ModalDialog>
+                }
+
                 <h1 className="tab-description">{i18n.getMessage('Archive.title')}</h1>
                 <div className="form-horizontal">
                     <div className="row">
@@ -366,6 +388,27 @@ export default class InvoiceArchive extends Components.ContextComponent {
                     ofText={i18n.getMessage('Archive.table.pagination.of')}
                     rowsText={i18n.getMessage('Archive.table.pagination.rows')}
 
+                    getTdProps={(state, rowInfo) => {
+                        return {
+                            onClick: (e, handleOriginal) => {
+                                this.setState({showModal: false}, () => {
+                                    let stateUpdate = Object.assign(this.state, {showModal: true}, {
+                                        selectedDoc: {
+                                            id: rowInfo.original._id,
+                                            doc: rowInfo.original._source
+                                        }
+                                    });
+
+                                    this.setState(stateUpdate);
+                                });
+
+                                if (handleOriginal) {
+                                    handleOriginal();
+                                }
+                            }
+                        };
+                    }}
+
                     columns={[
                         {
                             accessor: '_source.transactionId',
@@ -393,6 +436,11 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             id: 'from',
                             accessor: '_source.receiver.protocolAttributes.from',
                             Header: i18n.getMessage('Archive.table.columns.from.title')
+                        },
+                        {
+                            id: 'lastStatus',
+                            accessor: '_source.lastStatus',
+                            Header: t('Archive.table.columns.lastStatus')
                         }
                     ]}
                 />

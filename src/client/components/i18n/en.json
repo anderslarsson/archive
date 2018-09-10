@@ -25,7 +25,8 @@
   "Archive.table.columns.startDate.title": "Start Date",
   "Archive.table.columns.endDate.title": "End Date",
   "Archive.table.columns.from.title": "Sender Email",
-  "Archive.table.columns.actions.detail": "Details",
+  "Archive.table.columns.detail": "Details",
+  "Archive.table.columns.lastStatus": "Status",
 
   "Archive.invoice.page.title": "Invoice details"
 }

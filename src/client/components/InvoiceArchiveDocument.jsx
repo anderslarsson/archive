@@ -4,18 +4,26 @@ import {Components} from '@opuscapita/service-base-ui';
 import {InvoiceArchiveApi} from '../api';
 import translations from './i18n';
 
-export default class InvoiceTransaction extends Components.ContextComponent {
+export default class InvoiceArchiveDocument extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);
 
         this.state = {
+            loaded: false,
             index: null, // ES index name
             id: null,    // ES document ID
             doc: {
                 id: null
             }
         };
+
+        if (props.data) {
+            this.state.loaded = true;
+            this.state.showedInModal = props.showedInModal || false;
+            this.state.doc._source = props.data.doc;
+            this.state.doc.id = props.data.id;
+        }
 
         this.api = new InvoiceArchiveApi();
         context.i18n.register('Archive', translations);
@@ -25,29 +33,34 @@ export default class InvoiceTransaction extends Components.ContextComponent {
         this.api.getDocument(this.state.index, this.state.id)
             .then((data) => {
                 this.setState({
+                    loaded: true,
                     doc: data.data
                 });
             });
     }
 
     componentDidMount() {
-        const {index, id} = this.context.router.params;
+        if (!this.state.loaded) {
+            const {index, id} = this.context.router.params;
 
-        this.setState({
-            index: atob(index),
-            id
-        }, () => this.fetchDocument());
+            this.setState({
+                index: atob(index),
+                id
+            }, () => this.fetchDocument());
+        }
     }
 
     render() {
         const t = this.context.i18n.getMessage;
 
-        const id = this.state.doc.id;
         const doc = this.state.doc._source;
 
         return (
             <div>
-                <h2 className="tab-description">{t('Archive.invoice.page.title')}</h2>
+                {
+                    !this.state.showedInModal &&
+                        <h2 className="tab-description">{t('Archive.invoice.page.title')}</h2>
+                }
                 {
                     doc &&
                         <div>
@@ -113,7 +126,7 @@ export default class InvoiceTransaction extends Components.ContextComponent {
                                                         <tr key={i}>
                                                             <td>{a.name}</td>
                                                             <td>
-                                                                <a href={'/blob/api/c_' + doc.customerId + '/files' + a.reference} target="_blank">Download</a>
+                                                                <a href={'/blob/api/c_' + doc.customerId + '/files' + a.reference} target="_blank" rel="noopener noreferrer">Download</a>
                                                             </td>
                                                         </tr>
                                                     )

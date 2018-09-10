@@ -20,12 +20,13 @@
 
   "Archive.table.columns.id.title": "Transaction Id",
   "Archive.table.columns.no.title": "Invoice No",
-  "Archive.table.columns.from.title": "From",
-  "Archive.table.columns.to.title": "To",
-  "Archive.table.columns.startDate.title": "Start Date",
-  "Archive.table.columns.endDate.title": "End Date",
+  "Archive.table.columns.from.title": "Von",
+  "Archive.table.columns.to.title": "An",
+  "Archive.table.columns.startDate.title": "Beginn",
+  "Archive.table.columns.endDate.title": "Ende",
   "Archive.table.columns.from.title": "Absender E-Mail",
-  "Archive.table.columns.actions.detail": "Details",
+  "Archive.table.columns.detail": "Details",
+  "Archive.table.columns.lastStatus": "Status",
 
   "Archive.invoice.page.title": "Rechnungsdetails"
 }
