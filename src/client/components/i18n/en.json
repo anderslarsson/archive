@@ -1,17 +1,17 @@
 {
-  "Archive.title": "Invoice Searching",
-  "Archive.subtitle": "Select a tenant first then choose an archive to init the query",
+  "Archive.title": "Invoice archive",
+  "Archive.subtitle": "Select a tenant first then choose the year",
 
   "Archive.forms.labels.tenant": "Tenant",
   "Archive.forms.labels.indices": "Archives",
   "Archive.forms.labels.from": "From",
   "Archive.forms.labels.to": "To",
-  "Archive.forms.labels.textSearch": "Text Search",
+  "Archive.forms.labels.textSearch": "Search in text",
   "Archive.forms.buttons.reset": "Reset",
   "Archive.forms.buttons.search": "Search",
 
-  "Archive.table.loading": "Loading...",
-  "Archive.table.empty": "No file found",
+  "Archive.table.loading": "Loading ...",
+  "Archive.table.empty": "No entry found",
   "Archive.table.pagination.next": "Next",
   "Archive.table.pagination.previous": "Previous",
   "Archive.table.pagination.page": "Page",
@@ -28,5 +28,14 @@
   "Archive.table.columns.detail": "Details",
   "Archive.table.columns.lastStatus": "Status",
 
-  "Archive.invoice.page.title": "Invoice details"
+  "Archive.invoice.page.title": "Invoice Details",
+  "Archive.invoice.page.headings.attachments": "Attachments",
+  "Archive.invoice.page.headings.receiverInformation": "Sender/Receiver",
+
+  "Archive.invoice.page.labels.lastStatus": "Status",
+  "Archive.invoice.page.labels.customerId": "Customer-ID",
+  "Archive.invoice.page.labels.endDate": "Transaction End",
+  "Archive.invoice.page.labels.startDate": "Transaction Start",
+  "Archive.invoice.page.labels.from": "From",
+  "Archive.invoice.page.labels.to": "To"
 }

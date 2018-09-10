@@ -73,15 +73,15 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                                             <td>{doc.transactionId}</td>
                                         </tr>
                                         <tr>
-                                            <td>Start</td>
+                                            <td>{t('Archive.invoice.page.labels.startDate')}</td>
                                             <td>{doc.start}</td>
                                         </tr>
                                         <tr>
-                                            <td>End</td>
+                                            <td>{t('Archive.invoice.page.labels.endDate')}</td>
                                             <td>{doc.end}</td>
                                         </tr>
                                         <tr>
-                                            <td>Customer</td>
+                                            <td>{t('Archive.invoice.page.labels.customerId')}</td>
                                             <td>{doc.customerId}</td>
                                         </tr>
                                         <tr>
@@ -101,11 +101,11 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                                             <h3>{t('Archive.invoice.page.headings.receiverInformation')}</h3>
                                             <table className="table">
                                                 <tr>
-                                                    <td>From</td>
+                                                    <td>{t('Archive.invoice.page.labels.from')}</td>
                                                     <td>{doc.receiver.protocolAttributes.from}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>To</td>
+                                                    <td>{t('Archive.invoice.page.labels.to')}</td>
                                                     <td>{doc.receiver.protocolAttributes.to}</td>
                                                 </tr>
                                             </table>

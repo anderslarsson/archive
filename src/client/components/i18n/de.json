@@ -1,22 +1,22 @@
 {
-  "Archive.title": "Invoice Searching",
-  "Archive.subtitle": "Select a tenant first then choose an archive to init the query",
+  "Archive.title": "Rechnungsarchiv",
+  "Archive.subtitle": "Bitte wählen Sie einen Mandanten aus, dann ein Jahr",
 
-  "Archive.forms.labels.tenant": "Tenant",
-  "Archive.forms.labels.indices": "Archives",
-  "Archive.forms.labels.from": "From",
-  "Archive.forms.labels.to": "To",
-  "Archive.forms.labels.textSearch": "Text Search",
-  "Archive.forms.buttons.reset": "Reset",
-  "Archive.forms.buttons.search": "Search",
+  "Archive.forms.labels.tenant": "Mandant",
+  "Archive.forms.labels.indices": "Jahr",
+  "Archive.forms.labels.from": "Von",
+  "Archive.forms.labels.to": "An",
+  "Archive.forms.labels.textSearch": "Suche im Text",
+  "Archive.forms.buttons.reset": "zurücksetzen",
+  "Archive.forms.buttons.search": "Suchen",
 
-  "Archive.table.loading": "Loading...",
-  "Archive.table.empty": "No file found",
-  "Archive.table.pagination.next": "Next",
-  "Archive.table.pagination.previous": "Previous",
-  "Archive.table.pagination.page": "Page",
-  "Archive.table.pagination.of": "of",
-  "Archive.table.pagination.rows": "rows",
+  "Archive.table.loading": "Lade ...",
+  "Archive.table.empty": "Keine Einträge gefunden",
+  "Archive.table.pagination.next": "Vor",
+  "Archive.table.pagination.previous": "Zurück",
+  "Archive.table.pagination.page": "Seite",
+  "Archive.table.pagination.of": "von",
+  "Archive.table.pagination.rows": "Zeilen",
 
   "Archive.table.columns.id.title": "Transaction Id",
   "Archive.table.columns.no.title": "Invoice No",
@@ -28,5 +28,14 @@
   "Archive.table.columns.detail": "Details",
   "Archive.table.columns.lastStatus": "Status",
 
-  "Archive.invoice.page.title": "Rechnungsdetails"
+  "Archive.invoice.page.title": "Rechnungsdetails",
+  "Archive.invoice.page.headings.attachments": "Anhänge",
+  "Archive.invoice.page.headings.receiverInformation": "Sender/Empfänger",
+
+  "Archive.invoice.page.labels.lastStatus": "Status",
+  "Archive.invoice.page.labels.customerId": "Kunden-ID",
+  "Archive.invoice.page.labels.endDate": "Transaktionsende",
+  "Archive.invoice.page.labels.startDate": "Transaktionsbeginn",
+  "Archive.invoice.page.labels.from": "Von",
+  "Archive.invoice.page.labels.to": "An"
 }
