@@ -80,12 +80,10 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.createDocument = async function (req, res, app, db) {
-    /* Check if tenant has archiving enabled */
-    /* Basic param checking */
-    /* ES insertion */
 
     let doc = req.body;
 
+    /* Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.msgType || doc.msgType !== 'invoice') {
         res.status(422).send({
             success: false,
@@ -105,6 +103,7 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
+    /* Check if tenant has archiving enabled */
     let tHasArchiving = await hasArchiving(tenantId, type, db);
     if (!tHasArchiving) {
         res.status(400).send({
@@ -130,6 +129,7 @@ module.exports.createDocument = async function (req, res, app, db) {
             let createResult;
 
             try {
+                /* ES insertion */
                 createResult = await elasticContext.client.create({
                     index: archiveName,
                     id: doc.transactionId,

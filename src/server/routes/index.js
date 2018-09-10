@@ -4,10 +4,12 @@ const invoiceArchiveHandler     = require('./api/invoice_archive/');
 const infoHandler               = require('./api/info/');
 const tenantConfigHandler       = require('./api/tenantconfig/');
 
+const can = require('./api/can');
+
 const {
     indicesInvoiceHandler,
     indicesCmdHandler,
-    documentsHandler 
+    documentsHandler
 } = require('./api/indices/');
 
 /**
@@ -28,20 +30,16 @@ module.exports.init = async function (app, db) {
     app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
 
     /* *** Invoice archive *** */
-    app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
-
-    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
-
-    /* *** Info *** */
-    app.get('/api/info/cluster', (req, res) => infoHandler.getClusterHealth(req, res));
+    app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
+    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
 
     /* *** Indices *** */
-    app.get('/api/indices', tenantIdFilter, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
-    app.post('/api/indices/:id/open', (req, res) => indicesCmdHandler.openIndex(req, res));
-    app.get('/api/indices/:index/documents/:id', (req, res) => documentsHandler.get(req, res));
+    app.get('/api/indices', can.listInvoiceIndicesByTenantId, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
+    app.post('/api/indices/:index/open', can.accessIndex, (req, res) => indicesCmdHandler.openIndex(req, res));
+    app.get('/api/indices/:index/documents/:id', can.accessIndex, (req, res) => documentsHandler.get(req, res));
 
     /* *** Searches *** */
-    app.post('/api/searches', (req, res) => invoiceArchiveHandler.search(req, res, app, db));
+    app.post('/api/searches', can.accessIndex, (req, res) => invoiceArchiveHandler.search(req, res, app, db));
     app.get('/api/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
 
 };
@@ -57,44 +55,3 @@ function handle(req, res, app, db, handlerFn) {
     }
 }
 
-async function tenantIdFilter(req, res, next) {
-    if (!req.query.tenantId) {
-        res.status(400).json({
-            success: false,
-            message: 'No tenantId found in query.'
-        });
-    }
-
-    let tenantId = req.query.tenantId;
-
-    let allowed = false;
-    let tenants = [];
-
-    try {
-        tenants = (await req.opuscapita.getUserTenants());
-
-        let hasAll = tenants.find(t => t === '*');
-        if (hasAll) {
-            allowed = true;
-        }
-
-        let hasTenant = tenants.find(t => t === tenantId);
-        if (hasTenant) {
-            allowed = true;
-        }
-    } catch (e) {
-        res.status(400).json({
-            success: false,
-            message: 'Failed to fetch user tenants.'
-        });
-    }
-
-    if (allowed) {
-        next();
-    } else {
-        res.status(403).json({
-            success: false,
-            message: ` Access denied for tenantId ${tenantId}`
-        });
-    }
-}

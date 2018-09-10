@@ -8,12 +8,6 @@ const validTypes = [
     'invoice_receiving'
 ];
 
-// module.exports.post = async function(req, res, app, db) {
-//     let body = req.body;
-
-//     return res;
-// };
-
 module.exports.get = async function (req, res, app, db) {
     const Sequelize = db.Sequelize;
 
@@ -27,16 +21,12 @@ module.exports.get = async function (req, res, app, db) {
 
         /* Check if owning tenantId has valid archive configuration */
         tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        // Fetch tenants from session
+
         let tenantConfigs = [];
         if (isAdmin(req)) {
             tenantConfigs = await tenantConfigModel.findAll();
         } else {
             let tenants = (await req.opuscapita.getUserTenants());
-            // .map(tenant => {
-            //     return req.opuscapita.getCustomerId(tenant) || req.opuscapita.getSupplierId(tenant);
-            // })
-            // .filter(tenant => tenant !== null);
 
             tenantConfigs = await tenantConfigModel.findOne({
                 where: {
@@ -51,7 +41,6 @@ module.exports.get = async function (req, res, app, db) {
 
         res.status(200).json(result);
     } catch (e) {
-        /* handle error */
         switch (e.code) {
             case '':
                 sendErrorResponse(req, res, 500, '');

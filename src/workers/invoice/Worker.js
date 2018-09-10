@@ -67,7 +67,7 @@ class Worker {
 
         if (process.env.NODE_ENV !== 'testing') {
             try {
-                // Subscribe to archive.invoice.logrotation.job.created topic
+                /* Subscribe w/o callback to trigger queue creation and binding. */
                 await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
                 await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
             } catch (e) {
