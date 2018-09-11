@@ -195,6 +195,7 @@ module.exports.search = async function search(req, res) {
                     match: {
                         '_all': {
                             query: query.fullText || '',
+                            operator: 'and',
                             'zero_terms_query': 'all'
                         }
 
