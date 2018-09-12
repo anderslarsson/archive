@@ -3,7 +3,7 @@
   "Archive.subtitle": "Select a tenant first then choose the year",
 
   "Archive.forms.labels.tenant": "Tenant",
-  "Archive.forms.labels.indices": "Archives",
+  "Archive.forms.labels.indices": "Year",
   "Archive.forms.labels.from": "From",
   "Archive.forms.labels.to": "To",
   "Archive.forms.labels.textSearch": "Search in text",

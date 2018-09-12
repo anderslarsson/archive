@@ -5,7 +5,7 @@
   "Archive.forms.labels.tenant": "Mandant",
   "Archive.forms.labels.indices": "Jahr",
   "Archive.forms.labels.from": "Von",
-  "Archive.forms.labels.to": "An",
+  "Archive.forms.labels.to": "Bis",
   "Archive.forms.labels.textSearch": "Suche im Text",
   "Archive.forms.buttons.reset": "zurücksetzen",
   "Archive.forms.buttons.search": "Suchen",

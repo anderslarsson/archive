@@ -252,6 +252,7 @@ module.exports.search = async function search(req, res) {
         });
 
     } catch (e) {
+        req.opuscapita.logger.error('InvoiceArchiveHandler#search: Failed to query ES.', e);
         res.status(400).json({success: false});
     }
 };
