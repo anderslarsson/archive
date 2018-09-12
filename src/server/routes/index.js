@@ -26,7 +26,7 @@ module.exports.init = async function (app, db) {
     let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
     /* *** TenantConfig *** */
-    app.post('/api/tenantconfig', notImplementedFn);
+    app.post('/api/tenantconfig', (req, res) => tenantConfigHandler.post(req, res, app, db));
     app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
 
     /* *** Invoice archive *** */
