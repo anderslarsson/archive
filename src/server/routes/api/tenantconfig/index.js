@@ -52,6 +52,46 @@ module.exports.get = async function (req, res, app, db) {
     }
 };
 
+module.exports.post = async function post(req, res, app, db) {
+    if (!isAdmin(req)) {
+        res.status(403).json({success: false, message: 'Access denied'});
+        return false;
+    }
+
+    if (!req.body || !req.body.tenantId) {
+        res.status(400).json({success: false, message: 'Missing parameters.'});
+        return false;
+    }
+
+    try {
+        let tenantConfigModel;
+
+        /* Check if owning tenantId has valid archive configuration */
+        tenantConfigModel = await db.modelManager.getModel('TenantConfig');
+
+        let insertResult = await tenantConfigModel.findOrCreate({
+            where: {
+                tenantId: req.body.tenantId
+            }, defaults: {
+                type: 'invoice_receiving',
+                retentionPeriodHot: 30,
+                retentionPeriodLongTerm: 10
+            }
+        });
+
+        res.status(200).json({success: true, data: insertResult[0]});
+    } catch (e) {
+        switch (e.code) {
+            case '':
+                sendErrorResponse(req, res, 500, '');
+                break;
+
+            default:
+                sendErrorResponse(req, res, 500, 'The application encountered an unexpected error.');
+        }
+    }
+};
+
 /**
  * TODO move to shared module
  */
