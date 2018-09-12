@@ -57,6 +57,8 @@ async function main() {
         // !!!!!! FIXME - for testing purposes only
         for (let i = 0, len = archiveEntries.length; i < len; i++) {
             archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
+            // archiveEntries[i].start = '2011-11-11';
+            // archiveEntries[i].end = '2011-11-11';
         }
 
         /* STAGE 4: Parse EML files, upload extracted files to blob */
