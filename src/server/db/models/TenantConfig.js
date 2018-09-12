@@ -11,12 +11,12 @@ module.exports.init = function (db) {
             /** Unique identifier usually concatenated of federation id ':' and user id to ensure unique user names. */
             id: {
                 type: Sequelize.INTEGER,
-                allowNull: false,
-                primaryKey: true
+                primaryKey: true,
+                autoIncrement: true
             },
             /** Identifier of supplier a user is assigned to. */
             tenantId: {
-                type: Sequelize.STRING(30),
+                type: Sequelize.STRING(32),
                 allowNull: true
             },
             type: {

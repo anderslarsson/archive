@@ -18,7 +18,7 @@ module.exports.up = async function (db) {
             autoIncrement: true,
         },
         tenantId: {
-            type: Sequelize.STRING(30),
+            type: Sequelize.STRING(32),
             allowNull: true
         },
         type: {
