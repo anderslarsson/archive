@@ -68,7 +68,7 @@ class Mapper {
         }
 
         /* Get the fields from the elasticsearch mapping definition */
-        let fields = Object.keys(InvoiceArchiveConfig.esMapping.mappings._doc.properties);
+        let fields = Object.keys(InvoiceArchiveConfig.esMapping.mappings.doc.properties);
 
         try {
             fields.forEach((field) => {
