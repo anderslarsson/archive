@@ -1,7 +1,7 @@
 'use strict';
 
 const path          = require('path');
-const dotenv        = require('dotenv').config({path: path.resolve(process.cwd(), '.env.local')});
+const dotenv        = require('dotenv');
 const request       = require('request');
 
 class Api {
@@ -9,6 +9,13 @@ class Api {
     constructor() {
         this.accessToken = null;
         this.initialized = false;
+
+        let env = dotenv.config({path: path.resolve(process.cwd(), '.env.local')});
+        if (env.error) {
+            const msg = 'Failed to load secrects from ENV. Can not login.';
+            console.log(msg);
+            throw new Error(msg);
+        }
     }
 
     async init() {
@@ -20,12 +27,22 @@ class Api {
 
         if (!this.accessToken) {
             this.accessToken = await this.fetchApiAccessToken();
+            if (!this.accessToken) {
+                const msg = 'Failed to fetch accessToken. Can not login.';
+                console.log(msg);
+                throw new Error(msg);
+            }
+            console.info('API#init: Successfully fetched access token:');
         }
 
         return this.initialized = true;
     }
 
-    postJson(url, json) {
+    async postJson(url, json) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
         let options = {
             url,
             method: 'POST',
@@ -56,7 +73,11 @@ class Api {
         });
     }
 
-    putChunked(url, buffer) {
+    async putChunked(url, buffer) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
         return new Promise((resolve, reject) => {
             let options = {
                 url: url,

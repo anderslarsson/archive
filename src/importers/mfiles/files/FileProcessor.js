@@ -12,11 +12,13 @@ class FileProcessor {
 
     async parse(archiveEntries) {
         let done   = [];
-        let failed = [];
-        let i      = 0;
+        let failed = [].concat(archiveEntries.failed);
 
-        for (const entry of archiveEntries) {
-            console.log(`Parsing EML  ${i++}/${archiveEntries.length} `);
+        let i      = 0;
+        let total  = archiveEntries.done.length;
+
+        for (const entry of archiveEntries.done) {
+            console.log(`Parsing EML  ${i++}/${total} `);
 
             let eml = fs.readFileSync(`${this.dataDir}/${entry.files.inbound.pathToEml}`, 'utf8');
 
@@ -37,7 +39,7 @@ class FileProcessor {
             }
 
             if (parsedMail.attachments) {
-                console.log(`Uploading attachments to Blob storage ${i}/${archiveEntries.length} `);
+                console.log(`Uploading attachments to Blob storage ${i}/${total} `);
 
                 let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 

@@ -3,13 +3,14 @@
 const xml           = require('fast-xml-parser');
 const fs            = require('fs');
 
-const Mapper        = require('./Mapper');
-const FileProcessor = require('./FileProcessor');
-const api           = require('./Api');
+const Mapper         = require('./Mapper');
+const FileProcessor  = require('./FileProcessor');
+const api            = require('./Api');
+const CustomerMapper = require('./CustomerMapper');
 
 const homeDir = require('os').homedir();
-const dataDir = `${homeDir}/tmp/SIE_export`;
-// const dataDir = `${homeDir}/tmp/SIE_redux`;
+// const dataDir = `${homeDir}/tmp/SIE_export`;
+const dataDir = `${homeDir}/tmp/SIE_redux`;
 
 const moduleIdentifier = 'MFilesImporter';
 
@@ -46,33 +47,31 @@ async function main() {
 
         console.log('--- STAGE 2 ---');
 
-        let archiveEntries = xmlToArchiveMapping(objectElements);
+        let archiveEntriesStage2 = {
+            done: xmlToArchiveMapping(objectElements),
+            failed: []
+        };
 
         /* STAGE 3: Fetch owner information (tenantId) */
 
         console.log('--- STAGE 3 ---');
 
-        // TODO Not yet decided how to do the mapping.
+        let archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2);
+        debugger;
 
-        // !!!!!! FIXME - for testing purposes only
-        for (let i = 0, len = archiveEntries.length; i < len; i++) {
-            archiveEntries[i].customerId = archiveEntries[i].receiver.target = 'OC001';
-            // archiveEntries[i].start = '2011-11-11';
-            // archiveEntries[i].end = '2011-11-11';
-        }
 
         /* STAGE 4: Parse EML files, upload extracted files to blob */
 
         console.log('--- STAGE 4 ---');
 
-        archiveEntries = await processAttachments(archiveEntries);
+        // let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
+        // debugger;
 
         /* STAGE 5: Store in ES */
 
         console.log('--- STAGE 5 ---');
 
-        let esResult = await persistToEs(archiveEntries);
-
+        let esResult = await persistToEs(archiveEntriesStage3);
         debugger;
 
         // TODO handle archiveEntries.failed
@@ -234,6 +233,14 @@ async function persistToEs(archiveEntries) {
 async function processAttachments(archiveEntries) {
     let processor = new FileProcessor(dataDir);
     let result = await processor.parse(archiveEntries);
+
+    return result;
+}
+
+async function doCustomerMapping(archiveEntries) {
+    let mapper = new CustomerMapper();
+    let result = await mapper.run(archiveEntries);
+
     return result;
 }
 
