@@ -13,7 +13,7 @@ services:
       - acl
       - auth
       - api-registry
-      - customer
+#      - customer
     labels:
       SERVICE_NAME: 'archive'
       SERVICE_TAGS: 'external'
@@ -57,27 +57,27 @@ services:
       - consul
     command: 'npm run dev'
 
-  customer:
-    image: opuscapita/customer:dev
-    depends_on:
-      - mysql
-      - consul
-      - registrator
-      - redis
-    labels:
-      SERVICE_NAME: 'customer'
-    environment:
-      SERVICE_3009_CHECK_HTTP: /api/health/check
-      SERVICE_3009_CHECK_INTERVAL: 15s
-      SERVICE_3009_CHECK_TIMEOUT: 3s
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      REDIS_AUTH: ${REDIS_AUTH}
-      RABBITMQ_USER: ${RABBITMQ_USER}
-      RABBITMQ_PASS: ${RABBITMQ_PASS}
-    ports:
-      - '3009:3009'
-    command: 'npm run dev'
+    #  customer:
+    #    image: opuscapita/customer:dev
+    #    depends_on:
+    #      - mysql
+    #      - consul
+    #      - registrator
+    #      - redis
+    #    labels:
+    #      SERVICE_NAME: 'customer'
+    #    environment:
+    #      SERVICE_3009_CHECK_HTTP: /api/health/check
+    #      SERVICE_3009_CHECK_INTERVAL: 15s
+    #      SERVICE_3009_CHECK_TIMEOUT: 3s
+    #      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    #      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    #      REDIS_AUTH: ${REDIS_AUTH}
+    #      RABBITMQ_USER: ${RABBITMQ_USER}
+    #      RABBITMQ_PASS: ${RABBITMQ_PASS}
+    #    ports:
+    #      - '3009:3009'
+    #    command: 'npm run dev'
 
   bnp:
     image: opuscapita/bnp:dev
