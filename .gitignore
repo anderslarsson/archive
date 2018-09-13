@@ -8,3 +8,7 @@ src/server/static/components/
 tags
 .idea/
 .env.local
+
+src/importers/mfiles/customers/data
+src/importers/mfiles/customers/out
+

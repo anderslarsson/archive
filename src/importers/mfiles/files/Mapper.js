@@ -1,6 +1,6 @@
 'use strict';
 
-const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
+const {InvoiceArchiveConfig} = require('../../../shared/invoice_archive_config');
 
 class Mapper {
     constructor(objectElem) {
