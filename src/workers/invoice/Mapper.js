@@ -122,14 +122,14 @@ class Mapper {
                 return {
                     date: i.timestamp || null,
                     description: i.eventText || '',
-                    status: i.processStatus || ''
+                    status: i.stepStatus || ''
                 };
             });
     }
 
     _buildLastStatus() {
         let result = this.items.reduce((acc, elem) => {
-            return elem.hasOwnProperty('processStatus') ? elem.processStatus : acc;
+            return elem.hasOwnProperty('stepStatus') ? elem.stepStatus : acc;
         }, null);
 
         return result;
