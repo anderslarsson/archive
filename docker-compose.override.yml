@@ -2,6 +2,18 @@ version: '2'
 services:
   main:
     build: .
+    depends_on:
+      - elasticsearch
+      - mysql
+      - consul
+      - registrator
+      - redis
+      - kong
+      - rabbitmq
+      - acl
+      - auth
+      - api-registry
+      - customer
     volumes:
       - ./src:/home/node/archive/src
       - ./test:/home/node/archive/test
@@ -21,6 +33,28 @@ services:
   blob:
     env_file:
       - .env.local
+
+  customer:
+    image: opuscapita/customer:dev
+    depends_on:
+      - mysql
+      - consul
+      - registrator
+      - redis
+    labels:
+      SERVICE_NAME: 'customer'
+    environment:
+      SERVICE_3009_CHECK_HTTP: /api/health/check
+      SERVICE_3009_CHECK_INTERVAL: 15s
+      SERVICE_3009_CHECK_TIMEOUT: 3s
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      REDIS_AUTH: ${REDIS_AUTH}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+    ports:
+      - '3009:3009'
+    command: 'npm run dev'
 
   # invoice_worker:
   #   build: .
