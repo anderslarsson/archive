@@ -65,7 +65,7 @@ async function main() {
 
         console.log('--- STAGE 4 ---');
 
-        let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
+        // let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
         debugger;
 
         /* STAGE 5: Store in ES */
@@ -108,7 +108,8 @@ function xmlToArchiveMapping(objectElements) {
             e._errors = {       // Create container for errors on every entry
                 stage: {
                     fileProcessing: [],
-                    persistToEs: []
+                    persistToEs: [],
+                    customerMapping: []
                 }
             };
 

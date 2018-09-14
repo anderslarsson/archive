@@ -19,6 +19,9 @@ module.exports = class CustomerMapper {
         // !!!!!! FIXME - for testing purposes only
         for (const entry of archiveEntries.done) {
 
+            let success = false;
+            let failureMessage = '';
+
             if (entry && entry.receiver && entry.receiver.protocolAttributes && entry.receiver.protocolAttributes.to) {
                 const to = entry.receiver.protocolAttributes.to;
 
@@ -34,13 +37,26 @@ module.exports = class CustomerMapper {
                     entry.customerId = tenantId;
                     entry.receiver.target = tenantId;
 
-                    done.push(entry);
+                    success = true;
+
                 } else {
-                    console.error('CustomerMapper#run: No mapping found for email:' + to);
-                    failed.push(entry);
+                    failureMessage = 'CustomerMapper#run: No mapping found for email: ' + to;
+                    console.error(failureMessage);
+                    success = false;
                 }
             } else {
-                console.error('CustomerMapper#run: Entry has no receiver info.');
+                failureMessage = 'CustomerMapper#run: Entry has no receiver info.';
+                console.error(failureMessage);
+                success = false;
+            }
+
+            if (success) {
+                done.push(entry);
+            } else {
+                entry._errors.stage.customerMapping.push({
+                    type: 'customer_mapping_failed',
+                    message: failureMessage
+                });
                 failed.push(entry);
             }
 
