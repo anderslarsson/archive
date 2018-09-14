@@ -1,7 +1,7 @@
 'use strict';
 
-const xml           = require('fast-xml-parser');
-const fs            = require('fs');
+const xml = require('fast-xml-parser');
+const fs  = require('fs');
 
 const Mapper         = require('./Mapper');
 const FileProcessor  = require('./FileProcessor');
@@ -10,7 +10,8 @@ const CustomerMapper = require('./CustomerMapper');
 
 const homeDir = require('os').homedir();
 // const dataDir = `${homeDir}/tmp/SIE_export`;
-const dataDir = `${homeDir}/tmp/SIE_redux`;
+// const dataDir = `${homeDir}/tmp/SIE_redux`;
+const dataDir = `${homeDir}/tmp/mfiles_import`;
 
 const moduleIdentifier = 'MFilesImporter';
 
@@ -64,14 +65,14 @@ async function main() {
 
         console.log('--- STAGE 4 ---');
 
-        // let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
-        // debugger;
+        let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
+        debugger;
 
         /* STAGE 5: Store in ES */
 
         console.log('--- STAGE 5 ---');
 
-        let esResult = await persistToEs(archiveEntriesStage3);
+        // let esResult = await persistToEs(archiveEntriesStage3);
         debugger;
 
         // TODO handle archiveEntries.failed
@@ -238,7 +239,7 @@ async function processAttachments(archiveEntries) {
 }
 
 async function doCustomerMapping(archiveEntries) {
-    let mapper = new CustomerMapper();
+    let mapper = new CustomerMapper(`${dataDir}/mapping.csv`);
     let result = await mapper.run(archiveEntries);
 
     return result;

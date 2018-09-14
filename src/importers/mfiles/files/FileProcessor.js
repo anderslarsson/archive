@@ -26,6 +26,7 @@ class FileProcessor {
             try {
                 parsedMail = await simpleParser(eml);
             } catch (e) {
+                console.error('FileProcessor#parse: Failed to parse EML.', e);
                 parsedMail = null;
 
                 entry._errors.stage.fileProcessing.push({
@@ -41,29 +42,31 @@ class FileProcessor {
             if (parsedMail.attachments) {
                 console.log(`Uploading attachments to Blob storage ${i}/${total} `);
 
-                let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
+                // let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 
-                /* Push entries with failed uploads to the fail queue */
-                if (uploadResult.failed.length > 0) {
-                    entry._errors.stage.fileProcessing.push({
-                        type: 'blob_upload_failed',
-                        message: 'Failed to upload attachements',
-                        data: uploadResult.failed
-                    });
-                    failed.push(entry);
-                } else {
-                    /* Map result from Blog storage to archive schema. */
-                    let inboundAttachments = uploadResult.done.map((e) => {
-                        return {
-                            reference: e.path,
-                            name: e.name
-                        };
-                    });
+                // /* Push entries with failed uploads to the fail queue */
+                // if (uploadResult.failed.length > 0) {
+                //     entry._errors.stage.fileProcessing.push({
+                //         type: 'blob_upload_failed',
+                //         message: 'Failed to upload attachements',
+                //         data: uploadResult.failed
+                //     });
+                //     failed.push(entry);
+                // } else {
+                //     /* Map result from Blog storage to archive schema. */
+                //     let inboundAttachments = uploadResult.done.map((e) => {
+                //         return {
+                //             reference: e.path,
+                //             name: e.name
+                //         };
+                //     });
 
-                    entry.files.inboundAttachments = entry.files.inboundAttachments.concat(inboundAttachments);
+                //     entry.files.inboundAttachments = entry.files.inboundAttachments.concat(inboundAttachments);
 
-                    done.push(entry);
-                }
+                //     done.push(entry);
+                // }
+
+                done.push(entry);
             }
         }
 

@@ -33,7 +33,7 @@ class Mapper {
             });
 
         } catch (e) {
-            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document.');
+            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document.', e);
         }
 
         return this.document;
@@ -55,11 +55,17 @@ class Mapper {
          * has been parsed and the PDFs are stored to
          * the inboundAttachments field.
          */
-        let pathToEml = this.latestVersion
-            .docfiles
-            .docfile
-            .attr['@_pathfrombase']
-            .replace(/\\/g, '/');
+        let pathToEml = null;
+        if (this.latestVersion && this.latestVersion.docfiles && this.latestVersion.docfiles.docfile) {
+            pathToEml = this.latestVersion
+                .docfiles
+                .docfile
+                .attr['@_pathfrombase']
+                .replace(/\\/g, '/');
+        } else {
+            const guid = this.objectElem.attr['@_guid'];
+            console.warn(`WARN: Object ${guid} has no attached EML file.`);
+        }
 
         return {
             inbound: {
