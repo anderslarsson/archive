@@ -1,6 +1,8 @@
 'use strict';
 const simpleParser  = require('mailparse').simpleParser;
 const fs            = require('fs');
+const path          = require('path');
+const he            = require('he');
 
 const api    = require('./Api');
 
@@ -17,10 +19,37 @@ class FileProcessor {
         let i      = 0;
         let total  = archiveEntries.done.length;
 
-        for (const entry of archiveEntries.done) {
-            console.log(`Parsing EML  ${i++}/${total} `);
+        let timeLast = Date.now();
 
-            let eml = fs.readFileSync(`${this.dataDir}/${entry.files.inbound.pathToEml}`, 'utf8');
+        for (const entry of archiveEntries.done) {
+
+            i++;
+            const dts = Math.ceil((Date.now() - timeLast) / 1000);
+
+            if (dts >= 10) {
+                /* Print status only all five seconds */
+                console.log(`Parsing EML  ${i}/${total} `);
+                timeLast = Date.now();
+            }
+
+            let eml = null;
+            try {
+                eml = this.readEml(entry);
+            } catch (e) {
+                if (e.data) {
+                    console.error(`FileProcessor#readEml: ${e.data.message}`, e);
+                    entry._errors.stage.fileProcessing.push(e.data);
+
+                } else {
+                    let msg = 'FileProcessor#parse: Unhandled exception in #readEml()';
+                    console.error(msg, e);
+                    entry._errors.stage.fileProcessing.push({
+                        exception: e
+                    });
+                }
+
+                continue;
+            }
 
             let parsedMail;
             try {
@@ -40,7 +69,10 @@ class FileProcessor {
             }
 
             if (parsedMail.attachments) {
-                console.log(`Uploading attachments to Blob storage ${i}/${total} `);
+                if (dts >= 10) {
+                    /* Print status only all five seconds */
+                    console.log(`Uploading attachments to Blob storage ${i}/${total} `);
+                }
 
                 // let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 
@@ -74,6 +106,89 @@ class FileProcessor {
         // - return all done
         // -handle error for failed
         return {done, failed};
+    }
+
+    /**
+     * Takes a single archive entry as input
+     * and tries to read the EML file it
+     * references.
+     *
+     * @param {object} entry
+     */
+    readEml(entry) {
+        const pathToEml = (((entry || {}).files || {}).inbound || {}).pathToEml || false;
+        if (pathToEml === false) {
+            let msg = 'Unable to access pathToEml property.';
+            let error = new Error(msg);
+            error.data = {
+                type: 'read_pathtoeml_prop_failed',
+                message: msg
+            };
+            throw error;
+        }
+
+        let fileName;
+        try {
+            fileName = he.decode(entry.files.inbound.pathToEml);
+        } catch (e) {
+            let msg = 'Unable decode path with he.';
+            let error = new Error(msg);
+            error.data = {
+                type: 'decode_pathtoeml_prop_failed',
+                message: msg,
+                exception: e
+            };
+            throw error;
+        }
+
+        let eml;
+        let readFailed = false;
+        try {
+            eml = fs.readFileSync(`${this.dataDir}/${fileName}`, 'utf8');
+        } catch (e) {
+            readFailed = true;
+        }
+
+        /* Retry with fallback to read file in the given directory in /L/L */
+        try {
+            if (readFailed) {
+                const dirname = path.dirname(`${this.dataDir}/${fileName}`);
+                const ls = fs.readdirSync(dirname);
+
+                if (ls && ls.length >= 1) {
+                    let fallbackFileName = ls.find((e) => e.endsWith('.eml'));
+
+                    if (fallbackFileName) {
+                        eml = fs.readFileSync(`${dirname}/${fallbackFileName}`, 'utf8');
+                    } else {
+                        throw new Error('No EML in directory ' + dirname + ' and filename ' + fallbackFileName);
+                    }
+                }
+            }
+        } catch (e) {
+            let msg = 'Failed to read EML file';
+            let error = new Error(msg);
+            error.data = {
+                type: 'read_file_failed',
+                message: msg,
+                exception: e
+            };
+
+            throw error;
+        }
+
+        if (!eml || eml === '') {
+            let msg = 'Failed to read EML file or file is empty.';
+            let error = new Error(msg);
+            error.data = {
+                type: 'read_file_failed_or_empty',
+                message: msg
+            };
+
+            throw error;
+        }
+
+        return eml;
     }
 
     async uploadAttachments(archiveEntry, attachments) {

@@ -2,6 +2,7 @@
 
 const xml = require('fast-xml-parser');
 const fs  = require('fs');
+const he  = require('he');
 
 const Mapper         = require('./Mapper');
 const FileProcessor  = require('./FileProcessor');
@@ -12,6 +13,7 @@ const homeDir = require('os').homedir();
 // const dataDir = `${homeDir}/tmp/SIE_export`;
 // const dataDir = `${homeDir}/tmp/SIE_redux`;
 const dataDir = `${homeDir}/tmp/mfiles_import`;
+const mappingDir = `${homeDir}/tmp`;
 
 const moduleIdentifier = 'MFilesImporter';
 
@@ -28,11 +30,14 @@ const options = {
     trimValues: true,
     cdataTagName: '__cdata', //default is 'false'
     cdataPositionChar: '\\c',
+    tagValueProcessor: a => he.decode(a),
     localeRange: '', //To support non english character in tag/attribute values.
 };
 
 async function main() {
     await api.init();
+
+    let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4;
 
     try {
         /* STAGE 1: Preprocessing */
@@ -42,14 +47,15 @@ async function main() {
         let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
         let archiveElem     = fetchArchiveElement(indexXml);
         let contentXmlNames = findContentXmlNames(archiveElem);
-        let objectElements  = fetchObjectElements(contentXmlNames);
+
+        archiveEntriesStage1  = fetchObjectElements(contentXmlNames);
 
         /* STAGE 2: Create mapping */
 
         console.log('--- STAGE 2 ---');
 
-        let archiveEntriesStage2 = {
-            done: xmlToArchiveMapping(objectElements),
+        archiveEntriesStage2 = {
+            done: xmlToArchiveMapping(archiveEntriesStage1),
             failed: []
         };
 
@@ -57,15 +63,13 @@ async function main() {
 
         console.log('--- STAGE 3 ---');
 
-        let archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2);
-        debugger;
-
+        archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2);
 
         /* STAGE 4: Parse EML files, upload extracted files to blob */
 
         console.log('--- STAGE 4 ---');
 
-        // let archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
+        archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
         debugger;
 
         /* STAGE 5: Store in ES */
@@ -78,6 +82,7 @@ async function main() {
         // TODO handle archiveEntries.failed
 
     } catch (e) {
+        debugger;
         console.error(e);
     }
 
@@ -94,8 +99,11 @@ function readContentXml(entityName) {
     entityName = entityName.trim();
 
     let capitalizedEntityName = entityName.replace(/^\w/, c => c.toUpperCase());
+    let fileName = `${dataDir}/Metadata/${capitalizedEntityName}.xml`;
+    let contentXml = fs.readFileSync(fileName);
 
-    let contentXml = fs.readFileSync(`${dataDir}/Metadata/${capitalizedEntityName}.xml`);
+    console.info(`NFO: Parsing content XML: ${fileName}`);
+
     let content = xml.parse(contentXml.toString(), options).content;
 
     return content.object;
@@ -240,7 +248,7 @@ async function processAttachments(archiveEntries) {
 }
 
 async function doCustomerMapping(archiveEntries) {
-    let mapper = new CustomerMapper(`${dataDir}/mapping.csv`);
+    let mapper = new CustomerMapper(`${mappingDir}/mapping.csv`);
     let result = await mapper.run(archiveEntries);
 
     return result;

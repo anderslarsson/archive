@@ -15,12 +15,9 @@ module.exports = class CustomerMapper {
         const customerMapping = await csv({delimiter: ';'})
             .fromFile(this.pathToMapping);
 
-
-        // !!!!!! FIXME - for testing purposes only
         for (const entry of archiveEntries.done) {
 
             let success = false;
-            let failureMessage = '';
 
             if (entry && entry.receiver && entry.receiver.protocolAttributes && entry.receiver.protocolAttributes.to) {
                 const to = entry.receiver.protocolAttributes.to;
@@ -40,23 +37,30 @@ module.exports = class CustomerMapper {
                     success = true;
 
                 } else {
-                    failureMessage = 'CustomerMapper#run: No mapping found for email: ' + to;
-                    console.error(failureMessage);
+                    let failureMessage = 'CustomerMapper#run: No mapping found for email: ' + to;
+                    entry._errors.stage.customerMapping.push({
+                        type: 'customer_mapping_failed_no_mapping',
+                        message: failureMessage,
+                        data: to
+                    });
+
+                    // console.error(failureMessage);
                     success = false;
                 }
             } else {
-                failureMessage = 'CustomerMapper#run: Entry has no receiver info.';
-                console.error(failureMessage);
+                let failureMessage = 'CustomerMapper#run: Entry has no receiver info.';
+                entry._errors.stage.customerMapping.push({
+                    type: 'customer_mapping_failed_no_receiver',
+                    message: failureMessage
+                });
+
+                // console.error(failureMessage);
                 success = false;
             }
 
             if (success) {
                 done.push(entry);
             } else {
-                entry._errors.stage.customerMapping.push({
-                    type: 'customer_mapping_failed',
-                    message: failureMessage
-                });
                 failed.push(entry);
             }
 
