@@ -56,12 +56,18 @@ class Mapper {
          * the inboundAttachments field.
          */
         let pathToEml = null;
-        if (this.latestVersion && this.latestVersion.docfiles && this.latestVersion.docfiles.docfile) {
-            pathToEml = this.latestVersion
-                .docfiles
-                .docfile
-                .attr['@_pathfrombase']
-                .replace(/\\/g, '/');
+        if (((((this.latestVersion || {}).docfiles || {}).docfile || {}).attr || {})['@_pathfrombase']) {
+            let df = this.latestVersion .docfiles .docfile;
+
+            if (Array.isArray(df)) {
+                pathToEml = df.find(e => e.attr['@_ext'] === 'eml');
+            } else {
+                pathToEml = this.latestVersion
+                    .docfiles
+                    .docfile
+                    .attr['@_pathfrombase']
+                    .replace(/\\/g, '/');
+            }
         } else {
             const guid = this.objectElem.attr['@_guid'];
             console.warn(`WARN: Object ${guid} has no attached EML file.`);
