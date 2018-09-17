@@ -67,9 +67,13 @@ export default class InvoiceArchive extends Components.ContextComponent {
     fetchYearOptions(tenantId) {
         this.api.getYearOptions(tenantId)
             .then(response => {
-                const {availableOptions} = this.state;
-                availableOptions.indices = response.data;
-                this.setState({availableOptions});
+                if (response && response.data && response.data.length === 0) {
+                    this.context.showNotification('No archived data found.', 'error', 10);
+                } else {
+                    const {availableOptions} = this.state;
+                    availableOptions.indices = response.data;
+                    this.setState({availableOptions});
+                }
             })
             .catch((err) => {
                 this.context.showNotification(err.message, 'error', 10);
