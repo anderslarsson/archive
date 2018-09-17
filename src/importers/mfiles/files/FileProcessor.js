@@ -157,7 +157,7 @@ class FileProcessor {
                 const ls = fs.readdirSync(dirname);
 
                 if (ls && ls.length >= 1) {
-                    let fallbackFileName = ls.find((e) => e.endsWith('.eml'));
+                    let fallbackFileName = ls.find((e) => e.toLowerCase().endsWith('.eml'));
 
                     if (fallbackFileName) {
                         eml = fs.readFileSync(`${dirname}/${fallbackFileName}`, 'utf8');
