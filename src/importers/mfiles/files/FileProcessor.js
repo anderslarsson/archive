@@ -3,18 +3,39 @@ const simpleParser  = require('mailparse').simpleParser;
 const fs            = require('fs');
 const path          = require('path');
 const he            = require('he');
+const onDeath       = require('death');
 
 const api    = require('./Api');
 
 class FileProcessor {
 
     constructor(dataDir) {
+        this.done = [];
+        this.failed = [];
+
         this.dataDir = dataDir;
+
+        this.disposeDeath = onDeath(() => {
+            let d = Date.now();
+
+            fs.writeFileSync(`./${d}_fileProcessing.json`, JSON.stringify({done: this.done, failed: this.failed}, null, 4), (err) => {
+                if (err) {
+                    console.error(err);
+                    return;
+                };
+            });
+
+            process.exit();
+        });
+    }
+
+    dispose() {
+        this.disposeDeath();
     }
 
     async parse(archiveEntries) {
-        let done   = [];
-        let failed = [].concat(archiveEntries.failed);
+        this.done   = [];
+        this.failed = [].concat(archiveEntries.failed);
 
         let i      = 0;
         let total  = archiveEntries.done.length;
@@ -48,7 +69,7 @@ class FileProcessor {
                     });
                 }
 
-                failed.push(entry);
+                this.failed.push(entry);
                 continue;
             }
 
@@ -65,7 +86,7 @@ class FileProcessor {
                     exception: e
                 });
 
-                failed.push(entry);
+                this.failed.push(entry);
                 continue;
             }
 
@@ -99,14 +120,17 @@ class FileProcessor {
                 //     done.push(entry);
                 // }
 
-                done.push(entry);
+                this.done.push(entry);
             }
         }
 
         // TODO
         // - return all done
         // -handle error for failed
-        return {done, failed};
+        return {
+            done: this.done,
+            failed: this.failed
+        };
     }
 
     /**

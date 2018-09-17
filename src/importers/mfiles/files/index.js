@@ -4,6 +4,7 @@ const xml = require('fast-xml-parser');
 const fs  = require('fs');
 const he  = require('he');
 
+const EsUploader     = require('./EsUploader');
 const Mapper         = require('./Mapper');
 const FileProcessor  = require('./FileProcessor');
 const api            = require('./Api');
@@ -198,51 +199,19 @@ function fetchObjectElements(contentXmlNames) {
  * @return {Object} Object  of successful and failed mappings
  */
 async function persistToEs(archiveEntries) {
-    let done = [];
-    let failed = [].concat(archiveEntries.failed);
+    const esUploader = new EsUploader();
+    let result = await esUploader.run(archiveEntries);
 
-    let i = 0;
-    for (const entry of archiveEntries.done) {
-        console.log(`Creating ES document ${++i}/${archiveEntries.done.length} `);
+    esUploader.dispose();
 
-        /* Remove uneccessary data before writing to ES */
-        let cleanedEntry = Object.assign({}, entry);
-        if (cleanedEntry._errors) {
-            delete cleanedEntry._errors;
-        }
-
-        try {
-            let result = await api.postJson('http://localhost:8080/archive/api/archive/invoices', cleanedEntry);
-
-            if (result && result.success === true) {
-                done.push(entry);
-            } else {
-                entry._errors.stage.persistToEs.push({
-                    message: result.error || 'API error without message.',
-                    data: result
-                });
-                failed.push(entry);
-                console.error('Failed to persist to ES');
-            }
-        } catch (e) {
-            entry._errors.stage.persistToEs.push({
-                message: 'Failed to persist to ES with exception',
-                data: e
-            });
-            failed.push(entry);
-            console.error('Failed to persist to ES with exception: ', e, entry);
-        }
-    }
-
-    return {
-        done,
-        failed
-    };
+    return result;
 }
 
 async function processAttachments(archiveEntries) {
     let processor = new FileProcessor(dataDir);
     let result = await processor.parse(archiveEntries);
+
+    processor.dispose();
 
     return result;
 }

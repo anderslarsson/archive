@@ -56,15 +56,16 @@ class Mapper {
          * the inboundAttachments field.
          */
         let pathToEml = null;
-        if (((((this.latestVersion || {}).docfiles || {}).docfile || {}).attr || {})['@_pathfrombase']) {
-            let df = this.latestVersion .docfiles .docfile;
+        if (((this.latestVersion || {}).docfiles || {}).docfile) {
+            let df = this.latestVersion.docfiles.docfile;
 
             if (Array.isArray(df)) {
-                pathToEml = df.find(e => e.attr['@_ext'] === 'eml');
+                pathToEml = df
+                    .find(e => e.attr['@_ext'] === 'eml')
+                    .attr['@_pathfrombase']
+                    .replace(/\\/g, '/');
             } else {
-                pathToEml = this.latestVersion
-                    .docfiles
-                    .docfile
+                pathToEml = df
                     .attr['@_pathfrombase']
                     .replace(/\\/g, '/');
             }
