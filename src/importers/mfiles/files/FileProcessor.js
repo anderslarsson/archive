@@ -48,6 +48,7 @@ class FileProcessor {
                     });
                 }
 
+                failed.push(entry);
                 continue;
             }
 
