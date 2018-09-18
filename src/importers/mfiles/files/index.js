@@ -1,14 +1,14 @@
 'use strict';
 
-const xml = require('fast-xml-parser');
-const fs  = require('fs');
-const he  = require('he');
+const fs   = require('fs');
+const args = require('minimist')(process.argv.slice(2));
 
-const EsUploader     = require('./EsUploader');
-const Mapper         = require('./Mapper');
-const FileProcessor  = require('./FileProcessor');
-const api            = require('./Api');
-const CustomerMapper = require('./CustomerMapper');
+const MfilesXmlParser = require('./MfilesXmlParser');
+const EsUploader      = require('./EsUploader');
+const Mapper          = require('./Mapper');
+const FileProcessor   = require('./FileProcessor');
+const api             = require('./Api');
+const CustomerMapper  = require('./CustomerMapper');
 
 const homeDir = require('os').homedir();
 // const dataDir = `${homeDir}/tmp/SIE_export`;
@@ -16,40 +16,22 @@ const homeDir = require('os').homedir();
 const dataDir = `${homeDir}/tmp/mfiles_import`;
 const mappingDir = `${homeDir}/tmp`;
 
-const moduleIdentifier = 'MFilesImporter';
-
-
-const options = {
-    attributeNamePrefix: '@_',
-    attrNodeName: 'attr', //default is 'false'
-    textNodeName: '#text',
-    ignoreAttributes: false,
-    ignoreNameSpace: false,
-    allowBooleanAttributes: true,
-    parseNodeValue: true,
-    parseAttributeValue: true,
-    trimValues: true,
-    cdataTagName: '__cdata', //default is 'false'
-    cdataPositionChar: '\\c',
-    tagValueProcessor: a => he.decode(a),
-    localeRange: '', //To support non english character in tag/attribute values.
-};
+let resumeFrom = null;
 
 async function main() {
-    await api.init();
-
     let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4;
 
+    if (args.resume) {
+        let content = fs.readFileSync(args.resume);
+        resumeFrom = JSON.parse(content);
+    }
+
     try {
-        /* STAGE 1: Preprocessing */
+        /* STAGE 1: Preprocessing, fetching all object elemaents from content XML */
 
         console.log('--- STAGE 1 ---');
 
-        let indexXml        = readEntrypointXml(`${dataDir}/Index.xml`);
-        let archiveElem     = fetchArchiveElement(indexXml);
-        let contentXmlNames = findContentXmlNames(archiveElem);
-
-        archiveEntriesStage1  = fetchObjectElements(contentXmlNames);
+        archiveEntriesStage1  = preprocessXml();
 
         /* STAGE 2: Create mapping */
 
@@ -70,8 +52,9 @@ async function main() {
 
         console.log('--- STAGE 4 ---');
 
+        await api.init();
+
         archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
-        debugger;
 
         /* STAGE 5: Store in ES */
 
@@ -89,25 +72,18 @@ async function main() {
 
 }
 
-/**
- * @function readContentXml
- *
- * Extracts the object properties from the Content.xml
- *
- * @return {Array} - List of object entries
- */
-function readContentXml(entityName) {
-    entityName = entityName.trim();
+function preprocessXml() {
+    let parser = new MfilesXmlParser();
+    let result = parser.run();
 
-    let capitalizedEntityName = entityName.replace(/^\w/, c => c.toUpperCase());
-    let fileName = `${dataDir}/Metadata/${capitalizedEntityName}.xml`;
-    let contentXml = fs.readFileSync(fileName);
+    return result;
+}
 
-    console.info(`NFO: Parsing content XML: ${fileName}`);
+function parseObjectMeta(obj) {
+    let mapper = new Mapper(obj);
+    let result = mapper.do();
 
-    let content = xml.parse(contentXml.toString(), options).content;
-
-    return content.object;
+    return result;
 }
 
 function xmlToArchiveMapping(objectElements) {
@@ -127,66 +103,6 @@ function xmlToArchiveMapping(objectElements) {
     return result;
 }
 
-function parseObjectMeta(obj) {
-    let mapper = new Mapper(obj);
-    let result = mapper.do();
-
-    return result;
-}
-
-function readEntrypointXml(filePath) {
-    let result;
-    try {
-        result = fs.readFileSync(filePath);
-    } catch (e) {
-        result = null;
-    }
-
-    if (result) {
-        return result;
-    } else {
-        throw new Error(`${moduleIdentifier}#readEntrypointXml: Failed to read ${filePath}`);
-    }
-}
-
-function fetchArchiveElement(indexXml) {
-    let parsedXml = xml.parse(indexXml.toString(), options);
-
-    if (parsedXml && parsedXml.archive) {
-        return parsedXml.archive;
-    } else {
-        throw new Error(`${moduleIdentifier}#readArchiveElement: Failed to read the archive element.`);
-    }
-
-}
-
-/**
- * @function findContentXmlNames
- *
- * Retrieves all content XML names from the toplevel archive element.
- *
- * @param {XMLNode} archiveElem
- *
- * @returns {Array}
- */
-function findContentXmlNames(archiveElem) {
-    let result = archiveElem['#text']
-        .split('\n')
-        .filter((e) => e.match(/content/))
-        .map((e) => e.replace(/&|;/g, ''));
-
-    if (!Array.isArray(result) || result.length <= 0) {
-        throw new Error(`${moduleIdentifier}#findContentXmlNames: Failed to parse the content XML names from archive element.`);
-    } else {
-        return result;
-    }
-}
-
-function fetchObjectElements(contentXmlNames) {
-    return contentXmlNames
-        .map(readContentXml)
-        .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
-}
 
 /**
  * Write the result from previous mapping stages to Elasticsearch.
@@ -209,7 +125,7 @@ async function persistToEs(archiveEntries) {
 
 async function processAttachments(archiveEntries) {
     let processor = new FileProcessor(dataDir);
-    let result = await processor.parse(archiveEntries);
+    let result = await processor.run(archiveEntries);
 
     processor.dispose();
 

@@ -33,7 +33,7 @@ class FileProcessor {
         this.disposeDeath();
     }
 
-    async parse(archiveEntries) {
+    async run(archiveEntries) {
         this.done   = [];
         this.failed = [].concat(archiveEntries.failed);
 
