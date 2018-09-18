@@ -25,7 +25,6 @@ async function main() {
 
         debugger;
     } catch (e) {
-        /* handle error */
         debugger;
     }
 }

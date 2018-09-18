@@ -96,31 +96,29 @@ class FileProcessor {
                     console.log(`Uploading attachments to Blob storage ${i}/${total} `);
                 }
 
-                // let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
+                let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 
-                // /* Push entries with failed uploads to the fail queue */
-                // if (uploadResult.failed.length > 0) {
-                //     entry._errors.stage.fileProcessing.push({
-                //         type: 'blob_upload_failed',
-                //         message: 'Failed to upload attachements',
-                //         data: uploadResult.failed
-                //     });
-                //     failed.push(entry);
-                // } else {
-                //     /* Map result from Blog storage to archive schema. */
-                //     let inboundAttachments = uploadResult.done.map((e) => {
-                //         return {
-                //             reference: e.path,
-                //             name: e.name
-                //         };
-                //     });
+                /* Push entries with failed uploads to the fail queue */
+                if (uploadResult.failed.length > 0) {
+                    entry._errors.stage.fileProcessing.push({
+                        type: 'blob_upload_failed',
+                        message: 'Failed to upload attachements',
+                        data: uploadResult.failed
+                    });
+                    this.failed.push(entry);
+                } else {
+                    /* Map result from Blog storage to archive schema. */
+                    let outboundAttachments = uploadResult.done.map((e) => {
+                        return {
+                            reference: e.path,
+                            name: e.name
+                        };
+                    });
 
-                //     entry.files.inboundAttachments = entry.files.inboundAttachments.concat(inboundAttachments);
+                    entry.files.outboundAttachments = entry.files.outboundAttachments.concat(outboundAttachments);
 
-                //     done.push(entry);
-                // }
-
-                this.done.push(entry);
+                    this.done.push(entry);
+                }
             }
         }
 
@@ -224,7 +222,7 @@ class FileProcessor {
             if (attachment && attachment.content && attachment.content instanceof Buffer) {
 
                 try {
-                    let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, `c_${archiveEntry.customerId}`, attachment.filename);
+                    let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, `${archiveEntry.customerId}`, attachment.filename);
                     done.push(result);
                 } catch (e) {
                     console.error('FileProcessor#uploadAttachments: Failed to upload attachment. ', e);
@@ -249,7 +247,7 @@ class FileProcessor {
      */
     uploadFile(data, transactionId, tenantId, filename) {
         filename = encodeURI(filename);
-        return api.putChunked(`http://localhost:8080/blob/api/${tenantId}/files/private/archive_b/invoice/${transactionId}/${filename}?createMissing=true`, data);
+        return api.putChunked(`http://localhost:8080/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}?createMissing=true`, data);
     }
 
 }

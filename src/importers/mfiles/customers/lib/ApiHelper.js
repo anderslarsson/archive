@@ -1,8 +1,10 @@
-var axios = require('axios');
-var extend = require('extend');
-var qs = require('qs');
+const axios = require('axios');
+const extend = require('extend');
+const qs = require('qs');
+const path = require('path');
+const dotenv = require('dotenv');
 
-var defaultConfig = {
+const defaultConfig = {
     username: 'ocadmin',
     password: 'test',
     scheme: 'https',
@@ -10,7 +12,7 @@ var defaultConfig = {
     port: '443',
     clientId: 'oidcCLIENT',
     instanceId: 'ApiHelper'
-}
+};
 
 /**
  * Takes the configuration and initializes a new API session, then
@@ -20,13 +22,22 @@ var defaultConfig = {
 module.exports = class ApiHelper {
 
     constructor(config) {
+        this.tokenInfo = null;
+
+        let env = dotenv.config({path: path.resolve(process.cwd(), '.env.local')});
+        if (env.error) {
+            const msg = 'Failed to load secrects from ENV. Can not login.';
+            console.log(msg);
+            throw new Error(msg);
+        }
+
         this.config = extend(true, {}, defaultConfig, config);
     }
 
     init() {
         this.http = axios.create(extend(true, {}, this.config.http));
 
-        var data = qs.stringify( {'grant_type': 'password',
+        let data = qs.stringify({'grant_type': 'password',
             'username': this.config.username,
             'password': this.config.password,
             'scope': 'email phone userInfo roles'
@@ -48,12 +59,11 @@ module.exports = class ApiHelper {
         ).then( (response) => {
             console.log("received response for " + tokenUrl + ": " + response.status);
             this.tokenInfo = response.data;
-            this.tokenInfo.expires_at = new Date(this.tokenInfo.expires_in *1000 + new Date().getTime()).getTime();
-            //console.log("response: %o", this.tokenInfo);
-            console.log(this.config.instanceId + " received access_token " + this.tokenInfo.access_token + "\nvalid until %o", new Date(this.tokenInfo.expires_at));
+            this.tokenInfo.expires_at = new Date(this.tokenInfo.expires_in * 1000 + new Date().getTime()).getTime();
+            console.log(this.config.instanceId + ' received access_token ' + this.tokenInfo.access_token + "\nvalid until %o", new Date(this.tokenInfo.expires_at));
             return this;
         })
-            .catch( (err) => {
+            .catch((err) => {
                 console.log(this.config.instanceId + " Error getting access token: %o", err);
                 throw err;
             });

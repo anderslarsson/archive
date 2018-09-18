@@ -22,7 +22,7 @@ module.exports = class CustomerMapper {
             if (entry && entry.receiver && entry.receiver.protocolAttributes && entry.receiver.protocolAttributes.to) {
                 const to = entry.receiver.protocolAttributes.to;
 
-                let tenantId = customerMapping.find((v) => {
+                let row = customerMapping.find((v) => {
                     if (v.email) {
                         return v.email.toLowerCase() === to.toLowerCase();
                     } else {
@@ -30,9 +30,9 @@ module.exports = class CustomerMapper {
                     }
                 });
 
-                if (tenantId) {
-                    entry.customerId = tenantId;
-                    entry.receiver.target = tenantId;
+                if (row) {
+                    entry.customerId = row.tenantId;
+                    entry.receiver.target = row.tenantId;
 
                     success = true;
 

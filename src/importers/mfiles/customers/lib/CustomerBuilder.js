@@ -6,6 +6,8 @@ const csv = require('csvtojson');
 
 const ApiHelper = require('./ApiHelper');
 
+const outPath = 'src/importers/mfiles/customers/out';
+
 module.exports = class CustomerBuilder {
 
     constructor() {
@@ -26,16 +28,20 @@ module.exports = class CustomerBuilder {
     }
 
     async writeMappingCsv(prefix, mappings) {
-        let writeStream = fs.createWriteStream(`./out/${prefix}.csv`, {flags: 'a+'});
+        if (!fs.existsSync(outPath)) {
+            fs.mkdirSync(outPath);
+        }
+
+        let writeStream = fs.createWriteStream(`${outPath}/${prefix}.csv`, {flags: 'a+'});
 
         await writeStream.write('email;tenantId\n');
 
         for (const m of mappings) {
-            await writeStream.write(`${m.email};${m.tenantId}\n`);
+            let res = await writeStream.write(`${m.email};${m.tenantId}\n`);
+            console.log(res);
         }
 
-        await writeStream.end();
-        await writeStream.close();
+        return await writeStream.end();
     }
 
     async createArchiveConfig(data) {

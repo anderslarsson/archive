@@ -13,7 +13,7 @@ module.exports = class SiemensCustomerBuilder extends CustomerBuilder {
         let companies = [];
         try {
             companies = await csv({delimiter: ';'})
-                .fromFile('data/siemens.csv');
+                .fromFile('src/importers/mfiles/customers/data/siemens.csv');
 
             if (companies.length <= 0) {
                 throw new Error('Failed to read CSV. Empty result.');

@@ -32,14 +32,14 @@ module.exports = class ProcountorCustomerBuilder extends CustomerBuilder {
         }
 
         if (!customer) {
-            console.error(`ERR: Failed to create ProcountorSE`);
+            console.error('ERR: Failed to create ProcountorSE');
             return false;
         }
 
         let companies = [];
         try {
             companies = await csv({delimiter: ';'})
-                .fromFile('data/procountor.csv');
+                .fromFile('src/importers/mfiles/customers/data/procountor.csv');
 
             if (companies.length <= 0) {
                 throw new Error('Failed to read CSV. Empty result.');

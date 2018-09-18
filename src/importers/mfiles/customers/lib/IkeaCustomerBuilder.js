@@ -34,7 +34,7 @@ module.exports = class IkeaCustomerBuilder extends CustomerBuilder {
         let companies = [];
         try {
             companies = await csv({delimiter: ';'})
-                .fromFile('data/ikea.csv');
+                .fromFile('src/importers/mfiles/customers/data/ikea.csv');
 
             if (companies.length <= 0) {
                 throw new Error('Failed to read CSV. Empty result.');
