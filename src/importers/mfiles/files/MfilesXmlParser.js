@@ -33,8 +33,9 @@ module.exports = class MfilesXmlParser {
         let indexXml        = this.readEntrypointXml(`${dataDir}/Index.xml`);
         let archiveElem     = this.fetchArchiveElement(indexXml);
         let contentXmlNames = this.findContentXmlNames(archiveElem);
+        let objects         = this.fetchObjectElements(contentXmlNames);
 
-        let result = this.fetchObjectElements(contentXmlNames);
+        let result = this.removeNonEmailNodes(objects);
 
         return result;
     }
@@ -114,4 +115,38 @@ module.exports = class MfilesXmlParser {
         return content.object;
     }
 
+    removeNonEmailNodes(objects) {
+        console.log(`MfilesXmlParser#removeNonEmailNodes: Starting with ${objects.length} objects`);
+
+        let removed = 0;
+        let result = objects.filter((obj) => {
+            let success = false;
+            let v = this._getLatestObjectVersion(obj.version);
+
+            if (v) {
+                let klass = v.properties.property.find((prop) => prop.attr && prop.attr['@_name'] && prop.attr['@_name'] === 'Class');
+                if (klass && klass['#text'] && klass['#text'] === 'Email') {
+                    success = true;
+                }
+            }
+
+            success === false && removed++;
+
+            return success;
+        });
+
+        console.log(`MfilesXmlParser#removeNonEmailNodes: Finished with ${result.length} objects. Removed ${removed}`);
+
+        return result;
+    }
+
+    _getLatestObjectVersion(version) {
+        if (!Array.isArray(version)) {
+            return version;
+        }
+
+        return version.reduce((acc, v) => {
+            return (v.attr['@_value'] >= acc.attr['@_value']) ? v : acc;
+        }, version[0]);
+    }
 };
