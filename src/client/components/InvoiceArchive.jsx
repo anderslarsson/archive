@@ -1,5 +1,5 @@
 import React from 'react';
-import moment from 'moment';
+import {format} from 'date-fns';
 import ReactTable from 'react-table';
 import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
@@ -428,12 +428,12 @@ export default class InvoiceArchive extends Components.ContextComponent {
                         },
                         {
                             id: 'startDate',
-                            accessor: doc => moment(doc._source.start).format('YYYY-MM-DD'),
+                            accessor: doc => format(doc._source.start, 'YYYY-MM-DD'),
                             Header: i18n.getMessage('Archive.table.columns.startDate.title')
                         },
                         {
                             id: 'endDate',
-                            accessor: doc => moment(doc._source.end).format('YYYY-MM-DD'),
+                            accessor: doc => format(doc._source.end, 'YYYY-MM-DD'),
                             Header: i18n.getMessage('Archive.table.columns.endDate.title')
                         },
                         {
