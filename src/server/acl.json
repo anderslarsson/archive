@@ -1,25 +1,50 @@
 {
-    "archive": {
+    "archive-view": {
         "name": {
             "en": "Archive",
             "de": "Archiv"
         },
         "description": {
-            "en": "Business Network Portal archiving service.",
-            "de": "Business Network Portal Achiv Service."
+            "en": "Allows access to archives and documents.",
+            "de": "Erlaubt das arbeiten mit archiven und den Zugriff auf Dokumente."
         },
         "resources": [
           {
             "type": "rest",
-            "resourceId": "^/.*",
+            "resourceId": "^/invoices",
             "actions": ["view"]
           },
           {
             "type": "rest",
-            "resourceId": "^/hello",
-            "actions": [
-              "view"
-            ]
+            "resourceId": "^/api/indices.*",
+            "actions": ["view", "create"]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/api/tenantconfig/.*",
+            "actions": ["view"]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/api/searches.*",
+            "actions": ["view", "create"]
+          }
+        ]
+    },
+    "archive-tenant-mgmt": {
+        "name": {
+            "en": "Archive tenant management",
+            "de": "Archiv Mandanten Verwaltung"
+        },
+        "description": {
+            "en": "Allows to create tenant configurations.",
+            "de": "Erlaubt das hinzufügen neuer Mandanten."
+        },
+        "resources": [
+          {
+            "type": "rest",
+            "resourceId": "^/tenantconfig",
+            "actions": ["create"]
           }
         ]
     }
