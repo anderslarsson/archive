@@ -115,18 +115,18 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                             }
 
                             {
-                                doc && doc.files &&  doc.files.inboundAttachments && doc.files.inboundAttachments.length > 0 &&
+                                doc && doc.files &&  doc.files.outboundAttachments && doc.files.outboundAttachments.length > 0 &&
                                     <div className="row">
                                         <div className="col-md-12">
 
                                             <h3>{t('Archive.invoice.page.headings.attachments')}</h3>
                                             <table className="table">
                                                 {
-                                                    doc.files.inboundAttachments.map((a, i) =>
+                                                    doc.files.outboundAttachments.map((a, i) =>
                                                         <tr key={i}>
                                                             <td>{a.name}</td>
                                                             <td>
-                                                                <a href={'/blob/api/c_' + doc.customerId + '/files' + a.reference} target="_blank" rel="noopener noreferrer">Download</a>
+                                                                <a href={'/blob/api' + a.reference} target="_blank" rel="noopener noreferrer">Download</a>
                                                             </td>
                                                         </tr>
                                                     )
