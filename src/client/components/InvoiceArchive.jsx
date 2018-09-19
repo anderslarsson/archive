@@ -86,7 +86,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
         if (!availableOptions || !availableOptions.tenants) {
             return [];
         }
-        return availableOptions.tenants.map(tenant => ({value: tenant, label: tenant}));
+        return availableOptions.tenants.map(tenant => ({value: tenant.id, label: tenant.name}));
     }
 
     getYearSelectOptions() {

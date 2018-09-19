@@ -37,9 +37,28 @@ module.exports.get = async function (req, res, app, db) {
             });
         }
 
-        let result = tenantConfigs.map((config) => config.tenantId);
+        let tenantIds = tenantConfigs.map((config) => config.tenantId);
 
-        res.status(200).json(result);
+        let customerIds = tenantIds
+            .filter(id => id.startsWith('c_'))
+            .map(id => id.replace(/^c_/, ''));
+
+        let customers = await req.opuscapita.serviceClient.get('customer', `/api/customers/?id=${customerIds.join(',')}`);
+
+        let customerMapping = [];
+        for (const id of customerIds) {
+            const entry = customers[0].find(e => e.id === id);
+            if (entry) {
+                customerMapping.push({
+                    id: `c_${id}`,
+                    name: entry.name
+                });
+            } else {
+                /* Customer id not found in response */
+            }
+        }
+
+        res.status(200).json(customerMapping);
     } catch (e) {
         switch (e.code) {
             case '':
