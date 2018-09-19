@@ -36,8 +36,10 @@ describe('Elasticsearch', () => {
 
         it('Should create a new index when create=true is set', async () => {
             await elasticContext.openIndex('archive_unit_test', true);
+            let exists = await elasticContext.conn.indices.exists({index: indexName});
+            assert.strictEqual(exists, true);
 
-            assert.strictEqual(await elasticContext.conn.indices.exists({index: indexName}), true);
+            return true;
         });
 
     });
