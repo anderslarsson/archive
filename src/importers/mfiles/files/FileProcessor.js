@@ -48,7 +48,6 @@ class FileProcessor {
             const dts = Math.ceil((Date.now() - timeLast) / 1000);
 
             if (dts >= 10) {
-                /* Print status only all five seconds */
                 console.log(`Parsing EML  ${i}/${total} `);
                 timeLast = Date.now();
             }
@@ -73,6 +72,7 @@ class FileProcessor {
                 continue;
             }
 
+            /* Parse EML file */
             let parsedMail;
             try {
                 parsedMail = await simpleParser(eml);
@@ -90,9 +90,9 @@ class FileProcessor {
                 continue;
             }
 
+            /* Upload attachments */
             if (parsedMail.attachments) {
                 if (dts >= 10) {
-                    /* Print status only all five seconds */
                     console.log(`Uploading attachments to Blob storage ${i}/${total} `);
                 }
 
@@ -110,7 +110,7 @@ class FileProcessor {
                     /* Map result from Blog storage to archive schema. */
                     let outboundAttachments = uploadResult.done.map((e) => {
                         return {
-                            reference: e.path,
+                            reference: `/${e.tenantId}/data${e.path}`,
                             name: e.name
                         };
                     });
@@ -222,7 +222,9 @@ class FileProcessor {
             if (attachment && attachment.content && attachment.content instanceof Buffer) {
 
                 try {
-                    let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, `${archiveEntry.customerId}`, attachment.filename);
+                    let tenantId = `c_${archiveEntry.customerId}`;
+                    let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, tenantId, attachment.filename);
+                    result.tenantId = tenantId;
                     done.push(result);
                 } catch (e) {
                     console.error('FileProcessor#uploadAttachments: Failed to upload attachment. ', e);

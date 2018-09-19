@@ -16,15 +16,15 @@ const homeDir = require('os').homedir();
 const dataDir = `${homeDir}/tmp/mfiles_import`;
 const mappingDir = `${homeDir}/tmp`;
 
-let resumeFrom = null;
-
 async function main() {
-    let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4;
+    let startTime = Date.now();
 
-    if (args.resume) {
-        let content = fs.readFileSync(args.resume);
-        resumeFrom = JSON.parse(content);
-    }
+    let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4, archiveEntriesStage5;
+
+    // if (args.resume) {
+    //     let content = fs.readFileSync(args.resume);
+    //     resumeFrom = JSON.parse(content);
+    // }
 
     try {
         /* STAGE 1: Preprocessing, fetching all object elemaents from content XML */
@@ -60,8 +60,14 @@ async function main() {
 
         console.log('--- STAGE 5 ---');
 
-        // let esResult = await persistToEs(archiveEntriesStage3);
+        archiveEntriesStage5 = await persistToEs(archiveEntriesStage4);
+
+        console.log(`Processing finished. Took ${(Date.now() - startTime) / 1000}  seconds.`);
+
+        saveResult(archiveEntriesStage5);
+
         debugger;
+
 
         // TODO handle archiveEntries.failed
 
@@ -137,6 +143,17 @@ async function doCustomerMapping(archiveEntries) {
     let result = await mapper.run(archiveEntries);
 
     return result;
+}
+
+function saveResult(result) {
+    let d = Date.now();
+
+    return fs.writeFileSync(`./${d}_import_finished.json`, JSON.stringify(result, null, 4), (err) => {
+        if (err) {
+            console.error(err);
+            return;
+        };
+    });
 }
 
 main();

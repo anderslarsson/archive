@@ -31,11 +31,12 @@ module.exports = class CustomerMapper {
                 });
 
                 if (row) {
-                    entry.customerId = row.tenantId;
-                    entry.receiver.target = row.tenantId;
+                    let customerId = row.tenantId.replace(/^c_/, '');
+
+                    entry.customerId = customerId;
+                    entry.receiver.target = customerId;
 
                     success = true;
-
                 } else {
                     let failureMessage = 'CustomerMapper#run: No mapping found for email: ' + to;
                     entry._errors.stage.customerMapping.push({
