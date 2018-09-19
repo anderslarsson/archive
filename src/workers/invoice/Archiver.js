@@ -6,6 +6,7 @@ const Logger = require('ocbesbn-logger');
 
 const elasticContext = require('../../shared/elasticsearch');
 const Mapper = require('./Mapper');
+
 const {
     ErrCodes,
     InvoiceArchiveConfig
@@ -32,7 +33,6 @@ class Archiver {
         try {
             this.db = await dbInit.init(); // FIXME should await on the result
         } catch (e) {
-            /* handle error */
             this.logger.error('InvoiceArchiver#init: Failed to initialize.' , e);
         }
 
@@ -431,8 +431,7 @@ class Archiver {
                 try {
                     tenantId = mapper.owner;
                 } catch (e) {
-                    /* handle error */
-                    console.log(e);
+                    this.logger.log(`Archiver#archiveTransaction: Failed to read owner for transaction: ${transactionId}`, e);
                     tenantId = null;
                 }
 
