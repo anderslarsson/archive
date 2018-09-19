@@ -1,8 +1,8 @@
 {
-  "Archive.title": "Rechnungsarchiv",
+  "Archive.title": "Suche im Rechnungsarchiv",
   "Archive.subtitle": "Bitte wählen Sie einen Mandanten aus, dann ein Jahr",
 
-  "Archive.forms.labels.tenant": "Mandant",
+  "Archive.forms.labels.tenant": "Firma/Käufer",
   "Archive.forms.labels.indices": "Jahr",
   "Archive.forms.labels.from": "Von",
   "Archive.forms.labels.to": "Bis",
@@ -37,5 +37,6 @@
   "Archive.invoice.page.labels.endDate": "Transaktionsende",
   "Archive.invoice.page.labels.startDate": "Transaktionsbeginn",
   "Archive.invoice.page.labels.from": "Von",
-  "Archive.invoice.page.labels.to": "An"
+  "Archive.invoice.page.labels.to": "An",
+  "Archive.invoice.page.labels.emailSubject": "Betreff"
 }

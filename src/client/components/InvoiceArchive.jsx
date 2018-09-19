@@ -432,11 +432,6 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             Header: i18n.getMessage('Archive.table.columns.startDate.title')
                         },
                         {
-                            id: 'endDate',
-                            accessor: doc => format(doc._source.end, 'YYYY-MM-DD'),
-                            Header: i18n.getMessage('Archive.table.columns.endDate.title')
-                        },
-                        {
                             id: 'from',
                             accessor: '_source.receiver.protocolAttributes.from',
                             Header: i18n.getMessage('Archive.table.columns.from.title')

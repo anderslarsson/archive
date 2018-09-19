@@ -108,6 +108,10 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                                                     <td>{t('Archive.invoice.page.labels.to')}</td>
                                                     <td>{doc.receiver.protocolAttributes.to}</td>
                                                 </tr>
+                                                <tr>
+                                                    <td>{t('Archive.invoice.page.labels.emailSubject')}</td>
+                                                    <td>{doc.receiver.protocolAttributes.subject}</td>
+                                                </tr>
                                             </table>
 
                                         </div>

@@ -1,8 +1,8 @@
 {
-  "Archive.title": "Invoice archive",
+  "Archive.title": "Search for invoices",
   "Archive.subtitle": "Select a tenant first then choose the year",
 
-  "Archive.forms.labels.tenant": "Tenant",
+  "Archive.forms.labels.tenant": "Company/Buyer",
   "Archive.forms.labels.indices": "Year",
   "Archive.forms.labels.from": "From",
   "Archive.forms.labels.to": "To",
@@ -37,5 +37,6 @@
   "Archive.invoice.page.labels.endDate": "Transaction End",
   "Archive.invoice.page.labels.startDate": "Transaction Start",
   "Archive.invoice.page.labels.from": "From",
-  "Archive.invoice.page.labels.to": "To"
+  "Archive.invoice.page.labels.to": "To",
+  "Archive.invoice.page.labels.emailSubject": "Subject"
 }

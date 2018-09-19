@@ -115,6 +115,7 @@ class Mapper {
             protocolAttributes: {
                 to: this._fetchFromPropsByName('To'),
                 from: this._fetchFromPropsByName('From'),
+                subject: this._fetchFromPropsByName('Subject'),
                 mailId
             }
         };

@@ -94,6 +94,20 @@ const esMapping = {
                                 }
                             }
                         },
+                        outbound: {
+                            properties: {
+                                reference: {
+                                    type: 'keyword'
+                                }
+                            }
+                        },
+                        canonical: {
+                            properties: {
+                                content: {
+                                    type: 'text'
+                                }
+                            }
+                        },
                         inboundAttachments: {
                             properties: {
                                 reference: {
@@ -107,13 +121,6 @@ const esMapping = {
                                             'ignore_above': 256
                                         }
                                     }
-                                }
-                            }
-                        },
-                        outbound: {
-                            properties: {
-                                reference: {
-                                    type: 'keyword'
                                 }
                             }
                         },
