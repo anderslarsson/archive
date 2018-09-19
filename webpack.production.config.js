@@ -1,58 +1,58 @@
 const path = require('path');
-const webpack = require('webpack');
 
 module.exports = {
-  entry: [
-    './src/client/index.js'
-  ],
+    entry: [
+        'babel-polyfill',
+        './src/client/index.js'
+    ],
 
-  output: {
-    path: path.resolve(__dirname, './src/server/static'),
-    publicPath: '/static',
-    filename: 'bundle.js'
-    // filename: 'components/[name]-bundle.js',
-    // library: 'archive-[name]',
-    // libraryTarget: 'umd',
-    // umdNamedDefine: true
-  },
+    output: {
+        path: path.resolve(__dirname, './src/server/static'),
+        publicPath: '/static',
+        filename: 'bundle.js'
+        // filename: 'components/[name]-bundle.js',
+        // library: 'archive-[name]',
+        // libraryTarget: 'umd',
+        // umdNamedDefine: true
+    },
 
-  bail: true,
+    bail: true,
 
-  plugins: [
-  ],
+    plugins: [
+    ],
 
-  resolve: {
-    modules: ['node_modules'],
-    extensions: ['.js']
-  },
+    resolve: {
+        modules: ['node_modules'],
+        extensions: ['.js']
+    },
 
-  resolveLoader: {
-    modules: ['node_modules'],
-    extensions: ['.js']
-  },
+    resolveLoader: {
+        modules: ['node_modules'],
+        extensions: ['.js']
+    },
 
-  module: {
-    rules: [
-      {
-        test: /\.css$/,
-        loader: "style-loader!css-loader"
-      },
-      {
-        test: /.jsx?$/,
-        loader: 'babel-loader',
-        include: [
-          path.join(__dirname, 'src')
-        ],
-        options: {
-          compact: true,
-          presets: [
-            ['env', { 'targets': { 'node': 8, 'uglify': true }, 'modules': false }],
-            'stage-0',
-            'react'
-          ],
-          plugins: ['transform-decorators-legacy']
-        }
-      }
-    ]
-  }
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                loader: "style-loader!css-loader"
+            },
+            {
+                test: /.jsx?$/,
+                loader: 'babel-loader',
+                include: [
+                    path.join(__dirname, 'src')
+                ],
+                options: {
+                    compact: true,
+                    presets: [
+                        ['env', { 'targets': { 'node': 8, 'uglify': true }, 'modules': false }],
+                        'stage-0',
+                        'react'
+                    ],
+                    plugins: ['transform-decorators-legacy']
+                }
+            }
+        ]
+    }
 };
