@@ -41,7 +41,8 @@
     "react-bootstrap": "^0.32.3",
     "request": "^2.88.0",
     "typescript": "^3.0.3",
-    "webpack-config": "^7.5.0"
+    "webpack-config": "^7.5.0",
+    "webpack-visualizer-plugin": "^0.1.11"
   },
   "devDependencies": {
     "@opuscapita/react-select": "^1.0.0-rc.5-oc.6",

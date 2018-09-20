@@ -1,4 +1,7 @@
 const path = require('path');
+const webpack = require('webpack');
+const Visualizer = require('webpack-visualizer-plugin');
+
 
 module.exports = {
     entry: [
@@ -13,6 +16,14 @@ module.exports = {
     },
 
     devtool: 'source-map',
+
+    plugins: [
+        new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en|de/),
+
+        new Visualizer({
+            filename: './statistics.html'
+        })
+    ],
 
     module: {
         rules: [

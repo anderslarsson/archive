@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     entry: [
@@ -19,6 +20,11 @@ module.exports = {
     bail: true,
 
     plugins: [
+        new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en|de/),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': '"production"'
+        }),
+        new webpack.optimize.OccurrenceOrderPlugin(true),
     ],
 
     resolve: {
@@ -35,7 +41,7 @@ module.exports = {
         rules: [
             {
                 test: /\.css$/,
-                loader: "style-loader!css-loader"
+                loader: 'style-loader!css-loader'
             },
             {
                 test: /.jsx?$/,
@@ -46,7 +52,15 @@ module.exports = {
                 options: {
                     compact: true,
                     presets: [
-                        ['env', { 'targets': { 'node': 8, 'uglify': true }, 'modules': false }],
+                        [
+                            'env', {
+                                'targets': {
+                                    'node': 8,
+                                    'uglify': true
+                                },
+                                'modules': false
+                            }
+                        ],
                         'stage-0',
                         'react'
                     ],
