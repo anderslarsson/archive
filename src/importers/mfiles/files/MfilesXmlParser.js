@@ -4,10 +4,10 @@ const fs   = require('fs');
 const he   = require('he');
 const xml  = require('fast-xml-parser');
 
-const homeDir = require('os').homedir();
+// const homeDir = require('os').homedir();
 // const dataDir = `${homeDir}/tmp/SIE_export`;
 // const dataDir = `${homeDir}/tmp/SIE_redux`;
-const dataDir = `${homeDir}/tmp/mfiles_import`;
+// const dataDir = `${homeDir}/tmp/mfiles_import`;
 
 const options = {
     attributeNamePrefix: '@_',
@@ -27,10 +27,12 @@ const options = {
 
 module.exports = class MfilesXmlParser {
 
-    constructor() {}
+    constructor(dataDir) {
+        this.dataDir = dataDir;
+    }
 
     run() {
-        let indexXml        = this.readEntrypointXml(`${dataDir}/Index.xml`);
+        let indexXml        = this.readEntrypointXml(`${this.dataDir}/Index.xml`);
         let archiveElem     = this.fetchArchiveElement(indexXml);
         let contentXmlNames = this.findContentXmlNames(archiveElem);
         let objects         = this.fetchObjectElements(contentXmlNames);
@@ -42,7 +44,7 @@ module.exports = class MfilesXmlParser {
 
     fetchObjectElements(contentXmlNames) {
         return contentXmlNames
-            .map(this.readContentXml)
+            .map(this.readContentXml.bind(this))
             .reduce((acc, val) => acc.concat(val), []); // Concat all objects from the individual content XMLs
     }
 
@@ -105,7 +107,7 @@ module.exports = class MfilesXmlParser {
         entityName = entityName.trim();
 
         let capitalizedEntityName = entityName.replace(/^\w/, c => c.toUpperCase());
-        let fileName = `${dataDir}/Metadata/${capitalizedEntityName}.xml`;
+        let fileName = `${this.dataDir}/Metadata/${capitalizedEntityName}.xml`;
         let contentXml = fs.readFileSync(fileName);
 
         console.info(`NFO: Parsing content XML: ${fileName}`);

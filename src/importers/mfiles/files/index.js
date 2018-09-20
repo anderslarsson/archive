@@ -1,6 +1,7 @@
 'use strict';
 
 const fs   = require('fs');
+const path = require('path');
 const args = require('minimist')(process.argv.slice(2));
 
 const MfilesXmlParser = require('./MfilesXmlParser');
@@ -10,13 +11,7 @@ const FileProcessor   = require('./FileProcessor');
 const api             = require('./Api');
 const CustomerMapper  = require('./CustomerMapper');
 
-const homeDir = require('os').homedir();
-// const dataDir = `${homeDir}/tmp/SIE_export`;
-// const dataDir = `${homeDir}/tmp/SIE_redux`;
-const dataDir = `${homeDir}/tmp/mfiles_import`;
-const mappingDir = `${homeDir}/tmp`;
-
-async function main() {
+async function main(dataDir, mappingFile) {
     let startTime = Date.now();
 
     let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4, archiveEntriesStage5;
@@ -31,7 +26,7 @@ async function main() {
 
         console.log('--- STAGE 1 ---');
 
-        archiveEntriesStage1  = preprocessXml();
+        archiveEntriesStage1  = preprocessXml(dataDir);
 
         /* STAGE 2: Create mapping */
 
@@ -46,7 +41,7 @@ async function main() {
 
         console.log('--- STAGE 3 ---');
 
-        archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2);
+        archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2, mappingFile);
 
         /* STAGE 4: Parse EML files, upload extracted files to blob */
 
@@ -54,7 +49,7 @@ async function main() {
 
         await api.init();
 
-        archiveEntriesStage4 = await processAttachments(archiveEntriesStage3);
+        archiveEntriesStage4 = await processAttachments(archiveEntriesStage3, dataDir);
 
         /* STAGE 5: Store in ES */
 
@@ -78,8 +73,8 @@ async function main() {
 
 }
 
-function preprocessXml() {
-    let parser = new MfilesXmlParser();
+function preprocessXml(dataDir) {
+    let parser = new MfilesXmlParser(dataDir);
     let result = parser.run();
 
     return result;
@@ -129,7 +124,7 @@ async function persistToEs(archiveEntries) {
     return result;
 }
 
-async function processAttachments(archiveEntries) {
+async function processAttachments(archiveEntries, dataDir) {
     let processor = new FileProcessor(dataDir);
     let result = await processor.run(archiveEntries);
 
@@ -138,8 +133,8 @@ async function processAttachments(archiveEntries) {
     return result;
 }
 
-async function doCustomerMapping(archiveEntries) {
-    let mapper = new CustomerMapper(`${mappingDir}/mapping.csv`);
+async function doCustomerMapping(archiveEntries, mappingFile) {
+    let mapper = new CustomerMapper(`${mappingFile}`);
     let result = await mapper.run(archiveEntries);
 
     return result;
@@ -156,4 +151,41 @@ function saveResult(result) {
     });
 }
 
-main();
+let dataDir, mappingFile;
+
+if (!args['import-folder'] || args['import-folder'].length <= 0) {
+    console.error('Add --import-folder <PATH> argument');
+    process.exit();
+} else {
+    dataDir = path.resolve(args['import-folder']);
+
+    if (!fs.existsSync(dataDir)) {
+        console.error('Data directory not found.');
+        process.exit();
+    }
+
+    if (!fs.existsSync(`${dataDir}/Index.xml`)) {
+        console.error('Data directory has no Index.xml.');
+        process.exit();
+    }
+}
+
+if (!args['customer-mapping'] || args['customer-mapping'].length <= 0) {
+    console.error('Add --customer-mapping <PATH_TO_FILE.csv> argument');
+    process.exit();
+} else {
+    mappingFile = path.resolve(args['customer-mapping']);
+
+    if (!mappingFile.endsWith('.csv')) {
+        console.error('Mapping file needs have .csv file extension.');
+        process.exit();
+    }
+
+    if (!fs.existsSync(mappingFile)) {
+        console.error('Mapping file not found.');
+        process.exit();
+    }
+}
+
+
+main(dataDir, mappingFile);
