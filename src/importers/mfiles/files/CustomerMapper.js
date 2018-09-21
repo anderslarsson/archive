@@ -34,7 +34,7 @@ module.exports = class CustomerMapper {
                     let customerId = row.tenantId.replace(/^c_/, '');
 
                     entry.customerId = customerId;
-                    entry.receiver.target = customerId;
+                    entry.receiver.target = row.tenantId;
 
                     success = true;
                 } else {

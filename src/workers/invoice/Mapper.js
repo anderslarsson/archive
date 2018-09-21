@@ -31,14 +31,14 @@ class Mapper {
         let tOwners = this.items
             .map((h) => {
                 if (h.customerId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === h.customerId) {
+                    if (h.receiver && h.receiver.target && h.receiver.target === `c_${h.customerId}`) {
                         // Invoice receiving
                         return `c_${h.customerId}`;
                     }
                 }
 
                 if (h.supplierId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === h.supplierId) {
+                    if (h.receiver && h.receiver.target && h.receiver.target === `s_${h.supplierId}`) {
                         // Invoice sending
                         return `s_${h.supplierId}`;
                     }

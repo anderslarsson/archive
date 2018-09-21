@@ -313,14 +313,14 @@ module.exports.scroll = async function scroll(req, res) {
  */
 function extractOwnerFromDocument(doc) {
     if (doc.customerId) {
-        if (doc.receiver && doc.receiver.target && doc.receiver.target === doc.customerId) {
+        if (doc.receiver && doc.receiver.target && doc.receiver.target === `c_${doc.customerId}`) {
             // Invoice receiving
             return `c_${doc.customerId}`;
         }
     }
 
     if (doc.supplierId) {
-        if (doc.receiver && doc.receiver.target && doc.receiver.target === doc.supplierId) {
+        if (doc.receiver && doc.receiver.target && doc.receiver.target === `s_${doc.supplierId}`) {
             // Invoice sending
             return `s_${doc.supplierId}`;
         }
@@ -340,13 +340,13 @@ function extractOwnerFromDocument(doc) {
  */
 function extractTypeFromDocument(doc) {
     if (doc.customerId) {
-        if (doc.receiver && doc.receiver.target && doc.receiver.target === doc.customerId) {
+        if (doc.receiver && doc.receiver.target && doc.receiver.target === `c_${doc.customerId}`) {
             return 'invoice_receiving';
         }
     }
 
     if (doc.supplierId) {
-        if (doc.receiver && doc.receiver.target && doc.receiver.target === doc.supplierId) {
+        if (doc.receiver && doc.receiver.target && doc.receiver.target === `s_${doc.supplierId}`) {
             return 'invoice_sending';
         }
     }
