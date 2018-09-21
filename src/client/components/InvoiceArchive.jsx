@@ -140,16 +140,34 @@ export default class InvoiceArchive extends Components.ContextComponent {
         // TODO delete scroll on ES
         e.preventDefault();
 
-        const selectedValues = {
-            tenant: null,
-            index: null,
-        };
-
-        const availableOptions = {
-            indices: []
-        };
-
-        this.setState({selectedValues, availableOptions}, () => this.handleSearch());
+        this.setState({
+            loading: false,
+            showModal: false,
+            selectedDoc: {
+                id: null,
+                doc: null
+            },
+            search: {
+                docs: [],
+                total: 0,
+                pages: 0,
+                currentPage: 0,
+                currentDocs: [],
+                pageSize: 20,
+                scrollId: null
+            },
+            selectedValues: {
+                tenant: null,
+                index: null,
+                from: null,
+                to: null,
+                text: null
+            },
+            availableOptions: {
+                tenants: [],
+                indices: []
+            },
+        }, () => this.fetchTenantOptions());
     }
 
     handleSearch(e) {
