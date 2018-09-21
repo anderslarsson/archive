@@ -119,14 +119,14 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                             }
 
                             {
-                                doc && doc.files &&  doc.files.outboundAttachments && doc.files.outboundAttachments.length > 0 &&
+                                doc && doc.document && doc.document.files &&  doc.document.files.outboundAttachments && doc.document.files.outboundAttachments.length > 0 &&
                                     <div className="row">
                                         <div className="col-md-12">
 
                                             <h3>{t('Archive.invoice.page.headings.attachments')}</h3>
                                             <table className="table">
                                                 {
-                                                    doc.files.outboundAttachments.map((a, i) =>
+                                                    doc.document.files.outboundAttachments.map((a, i) =>
                                                         <tr key={i}>
                                                             <td>{a.name}</td>
                                                             <td>

@@ -95,7 +95,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     let doc = req.body;
 
     /* Basic param checking */
-    if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.msgType || doc.msgType !== 'invoice') {
+    if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
             success: false,
             error: 'Invalid data'

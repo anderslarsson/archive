@@ -43,46 +43,63 @@ class Mapper {
         return 'Not implemented';
     }
 
-    _buildEnd() {
-        return this._fetchFromPropsByName('Date');
-    }
+    _buildDocument() {
+        const buildMsgType = () => {
+            return 'invoice';
+        };
 
-    _buildFiles() {
-        /*
-         * Fetch the path to the EML file and store it
-         * temporary to the inbound struct.
-         * This will be removed after the EML
-         * has been parsed and the PDFs are stored to
-         * the inboundAttachments field.
-         */
-        let pathToEml = null;
-        if (((this.latestVersion || {}).docfiles || {}).docfile) {
-            let df = this.latestVersion.docfiles.docfile;
+        const buildMsgSubType = () => {
+            // Nothing to do here
+            return null;
+        };
 
-            if (Array.isArray(df)) {
-                pathToEml = df
-                    .find(e => e.attr['@_ext'] === 'eml')
-                    .attr['@_pathfrombase']
-                    .replace(/\\/g, '/');
+        const buildFiles = () => {
+            /*
+             * Fetch the path to the EML file and store it
+             * temporary to the inbound struct.
+             * This will be removed after the EML
+             * has been parsed and the PDFs are stored to
+             * the inboundAttachments field.
+             */
+            let pathToEml = null;
+            if (((this.latestVersion || {}).docfiles || {}).docfile) {
+                let df = this.latestVersion.docfiles.docfile;
+
+                if (Array.isArray(df)) {
+                    pathToEml = df
+                        .find(e => e.attr['@_ext'] === 'eml')
+                        .attr['@_pathfrombase']
+                        .replace(/\\/g, '/');
+                } else {
+                    pathToEml = df
+                        .attr['@_pathfrombase']
+                        .replace(/\\/g, '/');
+                }
             } else {
-                pathToEml = df
-                    .attr['@_pathfrombase']
-                    .replace(/\\/g, '/');
+                const guid = this.objectElem.attr['@_guid'];
+                console.warn(`WARN: Object ${guid} has no attached EML file.`);
             }
-        } else {
-            const guid = this.objectElem.attr['@_guid'];
-            console.warn(`WARN: Object ${guid} has no attached EML file.`);
-        }
+
+            return {
+                inbound: {
+                    pathToEml,
+                    reference: null
+                },
+                inboundAttachments: [],
+                outbound: null,
+                outboundAttachments: []
+            };
+        };
 
         return {
-            inbound: {
-                pathToEml,
-                reference: null
-            },
-            inboundAttachments: [],
-            outbound: null,
-            outboundAttachments: []
+            msgType: buildMsgType(),
+            msgSubType: buildMsgSubType(),
+            files: buildFiles()
         };
+    }
+
+    _buildEnd() {
+        return this._fetchFromPropsByName('Date');
     }
 
     _buildHistory() {
@@ -92,15 +109,6 @@ class Mapper {
 
     _buildLastStatus() {
         return 'imported_from_mfiles';
-    }
-
-    _buildMsgType() {
-        return 'invoice';
-    }
-
-    _buildMsgSubType() {
-        // Nothing to do here
-        return null;
     }
 
     _buildReceiver() {

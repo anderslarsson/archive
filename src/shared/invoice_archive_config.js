@@ -40,12 +40,6 @@ const esMapping = {
                 supplierId: {
                     type: 'keyword' // tenantId
                 },
-                msgType: {
-                    type: 'keyword'
-                },
-                msgSubType: {
-                    type: 'keyword'
-                },
                 sender: {
                     properties: {
                         physical: {
@@ -85,56 +79,69 @@ const esMapping = {
                         }
                     }
                 },
-                files: {
+                document: {
                     properties: {
-                        inbound: {
-                            properties: {
-                                reference: {
-                                    type: 'keyword'
-                                }
-                            }
+                        msgType: {
+                            type: 'keyword'
                         },
-                        outbound: {
-                            properties: {
-                                reference: {
-                                    type: 'keyword'
-                                }
-                            }
+                        msgSubType: {
+                            type: 'keyword'
                         },
-                        canonical: {
-                            properties: {
-                                content: {
-                                    type: 'text'
-                                }
-                            }
+                        amount: {
+                            type: 'float'
                         },
-                        inboundAttachments: {
+                        files: {
                             properties: {
-                                reference: {
-                                    type: 'keyword'
-                                },
-                                name: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            'ignore_above': 256
+                                inbound: {
+                                    properties: {
+                                        reference: {
+                                            type: 'keyword'
                                         }
                                     }
-                                }
-                            }
-                        },
-                        outboundAttachments: {
-                            properties: {
-                                reference: {
-                                    type: 'keyword'
                                 },
-                                name: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            'ignore_above': 256
+                                outbound: {
+                                    properties: {
+                                        reference: {
+                                            type: 'keyword'
+                                        }
+                                    }
+                                },
+                                canonical: {
+                                    properties: {
+                                        content: {
+                                            type: 'text'
+                                        }
+                                    }
+                                },
+                                inboundAttachments: {
+                                    properties: {
+                                        reference: {
+                                            type: 'keyword'
+                                        },
+                                        name: {
+                                            type: 'text',
+                                            fields: {
+                                                keyword: {
+                                                    type: 'keyword',
+                                                    'ignore_above': 256
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                outboundAttachments: {
+                                    properties: {
+                                        reference: {
+                                            type: 'keyword'
+                                        },
+                                        name: {
+                                            type: 'text',
+                                            fields: {
+                                                keyword: {
+                                                    type: 'keyword',
+                                                    'ignore_above': 256
+                                                }
+                                            }
                                         }
                                     }
                                 }

@@ -115,7 +115,7 @@ class FileProcessor {
                         };
                     });
 
-                    entry.files.outboundAttachments = entry.files.outboundAttachments.concat(outboundAttachments);
+                    entry.document.files.outboundAttachments = entry.document.files.outboundAttachments.concat(outboundAttachments);
 
                     this.done.push(entry);
                 }
@@ -139,7 +139,7 @@ class FileProcessor {
      * @param {object} entry
      */
     readEml(entry) {
-        const pathToEml = (((entry || {}).files || {}).inbound || {}).pathToEml || false;
+        const pathToEml = ((((entry || {}).document || {}).files || {}).inbound || {}).pathToEml || false;
         if (pathToEml === false) {
             let msg = 'Unable to access pathToEml property.';
             let error = new Error(msg);
@@ -152,7 +152,7 @@ class FileProcessor {
 
         let fileName;
         try {
-            fileName = he.decode(entry.files.inbound.pathToEml);
+            fileName = he.decode(entry.document.files.inbound.pathToEml);
         } catch (e) {
             let msg = 'Unable decode path with he.';
             let error = new Error(msg);

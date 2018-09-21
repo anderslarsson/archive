@@ -98,6 +98,59 @@ class Mapper {
         return this._simpleReducer('customerId');
     }
 
+    _buildDocument() {
+        let buildAmount = () => {
+            return this.items.reduce((acc, elem) => {
+                if (elem.document && elem.document.amount) {
+                    return elem.document.amount;
+                } else {
+                    return acc;
+                }
+            }, null);
+        };
+
+        let buildFiles = () => {
+            let outboundAttachments = this.items.reduce((acc, val) => {
+                let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
+                return acc.concat(attachments);
+            }, []);
+
+            return {
+                inbound: {}, // Not implemented
+                inboundAttachments: [], // Not implemented
+                outbound: {}, // Not implemented
+                outboundAttachments: outboundAttachments || []
+            };
+        };
+
+        let buildMsgType = () => {
+            return this.items.reduce((acc, elem) => {
+                if (elem.document && elem.document.msgtype) {
+                    return elem.document.msgtype;
+                } else {
+                    return acc;
+                }
+            }, null);
+        };
+
+        let buildMsgSubType = () => {
+            return this.items.reduce((acc, elem) => {
+                if (elem.document && elem.document.msgtypeSub) {
+                    return elem.document.msgtypeSub;
+                } else {
+                    return acc;
+                }
+            }, null);
+        };
+
+        return {
+            amount: buildAmount(),
+            msgType: buildMsgType(),
+            msgSubType: buildMsgSubType(),
+            files: buildFiles()
+        };
+    }
+
     _buildEnd() {
         let lastTimestamp = this.items[this.items.length - 1].timestamp || null;
 
@@ -110,20 +163,6 @@ class Mapper {
         }
 
         return lastTimestamp;
-    }
-
-    _buildFiles() {
-        let outboundAttachments = this.items.reduce((acc, val) => {
-            let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
-            return acc.concat(attachments);
-        }, []);
-
-        return {
-            inbound: {}, // Not implemented
-            inboundAttachments: [], // Not implemented
-            outbound: {}, // Not implemented
-            outboundAttachments: outboundAttachments || []
-        };
     }
 
     _buildHistory() {
@@ -143,26 +182,6 @@ class Mapper {
         }, null);
 
         return result;
-    }
-
-    _buildMsgType() {
-        return this.items.reduce((acc, elem) => {
-            if (elem.document && elem.document.msgtype) {
-                return elem.document.msgtype;
-            } else {
-                return acc;
-            }
-        }, null);
-    }
-
-    _buildMsgSubType() {
-        return this.items.reduce((acc, elem) => {
-            if (elem.document && elem.document.msgtypeSub) {
-                return elem.document.msgtypeSub;
-            } else {
-                return acc;
-            }
-        }, null);
     }
 
     _buildReceiver() {
