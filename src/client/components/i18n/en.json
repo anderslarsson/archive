@@ -38,5 +38,7 @@
   "Archive.invoice.page.labels.startDate": "Transaction Start",
   "Archive.invoice.page.labels.from": "From",
   "Archive.invoice.page.labels.to": "To",
-  "Archive.invoice.page.labels.emailSubject": "Subject"
+  "Archive.invoice.page.labels.emailSubject": "Subject",
+  "Archive.invoice.page.labels.totalAmount": "Total amount",
+  "Archive.invoice.page.labels.lastStatus": "Last status"
 }

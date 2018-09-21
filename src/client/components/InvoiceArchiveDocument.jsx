@@ -85,9 +85,17 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                                             <td>{doc.customerId}</td>
                                         </tr>
                                         <tr>
-                                            <td>Last status</td>
+                                            <td>{t('Archive.invoice.page.labels.lastStatus')}</td>
                                             <td>{doc.lastStatus}</td>
                                         </tr>
+
+                                        {
+                                            doc.document && doc.document.amount &&
+                                                <tr>
+                                                    <td>{t('Archive.invoice.page.labels.totalAmount')}</td>
+                                                    <td>{doc.document.amount}</td>
+                                                </tr>
+                                        }
                                     </table>
 
                                 </div>
