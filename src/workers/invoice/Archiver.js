@@ -477,7 +477,7 @@ class Archiver {
                                             body: mappingResult
                                         });
 
-                                        if (createResult) {
+                                        if (createResult && createResult.created === true) {
                                             retVal = true;
                                         }
                                     } catch (e) {

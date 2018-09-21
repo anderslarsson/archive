@@ -64,11 +64,13 @@ async function init() {
     if (!isProduction) {
         args.push('--inspect=0.0.0.0:9230');
     }
-    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: args});
 
+    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: args});
     invoiceArchiveWorker.on('exit', () => {
         logger.error('Invoice archive worker died. :(');
     });
+
+    // global.blub = invoiceArchiveWorker;
 
 }
 

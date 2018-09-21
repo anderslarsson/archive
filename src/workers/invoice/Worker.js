@@ -76,7 +76,7 @@ class Worker {
             }
 
             // Enter main loop
-            this.logWaitDispatcher();
+            // this.logWaitDispatcher();
             this.archiveWaitDispatcher();
         }
 
@@ -92,8 +92,8 @@ class Worker {
             msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, false); // Get single message, no auto ack
 
             if (msg && msg.payload && msg.payload.type && msg.payload.type === MsgTypes.ARCHIVE_TRANSACTION) {
-                let payload = msg.payload;
 
+                let payload = msg.payload;
 
                 if (payload.transactionId) {
                     // TODO do the magic

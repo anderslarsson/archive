@@ -25,13 +25,24 @@ const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_confi
 module.exports.createArchiverJob = async function (req, res) {
     let transactionId = req && req.body && req.body.transactionId;
 
+    if (!transactionId) {
+        res.status(422).json({
+            success: false,
+            message: 'Param transactionId missing.'
+        });
+        return false;
+    }
+
     try {
         await invoiceArchiveContext.archiveTransaction(transactionId);
 
-        res.status(200).send({success: 'true'});
+        res.status(200).json({success: 'true'});
     } catch (e) {
         /* handle error */
-        res.status(500).send(e);
+        res.status(500).json({
+            success: false,
+            message: e.message || 'Unknown error'
+        });
     }
 };
 
@@ -137,7 +148,7 @@ module.exports.createDocument = async function (req, res, app, db) {
                     body: doc
                 });
 
-                if (createResult) {
+                if (createResult && createResult.created === true) {
                     success = true;
                 }
             } catch (e) {

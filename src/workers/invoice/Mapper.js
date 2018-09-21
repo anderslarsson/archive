@@ -4,13 +4,18 @@ const Logger = require('ocbesbn-logger');
 const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 
 class Mapper {
+    /**
+     * Creates a new instance of the Mapper.
+     * Sets instance variables for transactionId and transaction items.
+     *
+     * @constructor
+     * @param {string} transactionId - The transaction that should be mapped
+     * @param {array} items - List of transactions that belong to the transactionId
+     */
     constructor(transactionId, items) {
-        this.items = items || [];
-
         this.transactionId = transactionId;
-        this.document = {
-            transactionId
-        };
+        this.items         = items || [];
+        this.document      = {transactionId};
 
         this.logger = new Logger({
             context: {
@@ -108,11 +113,16 @@ class Mapper {
     }
 
     _buildFiles() {
+        let outboundAttachments = this.items.reduce((acc, val) => {
+            let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
+            return acc.concat(attachments);
+        }, []);
+
         return {
-            inbound: 'Not implemented',
-            inboundAttachments: 'Not implemented',
-            outbound: 'Not implemented',
-            outboundAttachments: 'Not implemented'
+            inbound: {}, // Not implemented
+            inboundAttachments: [], // Not implemented
+            outbound: {}, // Not implemented
+            outboundAttachments: outboundAttachments || []
         };
     }
 

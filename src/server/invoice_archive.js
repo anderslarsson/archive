@@ -10,21 +10,21 @@
 const Logger      = require('ocbesbn-logger');
 const EventClient = require('@opuscapita/event-client');
 const {
-  MsgTypes,
-  InvoiceArchiveConfig
+    MsgTypes,
+    InvoiceArchiveConfig
 } = require('../shared/invoice_archive_config');
 
 const events = new EventClient({
-  exchangeName: 'archive',
-  consul: {
-    host: 'consul'
-  }
+    exchangeName: 'archive',
+    consul: {
+        host: 'consul'
+    }
 });
 
 const logger = new Logger({
-  context: {
-    serviceName: 'archive'
-  }
+    context: {
+        serviceName: 'archive'
+    }
 });
 
 /**
@@ -36,41 +36,41 @@ const logger = new Logger({
  * @param {Sequelize} db - Sequelize db object
  */
 module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
-  let results = [];
+    let results = [];
 
-  try {
+    try {
 
-    // Fetch all configured tenant configurations
-    let tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-    let configs           = await tenantConfigModel.findAll();
+        // Fetch all configured tenant configurations
+        let tenantConfigModel = await db.modelManager.getModel('TenantConfig');
+        let configs           = await tenantConfigModel.findAll();
 
-    // Enqueue a job for every tenant who has archive activated
-    for (let config of configs) {
-      try {
-        let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
-          type: MsgTypes.UPDATE_TENANT_MONTHLY,
-          tenantConfig: config
-        });
+        // Enqueue a job for every tenant who has archive activated
+        for (let config of configs) {
+            try {
+                let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
+                    type: MsgTypes.UPDATE_TENANT_MONTHLY,
+                    tenantConfig: config
+                });
 
-        results.push(result);
-      } catch (e) {
-        logger.error('Could not emit archive event update_tenants_daily for tenant.' + (config.supplierId || config.customerId));
-        results.push(Promise.resolve(false));
-      }
+                results.push(result);
+            } catch (e) {
+                logger.error('Could not emit archive event update_tenants_daily for tenant.' + (config.supplierId || config.customerId));
+                results.push(Promise.resolve(false));
+            }
+        }
+
+    } catch (e) {
+        let msg = 'Exception caught in' + __filename;
+
+        results = [];
+
+        logger.error(msg);
+        logger.error(e);
     }
 
-  } catch (e) {
-    let msg = 'Exception caught in' + __filename;
+    let emittedEvents = await Promise.all(results);
 
-    results = [];
-
-    logger.error(msg);
-    logger.error(e);
-  }
-
-  let emittedEvents = await Promise.all(results);
-
-  return emittedEvents.length;
+    return emittedEvents.length;
 };
 
 /**
@@ -83,41 +83,41 @@ module.exports.rotateTenantsDaily = async function rotateTenantsDaily(db) {
  * @returns {Integer} number of events created, should match the number of tenants with archive
  */
 module.exports.rotateTenantsMonthly = async function (db) {
-  let results = [];
+    let results = [];
 
-  try {
+    try {
 
-    // Fetch all configured tenant configurations
-    let tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-    let configs           = await tenantConfigModel.findAll();
+        // Fetch all configured tenant configurations
+        let tenantConfigModel = await db.modelManager.getModel('TenantConfig');
+        let configs           = await tenantConfigModel.findAll();
 
-    // Enqueue a job for every tenant who has archive activated
-    for (let config of configs) {
-      try {
-        let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
-          type: MsgTypes.UPDATE_TENANT_YEARLY,
-          tenantConfig: config
-        });
+        // Enqueue a job for every tenant who has archive activated
+        for (let config of configs) {
+            try {
+                let result = await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
+                    type: MsgTypes.UPDATE_TENANT_YEARLY,
+                    tenantConfig: config
+                });
 
-        results.push(result);
-      } catch (e) {
-        logger.error('Could not emit archive event UPDATE_TENANT_YEARLY for tenant ID' + (config.supplierId || config.customerId));
-        results.push(Promise.resolve(false));
-      }
+                results.push(result);
+            } catch (e) {
+                logger.error('Could not emit archive event UPDATE_TENANT_YEARLY for tenant ID' + (config.supplierId || config.customerId));
+                results.push(Promise.resolve(false));
+            }
+        }
+
+    } catch (e) {
+        let msg = 'Exception caught in' + __filename;
+
+        results = [];
+
+        logger.error(msg);
+        logger.error(e);
     }
 
-  } catch (e) {
-    let msg = 'Exception caught in' + __filename;
+    let emittedEvents = await Promise.all(results);
 
-    results = [];
-
-    logger.error(msg);
-    logger.error(e);
-  }
-
-  let emittedEvents = await Promise.all(results);
-
-  return emittedEvents.length;
+    return emittedEvents.length;
 };
 
 /**
@@ -125,11 +125,11 @@ module.exports.rotateTenantsMonthly = async function (db) {
  *
  */
 module.exports.rotateGlobalDaily = async function () {
-  await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
-    type: MsgTypes.CREATE_GLOBAL_DAILY
-  });
+    await events.emit(InvoiceArchiveConfig.newLogrotationJobQueueName, {
+        type: MsgTypes.CREATE_GLOBAL_DAILY
+    });
 
-  return 'ok';
+    return 'ok';
 };
 
 /**
@@ -139,16 +139,16 @@ module.exports.rotateGlobalDaily = async function () {
  * @returns {Boolean} Indicates the success of job creation
  */
 module.exports.archiveTransaction = async function (transactionId) {
-  await events.emit(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, {
-    type: MsgTypes.ARCHIVE_TRANSACTION,
-    transactionId
-  });
+    await events.emit(InvoiceArchiveConfig.newArchiveTransactionJobQueueName, {
+        type: MsgTypes.ARCHIVE_TRANSACTION,
+        transactionId
+    });
 };
 
 module.exports.initEventSubscriptions = function initEventSubscriptions() {
-  return events.subscribe(InvoiceArchiveConfig.finishedLogrotationJobQueueName, jobFinishedHandler.bind(this));
+    return events.subscribe(InvoiceArchiveConfig.finishedLogrotationJobQueueName, jobFinishedHandler.bind(this));
 };
 
 async function jobFinishedHandler(msg) {
-  console.log(msg);
+    console.log(msg);
 }
