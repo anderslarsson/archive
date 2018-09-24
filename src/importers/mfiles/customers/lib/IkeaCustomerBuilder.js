@@ -45,9 +45,13 @@ module.exports = class IkeaCustomerBuilder extends CustomerBuilder {
         }
 
         let customers = [];
-        companies.map((v) => {
+        companies.forEach((v) => {
+            const name = v['CUSTOMER_NAME'];
+            const customerId = name.replace(/^[0-9\W]+|[^0-9a-z\-]/gi, '').slice(0, 27);
+
             customers.push({
-                name: v['CUSTOMER_NAME'],
+                id: customerId,
+                name: name,
                 countryOfRegistration: v['EMAIL_COUNTRY'],
                 email: v['RECIPIENTS'],
                 vatIdentificationNo: v['VAT'],
