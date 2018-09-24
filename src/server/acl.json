@@ -1,17 +1,51 @@
 {
-    "earchive": {
+    "archive-view": {
         "name": {
-            "en": "Service Template example configuration.",
-            "de": ""
+            "en": "Archive",
+            "de": "Archiv"
         },
         "description": {
-            "en": "Please change this to fit your security configuration.",
-            "de": ""
+            "en": "Allows access to archives and documents.",
+            "de": "Erlaubt das arbeiten mit archiven und den Zugriff auf Dokumente."
         },
-        "resources": [{
+        "resources": [
+          {
             "type": "rest",
-            "resourceId": "^/.*",
+            "resourceId": "^/invoices",
             "actions": ["view"]
-        }]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/api/indices.*",
+            "actions": ["view", "create"]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/api/tenantconfig/.*",
+            "actions": ["view"]
+          },
+          {
+            "type": "rest",
+            "resourceId": "^/api/searches.*",
+            "actions": ["view", "create"]
+          }
+        ]
+    },
+    "archive-tenant-mgmt": {
+        "name": {
+            "en": "Archive tenant management",
+            "de": "Archiv Mandanten Verwaltung"
+        },
+        "description": {
+            "en": "Allows to create tenant configurations.",
+            "de": "Erlaubt das hinzufügen neuer Mandanten."
+        },
+        "resources": [
+          {
+            "type": "rest",
+            "resourceId": "^/tenantconfig",
+            "actions": ["create"]
+          }
+        ]
     }
 }

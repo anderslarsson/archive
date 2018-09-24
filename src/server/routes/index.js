@@ -1,3 +1,17 @@
+'use strict';
+
+const invoiceArchiveHandler     = require('./api/invoice_archive/');
+const infoHandler               = require('./api/info/');
+const tenantConfigHandler       = require('./api/tenantconfig/');
+
+const can = require('./api/can');
+
+const {
+    indicesInvoiceHandler,
+    indicesCmdHandler,
+    documentsHandler
+} = require('./api/indices/');
+
 /**
  * Initializes all routes for RESTful access.
  *
@@ -7,10 +21,37 @@
  * @returns {Promise} JavaScript Promise object.
  * @see [Minimum setup]{@link https://github.com/OpusCapita/web-init#minimum-setup}
  */
-module.exports.init = async function(app, db, config)
-{
-    // Register routes here.
-    // Use the passed db parameter in order to use Epilogue auto-routes.
-    // Use require in order to separate routes into multiple js files.
-    app.get('/', (req, res) => res.send('Hello world!'));
+module.exports.init = async function (app, db) {
+
+    let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
+
+    /* *** TenantConfig *** */
+    app.post('/api/tenantconfig', (req, res) => tenantConfigHandler.post(req, res, app, db));
+    app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
+
+    /* *** Invoice archive *** */
+    app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
+    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
+
+    /* *** Indices *** */
+    app.get('/api/indices', can.listInvoiceIndicesByTenantId, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
+    app.post('/api/indices/:index/open', can.accessIndex, (req, res) => indicesCmdHandler.openIndex(req, res));
+    app.get('/api/indices/:index/documents/:id', can.accessIndex, (req, res) => documentsHandler.get(req, res));
+
+    /* *** Searches *** */
+    app.post('/api/searches', can.accessIndex, (req, res) => invoiceArchiveHandler.search(req, res, app, db));
+    app.get('/api/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
+
+};
+
+function handle(req, res, app, db, handlerFn) {
+    try {
+        handlerFn(req, res, app, db);
+    } catch (e) {
+        res.json({
+            success: false,
+            message: e.message || 'Unknown error'
+        });
+    }
 }
+

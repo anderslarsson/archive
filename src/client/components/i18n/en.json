@@ -1,0 +1,44 @@
+{
+  "Archive.title": "Search for invoices",
+  "Archive.subtitle": "Select a tenant first then choose the year",
+
+  "Archive.forms.labels.tenant": "Company/Buyer",
+  "Archive.forms.labels.indices": "Year",
+  "Archive.forms.labels.from": "From",
+  "Archive.forms.labels.to": "To",
+  "Archive.forms.labels.textSearch": "Search in text",
+  "Archive.forms.buttons.reset": "Reset",
+  "Archive.forms.buttons.search": "Search",
+
+  "Archive.table.loading": "Loading ...",
+  "Archive.table.empty": "No entry found",
+  "Archive.table.pagination.next": "Next",
+  "Archive.table.pagination.previous": "Previous",
+  "Archive.table.pagination.page": "Page",
+  "Archive.table.pagination.of": "of",
+  "Archive.table.pagination.rows": "rows",
+
+  "Archive.table.columns.id.title": "Transaction Id",
+  "Archive.table.columns.no.title": "Invoice No",
+  "Archive.table.columns.from.title": "From",
+  "Archive.table.columns.to.title": "To",
+  "Archive.table.columns.startDate.title": "Start Date",
+  "Archive.table.columns.endDate.title": "End Date",
+  "Archive.table.columns.from.title": "Sender Email",
+  "Archive.table.columns.detail": "Details",
+  "Archive.table.columns.lastStatus": "Status",
+
+  "Archive.invoice.page.title": "Invoice Details",
+  "Archive.invoice.page.headings.attachments": "Attachments",
+  "Archive.invoice.page.headings.receiverInformation": "Sender/Receiver",
+
+  "Archive.invoice.page.labels.lastStatus": "Status",
+  "Archive.invoice.page.labels.customerId": "Customer-ID",
+  "Archive.invoice.page.labels.endDate": "Transaction End",
+  "Archive.invoice.page.labels.startDate": "Transaction Start",
+  "Archive.invoice.page.labels.from": "From",
+  "Archive.invoice.page.labels.to": "To",
+  "Archive.invoice.page.labels.emailSubject": "Subject",
+  "Archive.invoice.page.labels.totalAmount": "Total amount",
+  "Archive.invoice.page.labels.lastStatus": "Last status"
+}

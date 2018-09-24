@@ -1,0 +1,15 @@
+version: '2'
+services:
+  main:
+    build: .
+    volumes:
+      - ./src:/home/node/archive/src
+      - ./test:/home/node/archive/test
+      - ./config:/home/node/archive/config
+      - ./wiki:/home/node/archive/wiki
+    command: 'npm run dev'
+    ports:
+      - 9229:9229
+      - '${PORT}:${PORT}'
+    expose:
+        - 9229

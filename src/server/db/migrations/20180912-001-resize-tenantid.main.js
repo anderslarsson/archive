@@ -1,7 +1,5 @@
-const Sequelize = require('sequelize');
-
 /**
- * Inserts test data into existing database structures.
+ * Applies migrations for databse tables and data.
  * If all migrations were successul, this method will never be executed again.
  * To identify which migrations have successfully been processed, a migration's filename is used.
  *
@@ -10,11 +8,11 @@ const Sequelize = require('sequelize');
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.up = async function(db, config)
-{
-    // Add all structual and data migrations here.
-    // You may use db.getQueryInterface() for structures and config.models for working with data.
-}
+module.exports.up = async function (db) {
+    await db.query('ALTER TABLE TenantConfig MODIFY tenantId VARCHAR(32);');
+
+    return true;
+};
 
 /**
  * Reverts all migrations for databse tables and data.
@@ -25,6 +23,6 @@ module.exports.up = async function(db, config)
  * @returns {Promise} JavaScript Promise object.
  * @see [Applying data migrations]{@link https://github.com/OpusCapita/db-init#applying-data-migrations}
  */
-module.exports.down = async function(db, config)
-{
-}
+module.exports.down = async function (db, config) {
+    await db.query('ALTER TABLE TenantConfig MODIFY tenantId VARCHAR(30);');
+};
