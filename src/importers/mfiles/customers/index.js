@@ -1,5 +1,9 @@
 'use strict';
 
+const path   = require('path');
+const dotenv = require('dotenv');
+const args   = require('minimist')(process.argv.slice(2));
+
 const IkeaCustomerBuilder = require('./lib/IkeaCustomerBuilder');
 const SiemensCustomerBuilder = require('./lib/SiemensCustomerBuilder');
 const ProcountorCustomerBuilder = require('./lib/ProcountorCustomerBuilder');
@@ -27,6 +31,17 @@ async function main() {
     } catch (e) {
         debugger;
     }
+}
+
+if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = 'devbox';
+}
+
+let env = dotenv.config({path: path.resolve(process.cwd(), '.env.local')});
+if (env.error) {
+    const msg = 'Failed to load secrects from ENV. Can not login.';
+    console.log(msg);
+    throw new Error(msg);
 }
 
 main();
