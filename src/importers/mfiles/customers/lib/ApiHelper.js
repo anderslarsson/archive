@@ -43,18 +43,20 @@ module.exports = class ApiHelper {
             'scope': 'email phone userInfo roles'
         });
 
-        var tokenUrl = this.config.scheme + "://" + this.config.host + ":" + this.config.port + "/auth/token";
+        const tokenUrl = this.config.scheme + "://" + this.config.host + ":" + this.config.port + "/auth/token";
+
+        debugger;
 
         return this.http.post(tokenUrl,
             data,
             {
-                headers: {
-                    'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
-                }
-                // auth: {
-                //     username: this.config.clientId,
-                //     password: this.config.clientSecret
+                // headers: {
+                //     'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
                 // }
+                auth: {
+                    username: this.config.clientId,
+                    password: process.env.TOKEN_AUTH_CLIENT_SECRET_DEV
+                }
             }
         ).then( (response) => {
             console.log("received response for " + tokenUrl + ": " + response.status);
