@@ -106,15 +106,9 @@ class Worker {
                 }
 
                 if (success === false || success === null) {
-                    //
-                    // FIXME
-                    //
-                    // Broken because event-client default for nackMessage is requeue = true, meaning that
-                    // the message will be put back into the queue instead of being thrown away.
-                    // See @opuscapita/event-client #3
+                    /* Moving message to dead queue */
                     this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
-
-                    await this.eventClient.nackMessage(msg);
+                    await this.eventClient.nackMessage(msg, false, false);
                 }
 
                 // Success
