@@ -1,4 +1,5 @@
 const TenantConfig = require('./TenantConfig');
+const ArchiveTransactionLog = require('./ArchiveTransactionLog');
 
 /**
  * Initializes all required database models using Sequelize.
@@ -11,6 +12,7 @@ const TenantConfig = require('./TenantConfig');
 module.exports.init = async function (db, config) {
     // Register Sequelize database models
     return Promise.all([
-        TenantConfig.init(db, config)
+        TenantConfig.init(db, config),
+        ArchiveTransactionLog.init(db, config)
     ]);
 };
