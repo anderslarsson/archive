@@ -111,6 +111,7 @@ class FileProcessor {
                     let outboundAttachments = uploadResult.done.map((e) => {
                         return {
                             reference: `/${e.tenantId}/data${e.path}`,
+                            refType: 'blob',
                             name: e.name
                         };
                     });

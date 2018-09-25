@@ -96,14 +96,20 @@ const esMapping = {
                                     properties: {
                                         reference: {
                                             type: 'keyword'
-                                        }
+                                        },
+                                        refType: {
+                                            type: 'keyword'
+                                        },
                                     }
                                 },
                                 outbound: {
                                     properties: {
                                         reference: {
                                             type: 'keyword'
-                                        }
+                                        },
+                                        refType: {
+                                            type: 'keyword'
+                                        },
                                     }
                                 },
                                 canonical: {
@@ -116,6 +122,9 @@ const esMapping = {
                                 inboundAttachments: {
                                     properties: {
                                         reference: {
+                                            type: 'keyword'
+                                        },
+                                        refType: {
                                             type: 'keyword'
                                         },
                                         name: {
@@ -132,6 +141,9 @@ const esMapping = {
                                 outboundAttachments: {
                                     properties: {
                                         reference: {
+                                            type: 'keyword'
+                                        },
+                                        refType: {
                                             type: 'keyword'
                                         },
                                         name: {
