@@ -39,7 +39,9 @@ class Worker {
     /**
      * @constructor
      */
-    constructor() {
+    constructor(db) {
+
+        this.db = db;
 
         this.logWaitDispatcherTimeout = null;
         this.archiveWaitDispatcherTimeout = null;
@@ -59,8 +61,11 @@ class Worker {
         });
 
         this.archiver = new Archiver(this.eventClient, this.logger);
+    }
 
-        this.initEventSubscriptions();
+    async init() {
+        await this.initEventSubscriptions();
+        return true;
     }
 
     async initEventSubscriptions() {
@@ -114,7 +119,12 @@ class Worker {
                 // Success
                 if (success) {
                     this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
+
                     await this.eventClient.ackMessage(msg);
+                    await this.updateArchiveTransactionLog(payload.transactionId, 'status', 'done');
+
+                    // TODO Update ArchiveTransactionLog
+
                     this.logger.log('Finished job with result: \n' + success);
                 }
             }
@@ -172,15 +182,9 @@ class Worker {
                 // Failure (false -> ES result contained failures)
                 // Failure (null -> catch was invoked in handler function)
                 if (success === false || success === null) {
-                    //
-                    // FIXME
-                    //
-                    // Broken because event-client default for nackMessage is requeue = true, meaning that
-                    // the message will be put back into the queue instead of being thrown away.
-                    // See @opuscapita/event-client #3
                     this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
 
-                    await this.eventClient.nackMessage(msg);
+                    await this.eventClient.nackMessage(msg, false, false);
                 }
 
                 // Success
@@ -206,6 +210,25 @@ class Worker {
             // Restart the timer
             this.logWaitDispatcherTimeout = setTimeout(this.logWaitDispatcher.bind(this), 1000);
         }
+    }
+
+    async updateArchiveTransactionLog(transactionId, key, value) {
+        let success = false;
+        try {
+            const ArchiveTransactionLog = await this.db.modelManager.getModel('ArchiveTransactionLog');
+            let logEntry = await ArchiveTransactionLog.find({where: {transactionId: transactionId}});
+
+            if (logEntry) {
+                await logEntry.set(key, value);
+                await logEntry.save();
+
+                success = true;
+            }
+        } catch (e) {
+            success = false;
+            this.logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`);
+        }
+        return success;
     }
 
 }
