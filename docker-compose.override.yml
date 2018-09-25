@@ -56,17 +56,38 @@ services:
       - '3009:3009'
     command: 'npm run dev'
 
-  # invoice_worker:
-  #   build: .
-  #   volumes:
-  #     - ./src:/home/node/archive/src
-  #     - ./test:/home/node/archive/test
-  #     - ./config:/home/node/archive/config
-  #   command: 'npm run worker:invoice'
-  #   ports:
-  #     - 9230:9230
-  #   expose:
-  #       - 9230
-  #   depends_on:
-  #       - rabbitmq 
-      
+  bnp:
+    image: opuscapita/bnp:dev
+    depends_on:  # as of version 1.9.0 Dockerfile's HEALTHCHECK is not supported yet.
+      - acl
+      - mysql
+      - consul
+    labels:
+      SERVICE_NAME: 'bnp'
+    environment:
+      SERVICE_3008_NAME: bnp
+      SERVICE_3000_CHECK_HTTP: /api/health/check
+      SERVICE_3000_CHECK_INTERVAL: 15s
+      SERVICE_3000_CHECK_TIMEOUT: 3s
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      REDIS_AUTH: $REDIS_AUTH
+      NODE_ENV: development
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+    ports:
+      - '3000:3000'
+    command: 'npm run dev'
+
+  kibana:
+    image: opuscapita/kibana:dev
+    environment:
+      ELASTICSEARCH_IP: elasticsearch
+      SERVICE_5601_NAME: kibana
+      SERVICE_5601_CHECK_HTTP: /
+      SERVICE_5601_CHECK_INTERVAL: 15s
+      SERVICE_5601_CHECK_TIMEOUT: 3s
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
