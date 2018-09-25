@@ -250,7 +250,7 @@ class FileProcessor {
      */
     uploadFile(data, transactionId, tenantId, filename) {
         filename = encodeURI(filename);
-        return api.putChunked(`http://localhost:8080/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}?createMissing=true`, data);
+        return api.putChunked(`/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}?createMissing=true`, data);
     }
 
 }
