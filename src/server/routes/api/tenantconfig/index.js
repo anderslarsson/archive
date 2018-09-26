@@ -9,7 +9,6 @@ const validTypes = [
 ];
 
 module.exports.get = async function (req, res, app, db) {
-    const Sequelize = db.Sequelize;
 
     try {
         let type = req.params.type;
@@ -24,12 +23,12 @@ module.exports.get = async function (req, res, app, db) {
         if (isAdmin(req)) {
             tenantConfigs = await tenantConfigModel.findAll();
         } else {
-            let tenants = (await req.opuscapita.getUserTenants());
+            let tenants = await req.opuscapita.getUserTenants();
 
-            tenantConfigs = await tenantConfigModel.findOne({
+            tenantConfigs = await tenantConfigModel.findAll({
                 where: {
                     tenantId: {
-                        [Sequelize.Op.in]: tenants
+                        $in: tenants
                     }
                 }
             });
@@ -37,12 +36,15 @@ module.exports.get = async function (req, res, app, db) {
 
         let tenantIds = tenantConfigs.map((config) => config.tenantId);
 
+        /* Filter tenantIds with archiving by customer type */
         let customerIds = tenantIds
             .filter(id => id.startsWith('c_'))
             .map(id => id.replace(/^c_/, ''));
 
+        /* Fetch customer information from customer service */
         let customers = await req.opuscapita.serviceClient.get('customer', `/api/customers/?id=${customerIds.join(',')}`);
 
+        /* Enrich the customer information with archiving enabled with the humand readable customer name */
         let customerMapping = [];
         for (const id of customerIds) {
             const entry = customers[0].find(e => e.id === id);
@@ -51,21 +53,13 @@ module.exports.get = async function (req, res, app, db) {
                     id: `c_${id}`,
                     name: entry.name
                 });
-            } else {
-                /* Customer id not found in response */
             }
         }
 
         res.status(200).json(customerMapping);
     } catch (e) {
-        switch (e.code) {
-            case '':
-                sendErrorResponse(req, res, 500, '');
-                break;
-
-            default:
-                sendErrorResponse(req, res, 500, 'The application encountered an unexpected error.');
-        }
+        req.opuscapita.logger.error('TenantConfigHandler#get: Exception caught while trying to build customer list. ', e);
+        sendErrorResponse(req, res, 500, 'The application encountered an unexpected error.');
     }
 };
 

@@ -21,7 +21,7 @@
           },
           {
             "type": "rest",
-            "resourceId": "^/api/tenantconfig/*",
+            "resourceId": "^/api/tenantconfig/.*",
             "actions": ["view"]
           },
           {
