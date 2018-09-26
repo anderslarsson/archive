@@ -5,13 +5,13 @@
             "de": "Archiv"
         },
         "description": {
-            "en": "Allows access to archives and documents.",
-            "de": "Erlaubt das arbeiten mit archiven und den Zugriff auf Dokumente."
+            "en": "Allows read access to archives and its documents.",
+            "de": "Erlaubt lesenden Zugriff auf Archive und Dokumente."
         },
         "resources": [
           {
             "type": "rest",
-            "resourceId": "^/invoices",
+            "resourceId": "^(/api)?/invoices",
             "actions": ["view"]
           },
           {
