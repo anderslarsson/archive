@@ -111,7 +111,7 @@ class Mapper {
 
         let buildFiles = () => {
             let outboundAttachments = this.items.reduce((acc, val) => {
-                let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
+                let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
                 return acc.concat(attachments);
             }, []);
 
