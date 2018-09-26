@@ -47,7 +47,7 @@ async function main(dataDir, mappingFile) {
 
         console.log('--- STAGE 4 ---');
 
-        await api.init();
+        await api.init(args['target-env'] || 'devbox');
 
         archiveEntriesStage4 = await processAttachments(archiveEntriesStage3, dataDir);
 

@@ -111,14 +111,20 @@ class Mapper {
 
         let buildFiles = () => {
             let outboundAttachments = this.items.reduce((acc, val) => {
-                let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
+                let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
                 return acc.concat(attachments);
             }, []);
 
+            let canonical = this.items.reduce((acc, val) => {
+                const c = ((val.document || {}).files || {}).canonical || null;
+                return c ? c : acc;
+            }, null);
+
             return {
                 inbound: {}, // Not implemented
-                inboundAttachments: [], // Not implemented
                 outbound: {}, // Not implemented
+                canonical,
+                inboundAttachments: [], // Not implemented
                 outboundAttachments: outboundAttachments || []
             };
         };

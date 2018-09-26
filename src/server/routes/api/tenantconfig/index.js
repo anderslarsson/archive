@@ -17,10 +17,8 @@ module.exports.get = async function (req, res, app, db) {
             return sendErrorResponse(req, res, 400, 'Wrong parameters.');
         }
 
-        let tenantConfigModel;
-
         /* Check if owning tenantId has valid archive configuration */
-        tenantConfigModel = await db.modelManager.getModel('TenantConfig');
+        const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
 
         let tenantConfigs = [];
         if (isAdmin(req)) {

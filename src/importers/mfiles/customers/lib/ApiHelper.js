@@ -1,12 +1,8 @@
 const axios = require('axios');
 const extend = require('extend');
 const qs = require('qs');
-const path = require('path');
-const dotenv = require('dotenv');
 
 const defaultConfig = {
-    username: 'ocadmin',
-    password: 'test',
     scheme: 'https',
     host: 'develop.businessnetwork.opuscapita.com',
     port: '443',
@@ -23,29 +19,20 @@ module.exports = class ApiHelper {
 
     constructor(config) {
         this.tokenInfo = null;
-
-        let env = dotenv.config({path: path.resolve(process.cwd(), '.env.local')});
-        if (env.error) {
-            const msg = 'Failed to load secrects from ENV. Can not login.';
-            console.log(msg);
-            throw new Error(msg);
-        }
-
         this.config = extend(true, {}, defaultConfig, config);
     }
 
     init() {
         this.http = axios.create(extend(true, {}, this.config.http));
 
-        let data = qs.stringify({'grant_type': 'password',
+        let data = qs.stringify({
+            'grant_type': 'password',
             'username': this.config.username,
             'password': this.config.password,
             'scope': 'email phone userInfo roles'
         });
 
-        const tokenUrl = this.config.scheme + "://" + this.config.host + ":" + this.config.port + "/auth/token";
-
-        debugger;
+        const tokenUrl = this.config.scheme + '://' + this.config.host + ':' + this.config.port + '/auth/token';
 
         return this.http.post(tokenUrl,
             data,
@@ -55,18 +42,18 @@ module.exports = class ApiHelper {
                 // }
                 auth: {
                     username: this.config.clientId,
-                    password: process.env.TOKEN_AUTH_CLIENT_SECRET_DEV
+                    password: this.config.clientSecret
                 }
             }
-        ).then( (response) => {
+        ).then((response) => {
             console.log("received response for " + tokenUrl + ": " + response.status);
             this.tokenInfo = response.data;
             this.tokenInfo.expires_at = new Date(this.tokenInfo.expires_in * 1000 + new Date().getTime()).getTime();
-            console.log(this.config.instanceId + ' received access_token ' + this.tokenInfo.access_token + "\nvalid until %o", new Date(this.tokenInfo.expires_at));
+            console.log(this.config.instanceId + ' received access_token ' + this.tokenInfo.access_token + '\nvalid until %o', new Date(this.tokenInfo.expires_at));
             return this;
         })
             .catch((err) => {
-                console.log(this.config.instanceId + " Error getting access token: %o", err);
+                console.log(this.config.instanceId + ' Error getting access token: %o', err);
                 throw err;
             });
     }
@@ -79,10 +66,12 @@ module.exports = class ApiHelper {
         if (!this.tokenInfo) {
             return Promise.reject('ApiHelper not initialized! Call init(config) first...');
         }
+
         if(new Date().getTime() > this.tokenInfo.expires_at - 5000) {
             console.log(this.config.instanceId + " refreshing token which is valid until %o", new Date(this.tokenInfo.expires_at));
             return this.init({});
         }
+
         return Promise.resolve(this.getAuthHeader());
     }
 

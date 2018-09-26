@@ -22,7 +22,7 @@ const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_confi
  * @param {express.App} app
  * @param {Sequelize} db
  */
-module.exports.createArchiverJob = async function (req, res) {
+module.exports.createArchiverJob = async function (req, res, app, db) {
     let transactionId = req && req.body && req.body.transactionId;
 
     if (!transactionId) {
@@ -34,11 +34,30 @@ module.exports.createArchiverJob = async function (req, res) {
     }
 
     try {
-        await invoiceArchiveContext.archiveTransaction(transactionId);
+        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
+        let [log, created] = await ArchiveTransactionLog.findOrCreate({
+            where: {
+                transactionId: transactionId,
+                type: 'invoice_receiving'
+            },
+            defaults: {
+                type: 'invoice_receiving'
+            }
+        });
 
-        res.status(200).json({success: 'true'});
+        if (created === true) {
+            /* Transaction not processed yet */
+
+            await invoiceArchiveContext.archiveTransaction(transactionId);
+            res.status(200).json({success: true});
+        } else {
+            req.opuscapita.logger.warn('Trying to archive a transaction that was already processed.');
+            res.status(400).json({success: false, message: 'Transaction already processed'});
+        }
+
     } catch (e) {
-        /* handle error */
+        req.opuscapita.logger.error('Failed to start archiving of invoice transaction.', e);
+
         res.status(500).json({
             success: false,
             message: e.message || 'Unknown error'

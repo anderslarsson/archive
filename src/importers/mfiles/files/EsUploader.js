@@ -42,7 +42,7 @@ module.exports = class EsUploader {
             }
 
             try {
-                let result = await api.postJson('http://localhost:8080/archive/api/archive/invoices', cleanedEntry);
+                let result = await api.postJson('/archive/api/archive/invoices', cleanedEntry);
 
                 if (result && result.success === true) {
                     this.done.push(entry);
