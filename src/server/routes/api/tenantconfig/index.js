@@ -61,6 +61,10 @@ module.exports.get = async function (req, res, app, db) {
         /* Fetch customer information from customer service */
         let customers = await req.opuscapita.serviceClient.get('customer', `/api/customers/?id=${customerIds.join(',')}`);
 
+        req.opuscapita.logger.info('XXXXXXX customerIds ', customerIds);
+        req.opuscapita.logger.info('YYYYYYY tenantIds ', tenantIds);
+        req.opuscapita.logger.info('ZZZZZZZ userTenants ', await req.opuscapita.getUserTenants());
+
         /* Enrich the customer information with archiving enabled with the humand readable customer name */
         let customerMapping = [];
         for (const id of customerIds) {
