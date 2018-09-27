@@ -1,13 +1,12 @@
 'use strict';
 
-/* global after:true, beforeEach:true describe:true, it:true */
+/* global after:true, beforeEach:true describe:true, it:true, before: true */
 
 const assert = require('assert');
 const elasticContext = require('../../src/shared/elasticsearch');
 
 const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
 
-// Put your Mocha tests here and run "npm test".
 describe('Elasticsearch', () => {
 
     before(async () => {
