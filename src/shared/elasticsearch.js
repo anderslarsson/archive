@@ -23,6 +23,10 @@ class Elasticsearch {
     }
 
     async init() {
+        if (this.initialized) {
+            return true;
+        }
+
         await config.init();
         let endpointsFromConfig = await config.getEndPoints('elasticsearch');
 
@@ -44,6 +48,8 @@ class Elasticsearch {
             // sniffOnStart: true,
             // sniffInterval: 60000
         });
+
+        return this.initialized = true;
     }
 
     get client() {

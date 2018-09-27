@@ -28,6 +28,7 @@ describe('Elasticsearch', () => {
 
         beforeEach(async () => {
             try {
+                await elasticContext.init();
                 await elasticContext.conn.indices.delete({index: indexName});
             } catch (e) {
                 return true;
@@ -61,6 +62,7 @@ describe('Elasticsearch', () => {
         };
 
         beforeEach(async () => {
+            await elasticContext.init();
             await deleteIndicesFn();
         });
 
@@ -158,6 +160,7 @@ describe('Elasticsearch', () => {
         };
 
         beforeEach(async () => {
+            await elasticContext.init();
             await deleteIndicesFn();
         });
 
@@ -195,6 +198,10 @@ describe('Elasticsearch', () => {
                 return true;
             }
         };
+
+        beforeEach(async () => {
+            await elasticContext.init();
+        });
 
         after(async () => {
             await deleteIndicesFn();
