@@ -40,5 +40,6 @@
   "Archive.invoice.page.labels.to": "To",
   "Archive.invoice.page.labels.emailSubject": "Subject",
   "Archive.invoice.page.labels.totalAmount": "Total amount",
-  "Archive.invoice.page.labels.lastStatus": "Last status"
+  "Archive.invoice.page.labels.lastStatus": "Last status",
+  "Archive.invoice.page.headings.history": "Transaction history"
 }

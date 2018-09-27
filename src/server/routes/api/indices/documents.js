@@ -3,11 +3,11 @@
 const elasticContext = require('../../../../shared/elasticsearch');
 
 /**
- * @async
- * @function get
- *
  * Get a single document from the given index by its
  * transaction ID.
+ *
+ * @async
+ * @function get
  *
  * @param {express.Request} req
  * @param {object} req.params - POST data
