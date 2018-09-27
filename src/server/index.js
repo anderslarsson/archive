@@ -6,6 +6,7 @@ const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
 const invoiceArchiveContext = require('./invoice_archive');
+const elasticsearch         = require('../shared/elasticsearch');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -57,21 +58,18 @@ async function init() {
     });
 
     await invoiceArchiveContext.initEventSubscriptions();
-
-    logger.info('Forking worker proccess...');
+    await elasticsearch.init();
 
     let args = [];
     if (!isProduction) {
         args.push('--inspect=0.0.0.0:9230');
     }
 
+    logger.info('Forking worker proccess...');
     const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: args});
     invoiceArchiveWorker.on('exit', () => {
         logger.error('Invoice archive worker died. :(');
     });
-
-    // global.blub = invoiceArchiveWorker;
-
 }
 
 (() => init().catch(console.error))();

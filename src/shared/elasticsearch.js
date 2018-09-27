@@ -1,35 +1,39 @@
 'use strict';
 
-const {Client} = require('elasticsearch');
+const elasticsearch = require('elasticsearch');
 
 const Logger = require('ocbesbn-logger');
+const config = require('@opuscapita/config');
 
 const {
     ErrCodes,
     InvoiceArchiveConfig
 } = require('./invoice_archive_config');
 
-const {
-    normalizeTenantId
-} = require('./helpers');
-
-const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
+const {normalizeTenantId} = require('./helpers');
 
 class Elasticsearch {
 
     constructor() {
-        this.logger = new Logger();
-
+        this.logger         = new Logger();
+        this.initialized    = false;
         this.defaultDocType = 'doc';
 
-        this.conn = new Client({
+        this.InvoiceArchiveConfig = InvoiceArchiveConfig;
+    }
+
+    async init() {
+        await config.init();
+        this.endpoint = await config.getEndPoint('elasticsearch');
+
+        this.conn = new elasticsearch.Client({
             apiVersion: '5.5',
             hosts: [
-                ES_HOST
-            ]
+                `${this.endpoint.host}:${this.endpoint.port}`
+            ],
+            sniffOnStart: true,
+            sniffInterval: 60000
         });
-
-        this.InvoiceArchiveConfig = InvoiceArchiveConfig;
     }
 
     get client() {
@@ -358,12 +362,16 @@ class Elasticsearch {
                 if (create) {
                     await this.conn.indices.create({index: indexName});
 
-                    if (opts && opts.mapping && typeof opts.mapping === 'object') {
-                        await this.conn.indices.putMapping({
-                            body: opts.mapping.mappings.doc,
-                            index: indexName,
-                            type: this.defaultDocType
-                        });
+                    if (opts && opts.mapping) {
+                        if (typeof opts.mapping === 'object') {
+                            await this.conn.indices.putMapping({
+                                body: opts.mapping.mappings.doc,
+                                index: indexName,
+                                type: this.defaultDocType
+                            });
+                        } else {
+                            console.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
+                        }
                     }
 
                     return true;
