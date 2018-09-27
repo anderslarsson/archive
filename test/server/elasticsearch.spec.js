@@ -10,6 +10,10 @@ const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
 // Put your Mocha tests here and run "npm test".
 describe('Elasticsearch', () => {
 
+    before(async () => {
+        await elasticContext.init();
+    });
+
     after(async () => {
         await sleep(500);
     });
