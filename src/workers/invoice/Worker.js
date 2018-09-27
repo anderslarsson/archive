@@ -65,6 +65,7 @@ class Worker {
 
     async init() {
         await this.initEventSubscriptions();
+        await this.archiver.init();
         return true;
     }
 

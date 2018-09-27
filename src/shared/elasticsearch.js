@@ -24,15 +24,25 @@ class Elasticsearch {
 
     async init() {
         await config.init();
-        this.endpoint = await config.getEndPoint('elasticsearch');
+        let endpointsFromConfig = await config.getEndPoints('elasticsearch');
 
+        this.esEndpoints = endpointsFromConfig.map(e => `${e.host}:${e.port}`);
+
+        this.logger.info('Elasticsearch#init: Got elasticsearch endpoint from consul: ', this.esEndpoints);
+
+        /**
+         * FIXME
+         * The config should use the sniffOnStart parameter to enable
+         * cluster discovery by the ES client itself.
+         * This does not work at the moment cause the cluster itself
+         * exposes a wrong publish_address that points to localhost.
+         * See `GET /_nodes/_all/http` on ES.
+         */
         this.conn = new elasticsearch.Client({
             apiVersion: '5.5',
-            hosts: [
-                `${this.endpoint.host}:${this.endpoint.port}`
-            ],
-            sniffOnStart: true,
-            sniffInterval: 60000
+            hosts: this.esEndpoints,
+            // sniffOnStart: true,
+            // sniffInterval: 60000
         });
     }
 
