@@ -42,6 +42,7 @@ module.exports.init = async function (app, db) {
     app.post('/api/searches', can.accessIndex, (req, res) => invoiceArchiveHandler.search(req, res, app, db));
     app.get('/api/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
 
+    app.get(['/api/ping', '/public/api/ping'], (req, res) => res.status(200).json({success: true, data: 'pong'}));
 };
 
 function handle(req, res, app, db, handlerFn) {
