@@ -8,7 +8,6 @@ module.exports.init = function (db) {
      * @class TenantConfig
      */
     db.define('TenantConfig',
-        /** @lends User */
         {
             /** Unique identifier. Auto-incremented integer. */
             id: {
@@ -21,34 +20,31 @@ module.exports.init = function (db) {
                 type: Sequelize.STRING(32),
                 allowNull: true
             },
-            /** Identifies the type of archive this tenant uses. Maybe used later on for billing. **/
+            /** Identifies the type of archive this tenant uses. Maybe used later on for billing. */
             type: {
                 type: Sequelize.STRING(30),
                 allowNull: false,
                 defaultValue: 'invoice'
             },
-            /** Defines the number of *days* an archive entry should stay on the hot storage. **/
+            /** Defines the number of *days* an archive entry should stay on the hot storage. */
             retentionPeriodHot: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 defaultValue: '600' // 18 months is the default case for all GDP users
             },
-            /**
-             * Defines the number of *years* archives need to be kept around (on archive storage).
-             * Archives that are older than this can be savely deleted.
-             **/
+            /** Defines the number of *years* archives need to be kept around (on archive storage).  Archives that are older than this can be savely deleted.  */
             retentionPeriodLongTerm: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 defaultValue: '11'
             },
-            /** User who created this entry. **/
+            /** User who created this entry. */
             createdBy: {
                 type: Sequelize.STRING(60),
                 allowNull: false,
                 defaultValue: 'Opuscapita user'
             },
-            /** User who changed this entry. **/
+            /** User who changed this entry. */
             changedBy: {
                 type: Sequelize.STRING(60),
                 allowNull: false,

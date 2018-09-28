@@ -9,32 +9,28 @@ module.exports.init = function (db) {
      * and keeps track of the process in the log. The entries in the log can than be
      * checked against what actually went to elasticsearch.
      *
-     * @class ArchiveTransactionLog 
+     * @class ArchiveTransactionLog
      */
     db.define('ArchiveTransactionLog', {
 
-        /**
-         * Unique identifier that identifies a transaction.
-         * UUID actually is 32 (36) chars but we need some
-         * safety for improper stuff.
-         */
+        /** Unique identifier that identifies a transaction.  UUID actually is 32 (36) chars but we need some safety for improper stuff.  */
         transactionId: {
             type: Sequelize.STRING(48),
             allowNull: false,
             primaryKey: true
         },
-        /** Enum denoting the current status inside the archiving process. **/
+        /** Enum denoting the current status inside the archiving process. */
         status: {
             type: Sequelize.ENUM('created', 'processing', 'done'),
             allowNull: false,
             defaultValue: 'created'
         },
-        /** Type that denotes the target archive type. **/
+        /** Type that denotes the target archive type. */
         type: {
             type: Sequelize.ENUM('invoice_receiving'),
             allowNull: false,
         },
-        /** User who created this entry. **/
+        /** User who created this entry. */
         createdBy: {
             type: Sequelize.STRING(60),
             allowNull: false,
