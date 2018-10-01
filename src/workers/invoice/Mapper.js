@@ -110,10 +110,23 @@ class Mapper {
         };
 
         let buildFiles = () => {
-            let outboundAttachments = this.items.reduce((acc, val) => {
-                let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
-                return acc.concat(attachments);
-            }, []);
+            let outboundAttachments = this.items
+                .reduce((acc, val) => {
+                    let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
+                    return acc.concat(attachments);
+                }, [])
+                .filter(e => e.archivable === true || e.archivable === 'true')
+                .filter(e => e.refType === 'blob')
+                .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
+
+            let inboundAttachments = this.items
+                .reduce((acc, val) => {
+                    let attachments = ((val.document || {}).files || {}).inbound_attachments || [];
+                    return acc.concat(attachments);
+                }, [])
+                .filter(e => e.archivable === true || e.archivable === 'true')
+                .filter(e => e.refType === 'blob')
+                .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
 
             let canonical = this.items.reduce((acc, val) => {
                 const c = ((val.document || {}).files || {}).canonical || null;
@@ -124,7 +137,7 @@ class Mapper {
                 inbound: {}, // Not implemented
                 outbound: {}, // Not implemented
                 canonical,
-                inboundAttachments: [], // Not implemented
+                inboundAttachments: inboundAttachments || [], // Not implemented
                 outboundAttachments: outboundAttachments || []
             };
         };
@@ -194,6 +207,13 @@ class Mapper {
         let receiver = this.items
             .map((i) => i.receiver || null)
             .filter((r) => r !== null)
+            .filter(r => typeof r === 'object')
+            .filter(r => {
+                if (r.protocolAttributes) {
+                    return typeof r.protocolAttributes === 'object';
+                }
+                return true;
+            })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
         return this._isEmtpyObj(receiver) ? null : receiver;
@@ -203,6 +223,13 @@ class Mapper {
         let sender = this.items
             .map((i) => i.sender || null)
             .filter((s) => s !== null)
+            .filter(r => typeof r === 'object')
+            .filter(r => {
+                if (r.protocolAttributes) {
+                    return typeof r.protocolAttributes === 'object';
+                }
+                return true;
+            })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
         return this._isEmtpyObj(sender) ? null : sender;
