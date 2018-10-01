@@ -206,13 +206,14 @@ class Mapper {
     _buildReceiver() {
         let receiver = this.items
             .map((i) => i.receiver || null)
-            .filter((r) => r !== null)
+            .filter(r => r !== null)
             .filter(r => typeof r === 'object')
-            .filter(r => {
-                if (r.protocolAttributes) {
-                    return typeof r.protocolAttributes === 'object';
+            .map(r => {
+                if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
+                    return r;
+                } else {
+                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
                 }
-                return true;
             })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
@@ -224,11 +225,12 @@ class Mapper {
             .map((i) => i.sender || null)
             .filter((s) => s !== null)
             .filter(r => typeof r === 'object')
-            .filter(r => {
-                if (r.protocolAttributes) {
-                    return typeof r.protocolAttributes === 'object';
+            .map(r => {
+                if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
+                    return r;
+                } else {
+                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
                 }
-                return true;
             })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
