@@ -411,7 +411,7 @@ class Archiver {
             body: {
                 query: {
                     term: {
-                        'event.transactionId.keyword': transactionId
+                        'event.transactionId': transactionId
                     }
                 },
                 sort: {
