@@ -118,12 +118,13 @@ class Mapper {
         }
 
         return {
-            physical: 'M-FILES',
+            intermediator: 'M-FILES',
             target: 'Not implemented',
             protocolAttributes: {
                 to: this._fetchFromPropsByName('To'),
                 from: this._fetchFromPropsByName('From'),
                 subject: this._fetchFromPropsByName('Subject'),
+                type: 'email',
                 mailId
             }
         };

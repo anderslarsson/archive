@@ -42,7 +42,7 @@ const esMapping = {
                 },
                 sender: {
                     properties: {
-                        physical: {
+                        intermediator: {
                             type: 'keyword'
                         },
                         originator: {
@@ -55,7 +55,7 @@ const esMapping = {
                 },
                 receiver: {
                     properties: {
-                        physical: {
+                        intermediator: {
                             type: 'keyword'
                         },
                         target: {
