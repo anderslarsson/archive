@@ -1,6 +1,4 @@
 'use strict';
-const moment = require('moment');
-
 const dbInit = require('@opuscapita/db-init'); // Database
 const Logger = require('ocbesbn-logger');
 
