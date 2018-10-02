@@ -186,6 +186,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
         let queryOptions = {
             index: selectedValues.index,
             query: {
+                year: selectedValues.index.split('-').pop(),
                 from: selectedValues.from,
                 to: selectedValues.to,
                 fullText: selectedValues.fullTextQuery

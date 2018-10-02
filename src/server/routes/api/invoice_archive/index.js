@@ -219,6 +219,8 @@ module.exports.search = async function search(req, res) {
 
     let es = elasticContext.client;
 
+    /* TODO add query.{year, to, from} validation */
+
     let queryOptions = {
         query: {
             bool: {
@@ -243,6 +245,8 @@ module.exports.search = async function search(req, res) {
             }
         };
 
+        const firstOfJanuar = new Date(query.year);
+
         if (query.from) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
@@ -257,7 +261,7 @@ module.exports.search = async function search(req, res) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
                     end: {
-                        gte: query.from || new Date(query.year),
+                        gte: query.from || firstOfJanuar.toISOString(),
                         lte: query.to
                     }
                 }
