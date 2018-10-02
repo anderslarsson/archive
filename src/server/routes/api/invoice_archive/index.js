@@ -24,14 +24,7 @@ const lastDayOfYear = require('date-fns/last_day_of_year');
  * @param {Sequelize} db
  */
 module.exports.createArchiverJob = async function (req, res, app, db) {
-    let transactionId = req && req.body && req.body.transactionId;
-
-    try {
-        req.opuscapita.logger.log('createArchiverJob: req body', req.body);
-    } catch (e) {
-        /* handle error */
-        console.log('Exception caught.', e);
-    }
+    let transactionId = ((req || {}).body || {}).transactionId || null;
 
     if (!transactionId) {
         res.status(422).json({
