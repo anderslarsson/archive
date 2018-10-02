@@ -26,8 +26,12 @@ const lastDayOfYear = require('date-fns/last_day_of_year');
 module.exports.createArchiverJob = async function (req, res, app, db) {
     let transactionId = req && req.body && req.body.transactionId;
 
-    req.opuscapita.logger.log('createArchiverJob: req object', req);
-    req.opuscapita.logger.log('createArchiverJob: req body', body);
+    try {
+        req.opuscapita.logger.log('createArchiverJob: req body', req.body);
+    } catch (e) {
+        /* handle error */
+        console.log('Exception caught.', e);
+    }
 
     if (!transactionId) {
         res.status(422).json({
