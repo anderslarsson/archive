@@ -7,6 +7,7 @@ import {Components} from '@opuscapita/service-base-ui';
 import {InvoiceArchiveApi} from '../api';
 import InvoiceArchiveDocument from './InvoiceArchiveDocument.jsx';
 import translations from './i18n';
+
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
 
@@ -137,7 +138,8 @@ export default class InvoiceArchive extends Components.ContextComponent {
     }
 
     resetSearchForm(e) {
-        // TODO delete scroll on ES
+        this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+
         e.preventDefault();
 
         this.setState({
@@ -171,7 +173,9 @@ export default class InvoiceArchive extends Components.ContextComponent {
     }
 
     handleSearch(e) {
-        // TODO clear old scroll
+        if (this.state.search.scrollId) {
+            this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+        }
 
         e && e.preventDefault();
 
