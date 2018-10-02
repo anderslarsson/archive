@@ -329,6 +329,37 @@ module.exports.scroll = async function scroll(req, res) {
 };
 
 /**
+ * Delete a scroll for by the given scrollId
+ *
+ * @async
+ * @function search
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.scrollId - ID of the scroll API
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ */
+module.exports.clearScroll = async function clearScroll(req, res) {
+    const scrollId = req.params.id;
+    const es = elasticContext.client;
+
+    try {
+        await es.clearScroll({
+            scrollId
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Cleared scroll successfully.'
+        });
+
+    } catch (e) {
+        res.status(400).json({success: false});
+    }
+};
+
+/**
  * Extract the owner information from a archive document.
  *
  * @function

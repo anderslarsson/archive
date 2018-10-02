@@ -1,13 +1,12 @@
 'use strict';
+
 const dbInit = require('@opuscapita/db-init'); // Database
 const Logger = require('ocbesbn-logger');
 
 const elasticsearch = require('../../shared/elasticsearch');
 const Mapper = require('./Mapper');
 
-const {
-    InvoiceArchiveConfig
-} = require('../../shared/invoice_archive_config');
+const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 
 class Archiver {
 
