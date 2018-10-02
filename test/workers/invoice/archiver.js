@@ -53,18 +53,18 @@ describe('InvoiceArchiver', () => {
 
     });
 
-    describe('#getPrefixedTenantId()', () => {
-        it('Should return null for invalid parameters', () => {
-            assert.strictEqual(archiver.getPrefixedTenantId(''), null);
-            assert.strictEqual(archiver.getPrefixedTenantId({}), null);
-            assert.strictEqual(archiver.getPrefixedTenantId({customerId: ['a'], supplierId: ['c']}), null);
-            assert.strictEqual(archiver.getPrefixedTenantId({customerId: '', supplierId: ''}), null);
-        });
+    // describe('#getPrefixedTenantId()', () => {
+    //     it('Should return null for invalid parameters', () => {
+    //         assert.strictEqual(archiver.getPrefixedTenantId(''), null);
+    //         assert.strictEqual(archiver.getPrefixedTenantId({}), null);
+    //         assert.strictEqual(archiver.getPrefixedTenantId({customerId: ['a'], supplierId: ['c']}), null);
+    //         assert.strictEqual(archiver.getPrefixedTenantId({customerId: '', supplierId: ''}), null);
+    //     });
 
-        it('Should return a prefixed tenantId for valid params', () => {
-            assert.strictEqual(archiver.getPrefixedTenantId({customerId: 'OC001', supplierId: null}), 'c_OC001');
-            assert.strictEqual(archiver.getPrefixedTenantId({customerId: null, supplierId: 'hard001'}), 's_hard001');
-        });
-    });
+    //     it('Should return a prefixed tenantId for valid params', () => {
+    //         assert.strictEqual(archiver.getPrefixedTenantId({customerId: 'OC001', supplierId: null}), 'c_OC001');
+    //         assert.strictEqual(archiver.getPrefixedTenantId({customerId: null, supplierId: 'hard001'}), 's_hard001');
+    //     });
+    // });
 
 });
