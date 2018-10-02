@@ -386,8 +386,6 @@ class Archiver {
     }
 
     /**
-     * @function archiveTransaction
-     *
      * Archives a single transaction identified by the first param.
      *
      * 1. Find all documents belonging to the transaction
@@ -396,8 +394,11 @@ class Archiver {
      * 4. Create or open the tenants monthly index
      * 5. Write the entry to the tenant index
      *
-     * @param {String} transactionId
+     * TODO needs refactoring because to complex and to ugly
      *
+     * @async
+     * @function archiveTransaction
+     * @param {String} transactionId
      * @return {Boolean} Indicates the success or failure of the operation.
      */
     async archiveTransaction(transactionId) {
@@ -484,6 +485,8 @@ class Archiver {
 
                                         if (createResult && createResult.created === true) {
                                             retVal = true;
+
+                                            /** TODO toggle archivable flag on blob references */
                                         }
                                     } catch (e) {
                                         if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {

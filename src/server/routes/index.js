@@ -1,7 +1,6 @@
 'use strict';
 
 const invoiceArchiveHandler     = require('./api/invoice_archive/');
-const infoHandler               = require('./api/info/');
 const tenantConfigHandler       = require('./api/tenantconfig/');
 
 const can = require('./api/can');
@@ -23,15 +22,15 @@ const {
  */
 module.exports.init = async function (app, db) {
 
-    let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
+    // let notImplementedFn = (req, res) => res.status(500).send('Not implemented.');
 
     /* *** TenantConfig *** */
     app.post('/api/tenantconfig', (req, res) => tenantConfigHandler.post(req, res, app, db));
     app.get('/api/tenantconfig/:type', (req, res) => tenantConfigHandler.get(req, res, app, db));
 
     /* *** Invoice archive *** */
-    app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
-    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));  // TODO This endpoint needs admin/service level rights, @see acl.json
+    app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
+    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
 
     /* *** Indices *** */
     app.get('/api/indices', can.listInvoiceIndicesByTenantId, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
