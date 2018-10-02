@@ -8,6 +8,7 @@ const elasticContext = require('../../../../shared/elasticsearch');
 const invoiceArchiveContext = require('../../../invoice_archive');
 const MsgTypes = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
+const lastDayOfYear = require('date-fns/last_day_of_year');
 
 /**
  * @function createArchiverJob
@@ -247,7 +248,7 @@ module.exports.search = async function search(req, res) {
                 range: {
                     start: {
                         gte: query.from,
-                        lte: query.to
+                        lte: query.to || lastDayOfYear(new Date(query.year))
                     }
                 }
             });
@@ -256,7 +257,7 @@ module.exports.search = async function search(req, res) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
                     end: {
-                        gte: query.from,
+                        gte: query.from || new Date(query.year),
                         lte: query.to
                     }
                 }
