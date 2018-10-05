@@ -60,11 +60,14 @@ class Mapper {
         return owner;
     }
 
+    setItems(items) {
+        this.items = items;
+    }
+
     /**
+     * Triggers the actual mapping of the data given to the constructor.
+     *
      * @function do
-     *
-     * description
-     *
      * @returns {object} The resulting ES archive document
      */
     do() {
@@ -99,20 +102,11 @@ class Mapper {
     }
 
     _buildDocument() {
-        let buildAmount = () => {
-            return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.amount) {
-                    return elem.document.amount;
-                } else {
-                    return acc;
-                }
-            }, null);
-        };
 
         let buildFiles = () => {
             let outboundAttachments = this.items
                 .reduce((acc, val) => {
-                    let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
+                    let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
                     return acc.concat(attachments);
                 }, [])
                 .filter(e => e.archivable === true || e.archivable === 'true')
@@ -121,7 +115,7 @@ class Mapper {
 
             let inboundAttachments = this.items
                 .reduce((acc, val) => {
-                    let attachments = ((val.document || {}).files || {}).inbound_attachments || [];
+                    let attachments = ((val.document || {}).files || {}).inboundAttachments || [];
                     return acc.concat(attachments);
                 }, [])
                 .filter(e => e.archivable === true || e.archivable === 'true')
@@ -144,8 +138,8 @@ class Mapper {
 
         let buildMsgType = () => {
             return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.msgtype) {
-                    return elem.document.msgtype;
+                if (elem.document && elem.document.msgType) {
+                    return elem.document.msgType;
                 } else {
                     return acc;
                 }
@@ -154,8 +148,8 @@ class Mapper {
 
         let buildMsgSubType = () => {
             return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.msgtypeSub) {
-                    return elem.document.msgtypeSub;
+                if (elem.document && elem.document.msgTypeSub) {
+                    return elem.document.msgTypeSub;
                 } else {
                     return acc;
                 }
@@ -163,7 +157,6 @@ class Mapper {
         };
 
         return {
-            amount: buildAmount(),
             msgType: buildMsgType(),
             msgSubType: buildMsgSubType(),
             files: buildFiles()
@@ -171,12 +164,13 @@ class Mapper {
     }
 
     _buildEnd() {
-        let lastTimestamp = this.items[this.items.length - 1].timestamp || null;
+        let lastTimestamp = (this.items[this.items.length - 1] || {}).timestamp || null;
 
+        /** FIXME should this fallback be allowed? Cause the transaction
+         * ends with the last entry not with a random one. */
         if (lastTimestamp === null) {
-            let l = lastTimestamp = this.items
-                .find((i) => i.timestamp);
-            if (l) {
+            let l = lastTimestamp = this.items.find((i) => i.timestamp);
+            if (l && l.timestamp) {
                 lastTimestamp = l.timestamp;
             }
         }
@@ -184,12 +178,35 @@ class Mapper {
         return lastTimestamp;
     }
 
+    _buildExternalReference() {
+        let result = this.items
+            .filter(e => !this._isEmtpyObj(e.externalReference))
+            .reduce((acc, e) => {
+                if (e.externalReference && e.externalReference.type && e.externalReference.value) {
+                    return {
+                        type: e.externalReference.type,
+                        value: e.externalReference.value
+                    };
+                } else {
+                    return acc;
+                }
+            }, {});
+
+
+        if (result.type && result.value) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
     _buildHistory() {
         return this.items
             .map((i) => {
                 return {
                     date: i.timestamp || null,
-                    description: i.eventText || '',
+                    shortEventText: i.shortEventText || '',
+                    eventText: i.eventText || '',
                     status: i.stepStatus || ''
                 };
             });

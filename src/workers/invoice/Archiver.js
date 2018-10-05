@@ -25,6 +25,12 @@ class Archiver {
 
     }
 
+    /**
+     * Initializes the database and elasticsearch connection.
+     *
+     * @async
+     * @function init
+     */
     async init() {
         try {
             this.db = await dbInit.init();
@@ -87,25 +93,16 @@ class Archiver {
      */
     async archiveTransaction(transactionId) {
 
-        let es = this.elasticsearch.client;
         let retVal = false;
 
         /* Find all documents that belong to the transaction */
-        let result = await es.search({
-            index: 'bn_tx_logs*',
-            body: {
-                query: {
-                    term: {
-                        'event.transactionId': transactionId
-                    }
-                },
-                sort: {
-                    'event.timestamp': {
-                        order: 'asc'
-                    }
-                }
-            }
-        });
+        let result;
+        try {
+            result = await this.fetchTransactionDocumentsById(transactionId);
+        } catch (e) {
+            this.logger.error(`InvoiceArchiver#archiveTransaction: Exception caught while trying to fetch transaction ${transactionId} from elasticsearch`, e);
+            return false;
+        }
 
         if (result && result.hits && result.hits.total > 0) {
 
@@ -199,6 +196,32 @@ class Archiver {
         }
 
         return retVal;
+    }
+
+    /**
+     * Fetches a list of transaction entries from elasticsearch
+     * by the given transactionId
+     *
+     * @async
+     * @function fetchTransactionDocumentsById
+     * @param {string} id - transactionId
+     */
+    async fetchTransactionDocumentsById(id) {
+        return this.elasticsearch.client.search({
+            index: 'bn_tx_logs*',
+            body: {
+                query: {
+                    term: {
+                        'event.transactionId': id
+                    }
+                },
+                sort: {
+                    'event.timestamp': {
+                        order: 'asc'
+                    }
+                }
+            }
+        });
     }
 
 }

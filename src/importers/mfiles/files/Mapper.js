@@ -102,6 +102,21 @@ class Mapper {
         return this._fetchFromPropsByName('Date');
     }
 
+    _buildExternalReference() {
+        let mailId = this._fetchFromPropsByName('MailID');
+
+        if (mailId && typeof mailId.toString) {
+            mailId = mailId.toString();
+
+            return {
+                type: 'inChannel', // TODO check if this is the correct type name
+                value: mailId
+            };
+        } else {
+            return null;
+        }
+    }
+
     _buildHistory() {
         // Nothing to do here
         return [];
@@ -112,11 +127,6 @@ class Mapper {
     }
 
     _buildReceiver() {
-        let mailId = this._fetchFromPropsByName('MailID');
-        if (mailId && typeof mailId.toString) {
-            mailId = mailId.toString();
-        }
-
         return {
             intermediator: 'M-FILES',
             target: 'Not implemented',
