@@ -109,7 +109,7 @@ class Mapper {
             mailId = mailId.toString();
 
             return {
-                type: 'inChannel', // TODO check if this is the correct type name
+                type: 'gdp', // TODO check if this is the correct type name
                 value: mailId
             };
         } else {
