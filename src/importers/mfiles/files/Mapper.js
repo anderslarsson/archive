@@ -134,8 +134,7 @@ class Mapper {
                 to: this._fetchFromPropsByName('To'),
                 from: this._fetchFromPropsByName('From'),
                 subject: this._fetchFromPropsByName('Subject'),
-                type: 'email',
-                mailId
+                type: 'email'
             }
         };
     }
