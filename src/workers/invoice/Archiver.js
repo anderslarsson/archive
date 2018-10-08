@@ -211,8 +211,17 @@ class Archiver {
             index: 'bn_tx_logs*',
             body: {
                 query: {
-                    term: {
-                        'event.transactionId': id
+                    bool: {
+                        must: {
+                            term: {
+                                'event.transactionId': id
+                            }
+                        },
+                        filter: {
+                            term: {
+                                'event.archivable': true
+                            }
+                        }
                     }
                 },
                 sort: {
