@@ -10,10 +10,10 @@ const api    = require('./Api');
 class FileProcessor {
 
     constructor(dataDir) {
-        this.done = [];
+        this.done   = [];
         this.failed = [];
 
-        this.dataDir = dataDir;
+        this.dataDir = dataDir; // Directory containing the Index.xml
 
         this.disposeDeath = onDeath(() => {
             let d = Date.now();
@@ -33,6 +33,18 @@ class FileProcessor {
         this.disposeDeath();
     }
 
+    /**
+     * Iterates the entries in the archiveEntries.done list,
+     * parses the EML file, extracts the attachments and
+     * uploads them to blob storage.
+     *
+     * @async
+     * @function run
+     * @param {object} archiveEntries
+     * @param {array}  archiveEntries.done - List of archive entries to be processed.
+     * @param {array}  archiveEntries.failed - List of archive entries that failed to process in a previous stage.
+     * @return {object} Struct of done and failed archive entries from this stage.
+     */
     async run(archiveEntries) {
         this.done   = [];
         this.failed = [].concat(archiveEntries.failed);
@@ -52,6 +64,7 @@ class FileProcessor {
                 timeLast = Date.now();
             }
 
+            /** Read the archive entrie's EML file from disk */
             let eml = null;
             try {
                 eml = this.readEml(entry);
@@ -69,7 +82,7 @@ class FileProcessor {
                 }
 
                 this.failed.push(entry);
-                continue;
+                continue; // Skip to next entry
             }
 
             /* Parse EML file */
@@ -87,7 +100,7 @@ class FileProcessor {
                 });
 
                 this.failed.push(entry);
-                continue;
+                continue; // Skip to next entry
             }
 
             /* Upload attachments */
@@ -98,8 +111,8 @@ class FileProcessor {
 
                 let uploadResult = await this.uploadAttachments(entry, parsedMail.attachments);
 
-                /* Push entries with failed uploads to the fail queue */
                 if (uploadResult.failed.length > 0) {
+                    /* Push entries with failed uploads to the fail queue */
                     entry._errors.stage.fileProcessing.push({
                         type: 'blob_upload_failed',
                         message: 'Failed to upload attachements',
@@ -107,8 +120,8 @@ class FileProcessor {
                     });
                     this.failed.push(entry);
                 } else {
-                    /* Map result from Blog storage to archive schema. */
-                    let outboundAttachments = uploadResult.done.map((e) => {
+                    /* Map result from Blob storage to archive schema. */
+                    let inboundAttachments = uploadResult.done.map((e) => {
                         return {
                             reference: `/${e.tenantId}/data${e.path}`,
                             refType: 'blob',
@@ -116,16 +129,19 @@ class FileProcessor {
                         };
                     });
 
-                    entry.document.files.outboundAttachments = entry.document.files.outboundAttachments.concat(outboundAttachments);
-
-                    this.done.push(entry);
+                    entry.document.files.inboundAttachments = entry.document.files.inboundAttachments.concat(inboundAttachments);
                 }
             }
+
+            /** Set readonly flag */
+            if ((((entry || {}).document || {}).files || {}).inboundAttachments && entry.document.files.inboundAttachments.length > 0) {
+                let roResult = await this.setReadonly(entry.document.files.inboundAttachments);
+                console.info('FileProcessor: Set readonly done with', roResult);
+            }
+
+            this.done.push(entry);
         }
 
-        // TODO
-        // - return all done
-        // -handle error for failed
         return {
             done: this.done,
             failed: this.failed
@@ -215,8 +231,30 @@ class FileProcessor {
         return eml;
     }
 
+    async setReadonly(attachments) {
+        let done   = [];
+        let failed = [];
+
+        for (const attachment of attachments) {
+            try {
+                const blobPath = `/blob/api${attachment.reference}`.replace('/data/private', '/data/metadata/private');
+
+                let result = await api.patchJson(blobPath, {
+                    readOnly: true
+                });
+
+                done.push(result);
+            } catch (e) {
+                console.error('FileProcessor#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
+                failed.push(attachment);
+            }
+        }
+
+        return {done, failed};
+    }
+
     async uploadAttachments(archiveEntry, attachments) {
-        let done = [];
+        let done   = [];
         let failed = [];
 
         for (const attachment of attachments) {
@@ -248,9 +286,27 @@ class FileProcessor {
      * @param {filename}
      * @return {Promise <Obkect>}
      */
-    uploadFile(data, transactionId, tenantId, filename) {
+    async uploadFile(data, transactionId, tenantId, filename) {
         filename = encodeURI(filename);
-        return api.putChunked(`/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}?createMissing=true`, data);
+
+        let blobPath = `/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}`;
+
+        /** Check existence of file */
+        let {res} = await api.head(blobPath);
+        if (res && res.statusCode && res.statusCode === 200) {
+            /** File exists -> skip */
+            if (res.headers['x-file-info']) {
+                console.info('File already exists ...');
+                const fileInfo = decodeURIComponent(res.headers['x-file-info']);
+                return JSON.parse(fileInfo);
+            } else {
+                /** This should not happen but we need to indicate an error. */
+                throw new Error('Blob suggest file is already existing but did not provide file info.');
+            }
+        } else {
+            /** File does not exist, upload */
+            return api.putChunked(`${blobPath}?createMissing=true`, data);
+        }
     }
 
 }
