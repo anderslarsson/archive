@@ -102,9 +102,7 @@ class Worker {
                 let payload = msg.payload;
 
                 if (payload.transactionId) {
-                    // TODO do the magic
                     let result = await this.archiver.archiveTransaction(payload.transactionId);
-
                     success = result;
                 } else {
                     success = false;
@@ -123,8 +121,6 @@ class Worker {
 
                     await this.eventClient.ackMessage(msg);
                     await this.updateArchiveTransactionLog(payload.transactionId, 'status', 'done');
-
-                    // TODO Update ArchiveTransactionLog
 
                     this.logger.log('Finished job with result: \n' + success);
                 }

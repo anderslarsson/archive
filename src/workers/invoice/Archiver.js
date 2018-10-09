@@ -95,7 +95,7 @@ class Archiver {
 
         let retVal = false;
 
-        /* Find all documents that belong to the transaction */
+        /** Find all documents that belong to the transaction */
         let result;
         try {
             result = await this.fetchTransactionDocumentsById(transactionId);
@@ -188,6 +188,7 @@ class Archiver {
                         this.logger.info(`InvoiceArchiver#archiveTransaction: owning tenant ${tenantId} is not configured for archiving. (TX id: ${transactionId})`);
                     }
                 } else {
+                    /** Unable to determine owner of transaction. */
                     this.logger.error(`InvoiceArchiver#archiveTransaction: Unable to extract owning tenantId from transaction ${transactionId}`);
                 }
             }
