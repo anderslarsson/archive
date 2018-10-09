@@ -1,7 +1,8 @@
 'use strict';
 
-const dbInit = require('@opuscapita/db-init'); // Database
-const Logger = require('ocbesbn-logger');
+const dbInit        = require('@opuscapita/db-init'); // Database
+const Logger        = require('ocbesbn-logger');
+const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch');
 const Mapper = require('./Mapper');
@@ -11,6 +12,7 @@ const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 class Archiver {
 
     constructor(eventClient, logger) {
+        this.serviceClient = new ServiceClient();
 
         this.elasticsearch = elasticsearch;
         this.eventClient = eventClient;
@@ -167,7 +169,7 @@ class Archiver {
                                         if (createResult && createResult.created === true) {
                                             retVal = true;
 
-                                            /** TODO toggle archivable flag on blob references */
+                                            this.setReadonly((((mappingResult || {}).document || {}).files || {}).inboundAttachments || []); // TODO work on result
                                         }
                                     } catch (e) {
                                         if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
@@ -232,6 +234,24 @@ class Archiver {
                 }
             }
         });
+    }
+
+    async setReadonly(attachments = []) {
+        let done   = [];
+        let failed = [];
+
+        for (const attachment of attachments) {
+            try {
+                const blobPath = `/api${attachment.reference}`.replace('/data/private', '/data/metadata/private');
+                let result = await this.serviceClient.patch('blob', blobPath, {readOnly: true}, true);
+                done.push(result);
+            } catch (e) {
+                this.logger.error('FileProcessor#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
+                failed.push(attachment);
+            }
+        }
+
+        return {done, failed};
     }
 
 }
