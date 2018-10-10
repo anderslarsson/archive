@@ -91,7 +91,7 @@ class Mapper {
 
         } catch (e) {
             /* handle error */
-            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document.');
+            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document. Exception: ', e);
         }
 
         return this.document;
@@ -257,7 +257,7 @@ class Mapper {
     _buildStart() {
         let firstTimestamp = this.items.find((i) => i.timestamp);
 
-        return firstTimestamp.timestamp;
+        return firstTimestamp && firstTimestamp.timestamp;
     }
 
     _buildSupplierId() {

@@ -4,11 +4,12 @@
  * InvoiceArchive API handlers
  */
 
-const elasticContext = require('../../../../shared/elasticsearch');
-const invoiceArchiveContext = require('../../../invoice_archive');
-const MsgTypes = require('../../../../shared/msg_types');
+const lastDayOfYear          = require('date-fns/last_day_of_year');
+const elasticContext         = require('../../../../shared/elasticsearch');
+const invoiceArchiveContext  = require('../../../invoice_archive');
+const MsgTypes               = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
-const lastDayOfYear = require('date-fns/last_day_of_year');
+const Mapper                 = require('../../../../workers/invoice/Mapper');
 
 /**
  * @function createArchiverJob
@@ -114,6 +115,11 @@ module.exports.createDocument = async function (req, res, app, db) {
 
     let doc = req.body;
 
+    if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
+        /** Convert transaction document to archive document first */
+        doc = mapTransactionToEvent(doc);
+    }
+
     /* Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
@@ -144,9 +150,6 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    // FIXME Check date of doc to find the target index instead of using the current month. This
-    // is needed for M-Files import of existing data. So for example a doc with timestamp 2017-09-28
-    // needs to be put to the yearly index not to the current monthly index.
     let archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
 
     let msg, success;
@@ -170,6 +173,8 @@ module.exports.createDocument = async function (req, res, app, db) {
 
                 if (createResult && createResult.created === true) {
                     success = true;
+
+                    // TODO set files in document to readOnly=true
                 }
             } catch (e) {
                 if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
@@ -436,3 +441,12 @@ async function hasArchiving(tenantId, type, db) {
         return false;
     }
 }
+
+
+function mapTransactionToEvent(doc) {
+    let mapper = new Mapper(doc.event.transactionId, [doc.event]);
+    let archiveDocument = mapper.do();
+
+    return archiveDocument;
+};
+module.exports.mapTransactionToEvent = mapTransactionToEvent;

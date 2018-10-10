@@ -21,7 +21,7 @@ describe('InvoiceMapper', () => {
         }
     ];
 
-    describe.only('_buildExternalReference', () => {
+    describe('_buildExternalReference', () => {
 
         it('Should return a single entry with the reduced externalReference', () => {
             let m = new Mapper(uuid, validTransactions);
