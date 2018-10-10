@@ -104,6 +104,13 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
 };
 
 /**
+ * This endpoint accepts transcation and archive documents and
+ * tries to insert them to elasticsearch.
+ *
+ * TODO
+ *   - extract ES insertion to own method
+ *   - split flow for transaction and archive payloads to different methods
+ *
  * @function createDocument
  * @param {express.Request} req
  * @param {object} req.body - POST data
@@ -126,7 +133,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
             success: false,
-            error: 'Invalid data'
+            error: 'Required values missing or wrong msgType. Expected to find transactionId, supplierId|customerId and msgType=invoice.'
         });
         return false;
     }
@@ -137,7 +144,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     if (tenantId === null ||  type === null) {
         res.status(422).send({
             success: false,
-            error: 'Invalid data'
+            error: 'Unable to inflect owning tenantId or archive type from document.'
         });
         return false;
     }
@@ -178,6 +185,7 @@ module.exports.createDocument = async function (req, res, app, db) {
 
                     if (docIsMapped) {
                         await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO work on result
+                        // TODO update ArchiveTransactionLog to 'done'
                     }
                 }
             } catch (e) {
@@ -395,12 +403,11 @@ function extractOwnerFromDocument(doc) {
 }
 
 /**
+ * Detect the archive type by matching the sender/receiver information
+ * with the customer/supplier info from the document.
+ *
  * @function extractTypeFromDocument
- *
- * Extract the owner information from a archive document.
- *
  * @params {object} doc
- *
  * @returns {String} tenantId
  */
 function extractTypeFromDocument(doc) {
