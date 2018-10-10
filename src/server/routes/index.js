@@ -45,7 +45,7 @@ module.exports.init = async function (app, db) {
     /** *** Ping *** */
     app.get(['/api/ping', '/public/api/ping'], (req, res) => res.status(200).json({success: true, data: 'pong'}));
 
-    // app.post(['/public/api/tt'], (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
+    app.post(['/public/api/tt'], (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
 };
 
 function handle(req, res, app, db, handlerFn) {

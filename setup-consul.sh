@@ -2,7 +2,7 @@ function putConsulData
 {
 
     if [[ -z "${TOKEN_AUTH_CLIENT_SECRET_DEV}" ]]; then
-        TOKEN_AUTH_CLIENT_SECRET_DEV="notneeded"
+        TOKEN_AUTH_CLIENT_SECRET_DEV="only_needed_for_manually_run_importers"
     fi
 
     curl -X PUT -d ${MYSQL_DATABASE} http://consul:8500/v1/kv/archive/db-init/database &&

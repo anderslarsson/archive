@@ -114,10 +114,12 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
 module.exports.createDocument = async function (req, res, app, db) {
 
     let doc = req.body;
+    let docIsMapped = false;
 
     if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
         /** Convert transaction document to archive document first */
         doc = mapTransactionToEvent(doc);
+        docIsMapped = true;
     }
 
     /* Basic param checking */
@@ -174,16 +176,18 @@ module.exports.createDocument = async function (req, res, app, db) {
                 if (createResult && createResult.created === true) {
                     success = true;
 
-                    // TODO set files in document to readOnly=true
+                    if (docIsMapped) {
+                        await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO work on result
+                    }
                 }
             } catch (e) {
                 if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
-                    msg = `InvoiceArchiver#archiveTransaction: Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error(msg, e);
-                    success =  true; // FIXME
+                    msg = `Version conflict! Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
+                    req.opuscapita.logger.error('InvoiceArchiver#archiveTransaction:', msg, e);
+                    success =  false; // FIXME
                 } else {
-                    msg = `InvoiceArchiver#archiveTransaction: Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error(msg, e);
+                    msg = `Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
+                    req.opuscapita.logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
                     success = false;
                 }
             }
@@ -194,7 +198,8 @@ module.exports.createDocument = async function (req, res, app, db) {
 
     if (success) {
         res.status(200).json({
-            success: true
+            success: true,
+            msg: msg || "Done"
         });
     } else {
         res.status(400).json({
@@ -450,3 +455,22 @@ function mapTransactionToEvent(doc) {
     return archiveDocument;
 };
 module.exports.mapTransactionToEvent = mapTransactionToEvent;
+
+
+async function setReadonly(attachments = [], req) {
+    let done   = [];
+    let failed = [];
+
+    for (const attachment of attachments) {
+        try {
+            const blobPath = `/api${attachment.reference}`.replace('/data/private', '/data/metadata/private');
+            let result = await req.opuscapita.serviceClient.patch('blob', blobPath, {readOnly: true}, true);
+            done.push(result);
+        } catch (e) {
+            req.opuscapita.logger.error('InvoiceArchiveHandler#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
+            failed.push(attachment);
+        }
+    }
+
+    return {done, failed};
+};
