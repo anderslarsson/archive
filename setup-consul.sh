@@ -1,5 +1,10 @@
 function putConsulData
 {
+
+    if [[ -z "${TOKEN_AUTH_CLIENT_SECRET_DEV}" ]]; then
+        TOKEN_AUTH_CLIENT_SECRET_DEV="notneeded"
+    fi
+
     curl -X PUT -d ${MYSQL_DATABASE} http://consul:8500/v1/kv/archive/db-init/database &&
     curl -X PUT -d 'root' http://consul:8500/v1/kv/archive/db-init/user &&
     curl -X PUT -d ${MYSQL_ROOT_PASSWORD} http://consul:8500/v1/kv/archive/db-init/password &&
