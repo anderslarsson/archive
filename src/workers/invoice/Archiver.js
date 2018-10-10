@@ -5,7 +5,7 @@ const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch');
-const Mapper = require('./Mapper');
+const Mapper        = require('./Mapper');
 
 const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 

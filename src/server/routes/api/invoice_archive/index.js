@@ -4,6 +4,7 @@
  * InvoiceArchive API handlers
  */
 
+const Logger                 = require('ocbesbn-logger');
 const lastDayOfYear          = require('date-fns/last_day_of_year');
 const elasticContext         = require('../../../../shared/elasticsearch');
 const invoiceArchiveContext  = require('../../../invoice_archive');
@@ -11,12 +12,18 @@ const MsgTypes               = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
 const Mapper                 = require('../../../../workers/invoice/Mapper');
 
+
+const logger = new Logger({
+    context: {
+        serviceName: 'archive'
+    }
+});
+
 /**
- * @function createArchiverJob
- *
  * This API is called by external systems that want to trigger the archiving of a
  * a specific transaction.
  *
+ * @function createArchiverJob
  * @param {express.Request} req
  * @param {object} req.body - POST data
  * @param {String} req.body.transactionId - ID of the transaction to archive
@@ -36,6 +43,7 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
     }
 
     try {
+        // TODO move to method createInitialArchiveTransactionLogEntry
         const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
         let [log, created] = await ArchiveTransactionLog.findOrCreate({
             where: {
@@ -69,7 +77,6 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
 
 /**
  * @function createCuratorJob
- *
  * @param {express.Request} req
  * @param {object} req.body - POST data
  * @param {String} req.body.period - Identifies the period that should be curated
@@ -108,7 +115,6 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
  * tries to insert them to elasticsearch.
  *
  * TODO
- *   - extract ES insertion to own method
  *   - split flow for transaction and archive payloads to different methods
  *
  * @function createDocument
@@ -124,6 +130,8 @@ module.exports.createDocument = async function (req, res, app, db) {
     let docIsMapped = false;
 
     if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
+        // TODO createInitialArchiveTransactionLogEntry
+
         /** Convert transaction document to archive document first */
         doc = mapTransactionToEvent(doc);
         docIsMapped = true;
@@ -139,7 +147,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     }
 
     let tenantId = extractOwnerFromDocument(doc);
-    let type = extractTypeFromDocument(doc);
+    let type     = extractTypeFromDocument(doc);
 
     if (tenantId === null ||  type === null) {
         res.status(422).send({
@@ -159,55 +167,25 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    let archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
-
-    let msg, success;
+    let success, msg;
     try {
-        /* Open existing index or create new with mapping */
-        let indexOpened = await elasticContext.openIndex(archiveName, true, {
-            mapping: elasticContext.InvoiceArchiveConfig.esMapping
-        });
-
-        if (indexOpened) {
-            let createResult;
-
-            try {
-                /* ES insertion */
-                createResult = await elasticContext.client.create({
-                    index: archiveName,
-                    id: doc.transactionId,
-                    type: elasticContext.defaultDocType,
-                    body: doc
-                });
-
-                if (createResult && createResult.created === true) {
-                    success = true;
-
-                    if (docIsMapped) {
-                        await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO work on result
-                        // TODO update ArchiveTransactionLog to 'done'
-                    }
-                }
-            } catch (e) {
-                if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
-                    msg = `Version conflict! Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error('InvoiceArchiver#archiveTransaction:', msg, e);
-                    success =  false; // FIXME
-                } else {
-                    msg = `Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
-                    success = false;
-                }
-            }
-        }
+        ({success, msg} = await insertInvoiceArchiveDocument(doc));
     } catch (e) {
-        req.opuscapita.logger.error(`InvoiceArchiver#archiveTransaction: Unable to open index ${archiveName}. (TX id: ${doc.transactionId})`, e);
+        success = false;
+        msg = 'Failed to insert archive document to elasticsearch';
+
+        logger.error('InvoiceArchiveHandler#archiveTransaction: ', msg, e);
+    }
+
+    if (success && docIsMapped) {
+        await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO Do sth with result
+        await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
     }
 
     if (success) {
         res.status(200).json({
             success: true,
-            msg: msg || "Done"
+            msg: msg || 'Done'
         });
     } else {
         res.status(400).json({
@@ -454,6 +432,62 @@ async function hasArchiving(tenantId, type, db) {
     }
 }
 
+/**
+ * Insert a archive document to elasticsearch.
+ *
+ * @async
+ * @function insertInvoiceArchiveDocument
+ * @param {object} document - The document to insert. Needs to be in the correct format.
+ */
+async function insertInvoiceArchiveDocument(doc) {
+    const tenantId = extractOwnerFromDocument(doc);
+    const archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
+
+    let msg, success;
+    try {
+        /* Open existing index or create new with mapping */
+        let indexOpened = await elasticContext.openIndex(archiveName, true, {
+            mapping: elasticContext.InvoiceArchiveConfig.esMapping
+        });
+
+        if (indexOpened) {
+            let createResult;
+
+            try {
+                /* ES insertion */
+                createResult = await elasticContext.client.create({
+                    index: archiveName,
+                    id: doc.transactionId,
+                    type: elasticContext.defaultDocType,
+                    body: doc
+                });
+
+                if (createResult && createResult.created === true) {
+                    success = true;
+                }
+            } catch (e) {
+                if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
+                    success =  false;
+                    msg     = `Version conflict! Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
+
+                    logger.error('InvoiceArchiver#archiveTransaction:', msg, e);
+                } else {
+                    success = false;
+                    msg     = `Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
+
+                    logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
+                }
+            }
+        }
+    } catch (e) {
+        success = false;
+        msg     = `Unable to open index ${archiveName}. (TX id: ${doc.transactionId})`;
+
+        logger && logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
+    }
+
+    return {success, msg};
+}
 
 function mapTransactionToEvent(doc) {
     let mapper = new Mapper(doc.event.transactionId, [doc.event]);
@@ -474,10 +508,29 @@ async function setReadonly(attachments = [], req) {
             let result = await req.opuscapita.serviceClient.patch('blob', blobPath, {readOnly: true}, true);
             done.push(result);
         } catch (e) {
-            req.opuscapita.logger.error('InvoiceArchiveHandler#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
+            logger && logger.error('InvoiceArchiveHandler#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
             failed.push(attachment);
         }
     }
 
     return {done, failed};
 };
+
+async function updateArchiveTransactionLog(transactionId, key, value, db) {
+    let success = false;
+    try {
+        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
+        let logEntry = await ArchiveTransactionLog.find({where: {transactionId: transactionId}});
+
+        if (logEntry) {
+            await logEntry.set(key, value);
+            await logEntry.save();
+
+            success = true;
+        }
+    } catch (e) {
+        success = false;
+        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`);
+    }
+    return success;
+}
