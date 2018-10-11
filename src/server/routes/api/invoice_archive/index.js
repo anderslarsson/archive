@@ -43,9 +43,9 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
     }
 
     try {
-        const created = await createInitialArchiveTransactionLogEntry(transactionId, db);
+        const continueProcessing = await createInitialArchiveTransactionLogEntry(transactionId, db);
 
-        if (created === true) {
+        if (continueProcessing === true) {
             /* Transaction not processed yet */
 
             await invoiceArchiveContext.archiveTransaction(transactionId);
@@ -365,12 +365,12 @@ module.exports.clearScroll = async function clearScroll(req, res) {
  * @function createInitialArchiveTransactionLogEntry
  */
 async function createInitialArchiveTransactionLogEntry(transactionId, db) {
-    let created = false;
+    let allowProcessing = false;
 
     try {
         const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
 
-        let result = await ArchiveTransactionLog.findOrCreate({
+        let [log, created] = await ArchiveTransactionLog.findOrCreate({
             where: {
                 transactionId: transactionId,
                 type: 'invoice_receiving'
@@ -380,12 +380,21 @@ async function createInitialArchiveTransactionLogEntry(transactionId, db) {
             }
         });
 
-        created = result[1];
+        if (created) {
+            allowProcessing = true;
+        } else {
+            if (log.get('status' === 'failed')) {
+                allowProcessing = true;
+            } else {
+                allowProcessing = false;
+            }
+        }
+
     } catch (e) {
         logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId);
     }
 
-    return created;
+    return allowProcessing;
 }
 
 /**
