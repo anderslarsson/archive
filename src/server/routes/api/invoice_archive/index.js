@@ -129,6 +129,8 @@ module.exports.createDocument = async function (req, res, app, db) {
         }
     }
 
+    logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
+
     /* Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
@@ -138,13 +140,15 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    const tenantId = extractOwnerFromDocument(doc);
-    const type     = extractTypeFromDocument(doc);
+    const transactionId = doc.transactionId;
+    const tenantId      = extractOwnerFromDocument(doc);
+    const type          = extractTypeFromDocument(doc);
 
     if (tenantId === null ||  type === null) {
+        await updateArchiveTransactionLog(transactionId, 'status', 'failed');
         res.status(422).send({
             success: false,
-            error: 'Unable to inflect owning tenantId or archive type from document.'
+            error: 'Unable to extract owning tenantId or archive type from document.'
         });
         return false;
     }
@@ -152,6 +156,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     /* Check if tenant has archiving enabled */
     let tHasArchiving = await hasArchiving(tenantId, type, db);
     if (!tHasArchiving) {
+        await updateArchiveTransactionLog(transactionId, 'status', 'failed');
         res.status(400).send({
             success: false,
             error: `Tenant ${tenantId} is not configured for archiving.`
@@ -169,9 +174,13 @@ module.exports.createDocument = async function (req, res, app, db) {
         logger.error('InvoiceArchiveHandler#archiveTransaction: ', msg, e);
     }
 
-    if (success && docIsMapped) {
-        await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO Do sth with result
-        await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
+    if (docIsMapped) {
+        if (success) {
+            await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO Do sth with result
+            await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
+        } else {
+            await updateArchiveTransactionLog(doc.transactionId, 'status', 'failed', db);
+        }
     }
 
     if (success) {
