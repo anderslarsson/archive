@@ -95,7 +95,7 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
                 res.status(400).send(`Invalid value for paramater period: ${period}`);
         }
     } catch (e) {
-        req.opuscapita.logger.error('Failure in invoiceArchive API handler.');
+        req.opuscapita.logger.error('Failure in invoiceArchive API handler.', e);
         res.status(500).send(e);
     }
 };
@@ -323,6 +323,7 @@ module.exports.scroll = async function scroll(req, res) {
         });
 
     } catch (e) {
+        logger && logger.error('InvoiceArchiveHandler#scroll: Failed to scroll with exception.', e);
         res.status(400).json({success: false});
     }
 };
@@ -354,6 +355,7 @@ module.exports.clearScroll = async function clearScroll(req, res) {
         });
 
     } catch (e) {
+        logger && logger.error('InvoiceArchiveHandler#clearScroll: Failed to scroll with exception.', e);
         res.status(400).json({success: false});
     }
 };
@@ -391,7 +393,7 @@ async function createInitialArchiveTransactionLogEntry(transactionId, db) {
         }
 
     } catch (e) {
-        logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId);
+        logger && logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId, e);
     }
 
     return allowProcessing;
@@ -572,7 +574,7 @@ async function updateArchiveTransactionLog(transactionId, key, value, db) {
         }
     } catch (e) {
         success = false;
-        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`);
+        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`, e);
     }
     return success;
 }
