@@ -43,17 +43,7 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
     }
 
     try {
-        // TODO move to method createInitialArchiveTransactionLogEntry
-        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
-        let [log, created] = await ArchiveTransactionLog.findOrCreate({
-            where: {
-                transactionId: transactionId,
-                type: 'invoice_receiving'
-            },
-            defaults: {
-                type: 'invoice_receiving'
-            }
-        });
+        const created = await createInitialArchiveTransactionLogEntry(transactionId, db);
 
         if (created === true) {
             /* Transaction not processed yet */
@@ -130,11 +120,13 @@ module.exports.createDocument = async function (req, res, app, db) {
     let docIsMapped = false;
 
     if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
-        // TODO createInitialArchiveTransactionLogEntry
-
         /** Convert transaction document to archive document first */
         doc = mapTransactionToEvent(doc);
         docIsMapped = true;
+
+        if (doc && doc.transactionId) {
+            await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
+        }
     }
 
     /* Basic param checking */
@@ -146,8 +138,8 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    let tenantId = extractOwnerFromDocument(doc);
-    let type     = extractTypeFromDocument(doc);
+    const tenantId = extractOwnerFromDocument(doc);
+    const type     = extractTypeFromDocument(doc);
 
     if (tenantId === null ||  type === null) {
         res.status(422).send({
@@ -354,6 +346,36 @@ module.exports.clearScroll = async function clearScroll(req, res) {
         res.status(400).json({success: false});
     }
 };
+
+/**
+ * Log the start of invoice archive processing to database.
+ *
+ * @async
+ * @function createInitialArchiveTransactionLogEntry
+ */
+async function createInitialArchiveTransactionLogEntry(transactionId, db) {
+    let created = false;
+
+    try {
+        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
+
+        let result = await ArchiveTransactionLog.findOrCreate({
+            where: {
+                transactionId: transactionId,
+                type: 'invoice_receiving'
+            },
+            defaults: {
+                type: 'invoice_receiving'
+            }
+        });
+
+        created = result[1];
+    } catch (e) {
+        logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId);
+    }
+
+    return created;
+}
 
 /**
  * Extract the owner information from a archive document.
