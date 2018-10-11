@@ -115,12 +115,14 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.createDocument = async function (req, res, app, db) {
+    logger.info('InvoiceArchiveHandler#createDocument: Creating new document from req: ', req.body);
 
     let doc = req.body;
     let docIsMapped = false;
 
     if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
         /** Convert transaction document to archive document first */
+
         doc = mapTransactionToEvent(doc);
         docIsMapped = true;
 
