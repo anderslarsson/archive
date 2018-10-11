@@ -21,7 +21,7 @@ module.exports.init = function (db) {
         },
         /** Enum denoting the current status inside the archiving process. */
         status: {
-            type: Sequelize.ENUM('created', 'processing', 'done'),
+            type: Sequelize.ENUM('created', 'processing', 'done', 'failed'),
             allowNull: false,
             defaultValue: 'created'
         },
