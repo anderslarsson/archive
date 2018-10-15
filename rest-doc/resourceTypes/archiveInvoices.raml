@@ -39,9 +39,12 @@ post:
 /job:
   post:
     description: |
-      Create a new invoice archive entry from the given document.
+      Create a new invoice archive reqeust for the given transactionId.
     body:
       application/json:
+        type: object
+        properties:
+          transactionId: string
         example: |
           { "transactionId": "<UUID>" }
     responses:
