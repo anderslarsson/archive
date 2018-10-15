@@ -1,0 +1,54 @@
+displayName: Invoices 
+description:  Work with `invoice` achives.
+post:
+  description: |
+    Create a new invoice archive entry from the given document.
+  body:
+    application/json:
+      type: TransactionEventDocument
+  responses:
+    200:
+      body:
+        application/json:
+          type: object 
+          properties:
+            success: boolean
+            msg: string
+          example: |
+            { "success": true, "msg": "Done" }
+    400:
+      body:
+        application/json:
+          type: object
+          properties:
+            success: boolean
+            msg: string
+          example: |
+            { "success": false, "msg": "Failed to write document." }
+    422:
+      body:
+        application/json:
+          type: object
+          properties:
+            success: boolean
+            error: string
+          example: |
+            { "success": false, "error": "Tenant <tenantId> is not configured for archiving."
+/job:
+  post:
+    description: |
+      Create a new invoice archive entry from the given document.
+    body:
+      application/json:
+        example: |
+          { "transactionId": "<UUID>" }
+    responses:
+      200:
+        body:
+          application/json:
+            type: object 
+            properties:
+              success: boolean
+              msg: string
+            example: |
+              { "success": true, "msg": "Done" }
