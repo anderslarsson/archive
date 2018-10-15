@@ -188,7 +188,7 @@ module.exports.createDocument = async function (req, res, app, db) {
     if (success) {
         res.status(200).json({
             success: true,
-            msg: msg || 'Done'
+            message: msg || `Successfully created archive document for ${transactionId}.`
         });
     } else {
         res.status(400).json({
@@ -508,6 +508,7 @@ async function insertInvoiceArchiveDocument(doc) {
 
                 if (createResult && createResult.created === true) {
                     success = true;
+                    msg = `Successfully created archive document for ${doc.transactionId}.`;
                 }
             } catch (e) {
                 if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
