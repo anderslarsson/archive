@@ -15,7 +15,7 @@ post:
             success: boolean
             msg: string
           example: |
-            { "success": true, "msg": "Done" }
+            { "success": true, "message": "Done" }
     400:
       body:
         application/json:
@@ -24,16 +24,18 @@ post:
             success: boolean
             msg: string
           example: |
-            { "success": false, "msg": "Failed to write document." }
+            { "success": false, "error": "" }
     422:
       body:
         application/json:
           type: object
+          description: |
+            The request contained invalid or misses required params.
           properties:
             success: boolean
             error: string
           example: |
-            { "success": false, "error": "Tenant <tenantId> is not configured for archiving."
+            { "success": false, "error": "" }
 /job:
   post:
     description: |
