@@ -41,6 +41,8 @@ class Elasticsearch {
          * This does not work at the moment cause the cluster itself
          * exposes a wrong publish_address that points to localhost.
          * See `GET /_nodes/_all/http` on ES.
+         *
+         * Fixed by https://github.com/OpusCapita/elasticsearch/pull/3
          */
         this.conn = new elasticsearch.Client({
             apiVersion: '5.5',
@@ -248,8 +250,10 @@ class Elasticsearch {
                 // Use existing index
                 statusDstIndex = await this.openIndex(dstIndexName, false);
 
-                // Assuming the  dstIndex has the srcIndex mapping
-                // TODO Implement check
+                /**
+                 * Relying on the assumption that the dstIndex has the srcIndex mapping,
+                 * can not update the mapping at this point.
+                 */
                 dstHasSrcMapping = true;
             }
 
@@ -267,15 +271,16 @@ class Elasticsearch {
                     body.source.query = query;
                 }
 
-                // Return the actual result of the reindex action
-                // to the caller.
+                /**
+                 * Return the actual result of the reindex action
+                 * to the caller.
+                 */
                 return await this.conn.reindex({
                     waitForCompletion: true,
                     body: body
                 });
             }
         } catch (e) {
-            // TODO Do something with the error?
             this.logger.error('Elasticsearch#reindex: Failed to execute reindex.', e);
             throw e;
         }

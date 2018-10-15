@@ -8,7 +8,6 @@ const elasticContext = require('../../../../shared/elasticsearch');
  *
  * @async
  * @function get
- *
  * @param {express.Request} req
  * @param {object} req.params - POST data
  * @param {String} req.params.indexId - Identifier of the ES
@@ -22,8 +21,6 @@ module.exports.get = async function get(req, res) {
     if (!req.params.index || !req.params.id) {
         res.status(400).json({success: false, message: 'Missing params.'});
     }
-
-    // TODO check if user is allowed to view index
 
     let index = req.params.index;
     let id = req.params.id;
@@ -47,7 +44,7 @@ module.exports.get = async function get(req, res) {
         res.status(200).json({success: true, data: result});
     } catch (e) {
         logger.error('Documents#get: Index failure.', e);
-        res.status(404).json({success: false, message: ''});
+        res.status(404).json({success: false, message: `Unable to retrieve document ${id} from index ${index}.`});
     }
 
 };

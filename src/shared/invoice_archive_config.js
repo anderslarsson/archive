@@ -271,7 +271,7 @@ class InvoiceArchiveConfig {
     }
 
     static get esMapping() {
-        return esMapping; // TODO
+        return esMapping;
     }
 }
 

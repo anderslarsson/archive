@@ -3,10 +3,9 @@
 const elasticContext = require('../../../../shared/elasticsearch');
 
 /**
- * @function get
- *
  * Get all invoice indices for the tenant given in the request params.
  *
+ * @function get
  */
 module.exports.get = async function get(req, res) {
     let tenantId = req.query.tenantId;

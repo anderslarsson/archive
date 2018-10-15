@@ -115,7 +115,7 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.createDocument = async function (req, res, app, db) {
-    logger.info('InvoiceArchiveHandler#createDocument: Creating new document from req: ', req.body);
+    logger && logger.info('InvoiceArchiveHandler#createDocument: Creating new document from req: ', req.body);
 
     let doc = req.body;
     let docIsMapped = false;
@@ -131,7 +131,7 @@ module.exports.createDocument = async function (req, res, app, db) {
         }
     }
 
-    logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
+    logger && logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
 
     /* Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {

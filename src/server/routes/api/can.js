@@ -62,7 +62,7 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
     try {
         tenants = (await req.opuscapita.getUserTenants());
         if (!hasTenantAccess(tenantId, tenants)) {
-            res.status(403).json({success: false, message: 'Access denied.'});
+            res.status(403).json({success: false, message: 'You are not allowed to access this index.'});
         }
     } catch (e) {
         res.status(400).json({
