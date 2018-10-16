@@ -43,16 +43,22 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
     }
 
     try {
-        const continueProcessing = await createInitialArchiveTransactionLogEntry(transactionId, db);
+
+        /**
+         * TODO Initial logging deactivated as it conflicts with logging in #createDocument
+         * endpoint. Figure out, how to do this without conflict.
+         */
+        // const continueProcessing = await createInitialArchiveTransactionLogEntry(transactionId, db);
+        const continueProcessing = true;
 
         if (continueProcessing === true) {
-            /* Transaction not processed yet */
+            /* Transaction not processed yet, continue */
 
             await invoiceArchiveContext.archiveTransaction(transactionId);
-            res.status(200).json({success: true});
+            res.status(202).json({success: true});
         } else {
             req.opuscapita.logger.warn('Trying to archive a transaction that was already processed.');
-            res.status(400).json({success: false, message: 'Transaction already processed'});
+            res.status(409).json({success: false, message: 'Transaction already processed'});
         }
 
     } catch (e) {
@@ -122,13 +128,8 @@ module.exports.createDocument = async function (req, res, app, db) {
 
     if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
         /** Convert transaction document to archive document first */
-
         doc = mapTransactionToEvent(doc);
         docIsMapped = true;
-
-        if (doc && doc.transactionId) {
-            await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
-        }
     }
 
     logger && logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
@@ -142,6 +143,10 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
+    // Log process start only after basic validity check
+    await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
+
+    /** Extract owner and type information from document */
     const transactionId = doc.transactionId;
     const tenantId      = extractOwnerFromDocument(doc);
     const type          = extractTypeFromDocument(doc);
@@ -155,7 +160,7 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    /* Check if tenant has archiving enabled */
+    /** Check if tenant has archiving enabled */
     let tHasArchiving = await hasArchiving(tenantId, type, db);
     if (!tHasArchiving) {
         await updateArchiveTransactionLog(transactionId, 'status', 'failed');
@@ -363,8 +368,13 @@ module.exports.clearScroll = async function clearScroll(req, res) {
 /**
  * Log the start of invoice archive processing to database.
  *
+ * TODO refactor function name, not very intuitive
+ *
  * @async
  * @function createInitialArchiveTransactionLogEntry
+ * @param {string} transactionId
+ * @param {Sequelize} db - Database instance
+ * @return {Boolean} Returns a boolean indicating if the caller might continueing processing of the document
  */
 async function createInitialArchiveTransactionLogEntry(transactionId, db) {
     let allowProcessing = false;
@@ -393,6 +403,7 @@ async function createInitialArchiveTransactionLogEntry(transactionId, db) {
         }
 
     } catch (e) {
+        allowProcessing = false;
         logger && logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId, e);
     }
 

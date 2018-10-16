@@ -21,10 +21,13 @@ if (isProduction) {
     logger.redirectConsoleOut(); // Force anyone using console.* outputs into Logger format.
 }
 
-// Basic database and web server initialization.
-// See database : https://github.com/OpusCapita/db-init
-// See web server: https://github.com/OpusCapita/web-init
-// See logger: https://github.com/OpusCapita/logger
+/**
+ * Entrypoint for the server process.
+ * Setup express, initialize event subscriptions and start worker processes.
+ *
+ * @async
+ * @function init
+ */
 async function init() {
     const db = await dbInit.init();
 
@@ -60,15 +63,18 @@ async function init() {
     await invoiceArchiveContext.initEventSubscriptions();
     await elasticsearch.init();
 
-    let args = [];
-    if (!isProduction) {
-        args.push('--inspect=0.0.0.0:9230');
-    }
-
-    logger.info('Forking worker proccess...');
-    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: args});
+    logger.info('Forking invoice archiver worker proccess...');
+    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: []});
     invoiceArchiveWorker.on('exit', () => {
         logger.error('Invoice archive worker died. :(');
+    });
+
+    let args = [];
+    if (!isProduction) args.push('--inspect=0.0.0.0:9230');
+    logger.info('Forking transaction log checker worker proccess...');
+    const transactionLogCheckWorker = fork(process.cwd() + '/src/workers/transactionLogCheck/run.js', [], {execArgv: args});
+    transactionLogCheckWorker.on('exit', () => {
+        logger.error('Transaction log check worker died. :(');
     });
 }
 

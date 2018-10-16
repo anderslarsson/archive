@@ -81,7 +81,7 @@ class Worker {
                 throw e;
             }
 
-            // Enter main loop
+            /** Enter main loop */
             // this.logWaitDispatcher();
             this.archiveWaitDispatcher();
         }
@@ -122,7 +122,7 @@ class Worker {
                     await this.eventClient.ackMessage(msg);
                     await this.updateArchiveTransactionLog(payload.transactionId, 'status', 'done');
 
-                    this.logger.log('Finished job with result: \n' + success);
+                    this.logger.log('Finished invoice archiver job with result: \n' + success);
                 }
             }
         } catch (handleMessageError) {
@@ -146,9 +146,10 @@ class Worker {
     /**
      * Callback method for @see EventClient.subscribe method.
      *
+     * @async
+     * @function logWaitDispatcher
      * @param {Object} msg - Message received from MQ
      * @returns {Boolean} - Indicates the success of the job processing
-     *
      */
     async logWaitDispatcher() {
         let msg;
