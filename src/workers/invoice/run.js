@@ -1,5 +1,5 @@
-const dbInit = require('@opuscapita/db-init'); // Database
-const Logger = require('ocbesbn-logger'); // Logger
+const dbInit = require('@opuscapita/db-init');
+const Logger = require('ocbesbn-logger');
 const InvoiceWorker = require('./Worker');
 
 const logger = new Logger({
@@ -11,7 +11,7 @@ const logger = new Logger({
 async function init() {
     const db = await dbInit.init();
 
-    let worker = new InvoiceWorker(db);
+    const worker = new InvoiceWorker(db);
     await worker.init();
 
     process.on('message', (m) => {
@@ -27,6 +27,6 @@ async function init() {
 try {
     init();
 } catch (e) {
-    logger.error('Failed to initialize InvoiceWorker.');
+    logger.error('Exception caught. Failed to initialize InvoiceWorker with: ', e);
 }
 

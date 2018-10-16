@@ -135,8 +135,7 @@ class FileProcessor {
 
             /** Set readonly flag */
             if ((((entry || {}).document || {}).files || {}).inboundAttachments && entry.document.files.inboundAttachments.length > 0) {
-                let roResult = await this.setReadonly(entry.document.files.inboundAttachments);
-                console.info('FileProcessor: Set readonly done with', roResult);
+                await this.setReadonly(entry.document.files.inboundAttachments);
             }
 
             this.done.push(entry);
@@ -296,7 +295,6 @@ class FileProcessor {
         if (res && res.statusCode && res.statusCode === 200) {
             /** File exists -> skip */
             if (res.headers['x-file-info']) {
-                console.info('File already exists ...');
                 const fileInfo = decodeURIComponent(res.headers['x-file-info']);
                 return JSON.parse(fileInfo);
             } else {
