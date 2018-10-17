@@ -4,17 +4,26 @@
  * InvoiceArchive API handlers
  */
 
-const elasticContext = require('../../../../shared/elasticsearch');
-const invoiceArchiveContext = require('../../../invoice_archive');
-const MsgTypes = require('../../../../shared/msg_types');
+const Logger                 = require('ocbesbn-logger');
+const lastDayOfYear          = require('date-fns/last_day_of_year');
+const elasticContext         = require('../../../../shared/elasticsearch');
+const invoiceArchiveContext  = require('../../../invoice_archive');
+const MsgTypes               = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
+const Mapper                 = require('../../../../workers/invoice/Mapper');
+
+
+const logger = new Logger({
+    context: {
+        serviceName: 'archive'
+    }
+});
 
 /**
- * @function createArchiverJob
- *
  * This API is called by external systems that want to trigger the archiving of a
  * a specific transaction.
  *
+ * @function createArchiverJob
  * @param {express.Request} req
  * @param {object} req.body - POST data
  * @param {String} req.body.transactionId - ID of the transaction to archive
@@ -23,7 +32,7 @@ const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_confi
  * @param {Sequelize} db
  */
 module.exports.createArchiverJob = async function (req, res, app, db) {
-    let transactionId = req && req.body && req.body.transactionId;
+    let transactionId = ((req || {}).body || {}).transactionId || null;
 
     if (!transactionId) {
         res.status(422).json({
@@ -34,25 +43,22 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
     }
 
     try {
-        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
-        let [log, created] = await ArchiveTransactionLog.findOrCreate({
-            where: {
-                transactionId: transactionId,
-                type: 'invoice_receiving'
-            },
-            defaults: {
-                type: 'invoice_receiving'
-            }
-        });
 
-        if (created === true) {
-            /* Transaction not processed yet */
+        /**
+         * TODO Initial logging deactivated as it conflicts with logging in #createDocument
+         * endpoint. Figure out, how to do this without conflict.
+         */
+        // const continueProcessing = await createInitialArchiveTransactionLogEntry(transactionId, db);
+        const continueProcessing = true;
+
+        if (continueProcessing === true) {
+            /* Transaction not processed yet, continue */
 
             await invoiceArchiveContext.archiveTransaction(transactionId);
-            res.status(200).json({success: true});
+            res.status(202).json({success: true});
         } else {
             req.opuscapita.logger.warn('Trying to archive a transaction that was already processed.');
-            res.status(400).json({success: false, message: 'Transaction already processed'});
+            res.status(409).json({success: false, message: 'Transaction already processed'});
         }
 
     } catch (e) {
@@ -67,7 +73,6 @@ module.exports.createArchiverJob = async function (req, res, app, db) {
 
 /**
  * @function createCuratorJob
- *
  * @param {express.Request} req
  * @param {object} req.body - POST data
  * @param {String} req.body.period - Identifies the period that should be curated
@@ -96,12 +101,18 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
                 res.status(400).send(`Invalid value for paramater period: ${period}`);
         }
     } catch (e) {
-        req.opuscapita.logger.error('Failure in invoiceArchive API handler.');
+        req.opuscapita.logger.error('Failure in invoiceArchive API handler.', e);
         res.status(500).send(e);
     }
 };
 
 /**
+ * This endpoint accepts transcation and archive documents and
+ * tries to insert them to elasticsearch.
+ *
+ * TODO
+ *   - split flow for transaction and archive payloads to different methods
+ *
  * @function createDocument
  * @param {express.Request} req
  * @param {object} req.body - POST data
@@ -110,32 +121,49 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.createDocument = async function (req, res, app, db) {
+    logger && logger.info('InvoiceArchiveHandler#createDocument: Creating new document from req: ', req.body);
 
     let doc = req.body;
+    let docIsMapped = false;
+
+    if (doc && doc.hasOwnProperty('event') && typeof doc.event === 'object') {
+        /** Convert transaction document to archive document first */
+        doc = mapTransactionToEvent(doc);
+        docIsMapped = true;
+    }
+
+    logger && logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
 
     /* Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
             success: false,
-            error: 'Invalid data'
+            error: 'Required values missing or wrong msgType. Expected to find transactionId, supplierId|customerId and msgType=invoice.'
         });
         return false;
     }
 
-    let tenantId = extractOwnerFromDocument(doc);
-    let type = extractTypeFromDocument(doc);
+    // Log process start only after basic validity check
+    await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
+
+    /** Extract owner and type information from document */
+    const transactionId = doc.transactionId;
+    const tenantId      = extractOwnerFromDocument(doc);
+    const type          = extractTypeFromDocument(doc);
 
     if (tenantId === null ||  type === null) {
+        await updateArchiveTransactionLog(transactionId, 'status', 'failed');
         res.status(422).send({
             success: false,
-            error: 'Invalid data'
+            error: 'Unable to extract owning tenantId or archive type from document.'
         });
         return false;
     }
 
-    /* Check if tenant has archiving enabled */
+    /** Check if tenant has archiving enabled */
     let tHasArchiving = await hasArchiving(tenantId, type, db);
     if (!tHasArchiving) {
+        await updateArchiveTransactionLog(transactionId, 'status', 'failed');
         res.status(400).send({
             success: false,
             error: `Tenant ${tenantId} is not configured for archiving.`
@@ -143,52 +171,29 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    // FIXME Check date of doc to find the target index instead of using the current month. This
-    // is needed for M-Files import of existing data. So for example a doc with timestamp 2017-09-28
-    // needs to be put to the yearly index not to the current monthly index.
-    let archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
-
-    let msg, success;
+    let success, msg;
     try {
-        /* Open existing index or create new with mapping */
-        let indexOpened = await elasticContext.openIndex(archiveName, true, {
-            mapping: elasticContext.InvoiceArchiveConfig.esMapping
-        });
-
-        if (indexOpened) {
-            let createResult;
-
-            try {
-                /* ES insertion */
-                createResult = await elasticContext.client.create({
-                    index: archiveName,
-                    id: doc.transactionId,
-                    type: elasticContext.defaultDocType,
-                    body: doc
-                });
-
-                if (createResult && createResult.created === true) {
-                    success = true;
-                }
-            } catch (e) {
-                if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
-                    msg = `InvoiceArchiver#archiveTransaction: Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error(msg, e);
-                    success =  true; // FIXME
-                } else {
-                    msg = `InvoiceArchiver#archiveTransaction: Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
-                    req.opuscapita.logger.error(msg, e);
-                    success = false;
-                }
-            }
-        }
+        ({success, msg} = await insertInvoiceArchiveDocument(doc));
     } catch (e) {
-        req.opuscapita.logger.error(`InvoiceArchiver#archiveTransaction: Unable to open index ${archiveName}. (TX id: ${doc.transactionId})`, e);
+        success = false;
+        msg = 'Failed to insert archive document to elasticsearch';
+
+        logger.error('InvoiceArchiveHandler#archiveTransaction: ', msg, e);
+    }
+
+    if (docIsMapped) {
+        if (success) {
+            await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO Do sth with result
+            await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
+        } else {
+            await updateArchiveTransactionLog(doc.transactionId, 'status', 'failed', db);
+        }
     }
 
     if (success) {
         res.status(200).json({
-            success: true
+            success: true,
+            message: msg || `Successfully created archive document for ${transactionId}.`
         });
     } else {
         res.status(400).json({
@@ -218,6 +223,8 @@ module.exports.search = async function search(req, res) {
 
     let es = elasticContext.client;
 
+    /* TODO add query.{year, to, from} validation */
+
     let queryOptions = {
         query: {
             bool: {
@@ -242,12 +249,14 @@ module.exports.search = async function search(req, res) {
             }
         };
 
+        const firstOfJanuar = new Date(query.year);
+
         if (query.from) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
                     start: {
                         gte: query.from,
-                        lte: query.to
+                        lte: query.to || lastDayOfYear(new Date(query.year))
                     }
                 }
             });
@@ -256,7 +265,7 @@ module.exports.search = async function search(req, res) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
                     end: {
-                        gte: query.from,
+                        gte: query.from || firstOfJanuar.toISOString(),
                         lte: query.to
                     }
                 }
@@ -319,9 +328,87 @@ module.exports.scroll = async function scroll(req, res) {
         });
 
     } catch (e) {
+        logger && logger.error('InvoiceArchiveHandler#scroll: Failed to scroll with exception.', e);
         res.status(400).json({success: false});
     }
 };
+
+/**
+ * Delete a scroll for by the given scrollId
+ *
+ * @async
+ * @function search
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.scrollId - ID of the scroll API
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ */
+module.exports.clearScroll = async function clearScroll(req, res) {
+    const scrollId = req.params.id;
+    const es = elasticContext.client;
+
+    try {
+        await es.clearScroll({
+            scrollId
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Cleared scroll successfully.'
+        });
+
+    } catch (e) {
+        logger && logger.error('InvoiceArchiveHandler#clearScroll: Failed to scroll with exception.', e);
+        res.status(400).json({success: false});
+    }
+};
+
+/**
+ * Log the start of invoice archive processing to database.
+ *
+ * TODO refactor function name, not very intuitive
+ *
+ * @async
+ * @function createInitialArchiveTransactionLogEntry
+ * @param {string} transactionId
+ * @param {Sequelize} db - Database instance
+ * @return {Boolean} Returns a boolean indicating if the caller might continueing processing of the document
+ */
+async function createInitialArchiveTransactionLogEntry(transactionId, db) {
+    let allowProcessing = false;
+
+    try {
+        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
+
+        let [log, created] = await ArchiveTransactionLog.findOrCreate({
+            where: {
+                transactionId: transactionId,
+                type: 'invoice_receiving'
+            },
+            defaults: {
+                type: 'invoice_receiving'
+            }
+        });
+
+        if (created) {
+            allowProcessing = true;
+        } else {
+            if (log.get('status' === 'failed')) {
+                allowProcessing = true;
+            } else {
+                allowProcessing = false;
+            }
+        }
+
+    } catch (e) {
+        allowProcessing = false;
+        logger && logger.error('InvoiceArchiveHandler#createInitialArchiveTransactionLogEntry: Failed to log start of processing to db, ', transactionId, e);
+    }
+
+    return allowProcessing;
+}
 
 /**
  * Extract the owner information from a archive document.
@@ -349,12 +436,11 @@ function extractOwnerFromDocument(doc) {
 }
 
 /**
+ * Detect the archive type by matching the sender/receiver information
+ * with the customer/supplier info from the document.
+ *
  * @function extractTypeFromDocument
- *
- * Extract the owner information from a archive document.
- *
  * @params {object} doc
- *
  * @returns {String} tenantId
  */
 function extractTypeFromDocument(doc) {
@@ -399,4 +485,108 @@ async function hasArchiving(tenantId, type, db) {
     } catch (e) {
         return false;
     }
+}
+
+/**
+ * Insert a archive document to elasticsearch.
+ *
+ * @async
+ * @function insertInvoiceArchiveDocument
+ * @param {object} document - The document to insert. Needs to be in the correct format.
+ */
+async function insertInvoiceArchiveDocument(doc) {
+    const tenantId = extractOwnerFromDocument(doc);
+    const archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
+
+    let msg, success;
+    try {
+        /* Open existing index or create new with mapping */
+        let indexOpened = await elasticContext.openIndex(archiveName, true, {
+            mapping: elasticContext.InvoiceArchiveConfig.esMapping
+        });
+
+        if (indexOpened) {
+            let createResult;
+
+            try {
+                /* ES insertion */
+                createResult = await elasticContext.client.create({
+                    index: archiveName,
+                    id: doc.transactionId,
+                    type: elasticContext.defaultDocType,
+                    body: doc
+                });
+
+                if (createResult && createResult.created === true) {
+                    success = true;
+                    msg = `Successfully created archive document for ${doc.transactionId}.`;
+                }
+            } catch (e) {
+                if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
+                    success =  false;
+                    msg     = `Version conflict! Transaction has already been written to index  ${archiveName}. (TX id: ${doc.transactionId})`;
+
+                    logger.error('InvoiceArchiver#archiveTransaction:', msg, e);
+                } else {
+                    success = false;
+                    msg     = `Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
+
+                    logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
+                }
+            }
+        }
+    } catch (e) {
+        success = false;
+        msg     = `Unable to open index ${archiveName}. (TX id: ${doc.transactionId})`;
+
+        logger && logger.error('InvoiceArchiver#archiveTransaction: ', msg, e);
+    }
+
+    return {success, msg};
+}
+
+function mapTransactionToEvent(doc) {
+    let mapper = new Mapper(doc.event.transactionId, [doc.event]);
+    let archiveDocument = mapper.do();
+
+    return archiveDocument;
+};
+module.exports.mapTransactionToEvent = mapTransactionToEvent;
+
+
+async function setReadonly(attachments = [], req) {
+    let done   = [];
+    let failed = [];
+
+    for (const attachment of attachments) {
+        try {
+            const blobPath = `/api${attachment.reference}`.replace('/data/private', '/data/metadata/private');
+            let result = await req.opuscapita.serviceClient.patch('blob', blobPath, {readOnly: true}, true);
+            done.push(result);
+        } catch (e) {
+            logger && logger.error('InvoiceArchiveHandler#setReadonly: Failed to set readonly flag on attachment. ', attachment.reference, e);
+            failed.push(attachment);
+        }
+    }
+
+    return {done, failed};
+};
+
+async function updateArchiveTransactionLog(transactionId, key, value, db) {
+    let success = false;
+    try {
+        const ArchiveTransactionLog = await db.modelManager.getModel('ArchiveTransactionLog');
+        let logEntry = await ArchiveTransactionLog.find({where: {transactionId: transactionId}});
+
+        if (logEntry) {
+            await logEntry.set(key, value);
+            await logEntry.save();
+
+            success = true;
+        }
+    } catch (e) {
+        success = false;
+        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`, e);
+    }
+    return success;
 }

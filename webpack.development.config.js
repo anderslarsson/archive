@@ -19,10 +19,7 @@ module.exports = {
 
     plugins: [
         new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en|de/),
-
-        new Visualizer({
-            filename: './statistics.html'
-        })
+        new Visualizer()
     ],
 
     module: {

@@ -12,3 +12,4 @@ tags
 src/importers/mfiles/customers/data
 src/importers/mfiles/customers/out
 
+src/server/static/stats.html

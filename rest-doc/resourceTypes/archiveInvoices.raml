@@ -1,0 +1,59 @@
+displayName: Invoices 
+description:  Work with `invoice` achives.
+post:
+  description: |
+    Create a new invoice archive entry from the given document.
+  body:
+    application/json:
+      type: TransactionEventDocument
+  responses:
+    200:
+      body:
+        application/json:
+          type: object 
+          properties:
+            success: boolean
+            msg: string
+          example: |
+            { "success": true, "message": "Done" }
+    400:
+      body:
+        application/json:
+          type: object
+          properties:
+            success: boolean
+            msg: string
+          example: |
+            { "success": false, "error": "" }
+    422:
+      body:
+        application/json:
+          type: object
+          description: |
+            The request contained invalid or misses required params.
+          properties:
+            success: boolean
+            error: string
+          example: |
+            { "success": false, "error": "" }
+/job:
+  post:
+    description: |
+      Create a new invoice archive reqeust for the given transactionId.
+    body:
+      application/json:
+        type: object
+        properties:
+          transactionId: string
+        example: |
+          { "transactionId": "<UUID>" }
+    responses:
+      200:
+        body:
+          application/json:
+            type: object 
+            properties:
+              success: boolean
+              msg: string
+            example: |
+              { "success": true, "msg": "Done" }

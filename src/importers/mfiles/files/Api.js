@@ -8,6 +8,8 @@ class Api {
 
     constructor() {
         this.accessToken = null;
+        this.idToken     = null;
+
         this.initialized = false;
 
         this.targetEnv = 'devbox';
@@ -59,12 +61,21 @@ class Api {
         // TODO Add accessToken renewal
 
         if (!this.accessToken) {
-            this.accessToken = await this.fetchApiAccessToken();
-            if (!this.accessToken) {
+            let authResult = await this.fetchApiAccessToken();
+            if (!authResult.access_token) {
                 const msg = 'Failed to fetch accessToken. Can not login.';
                 console.log(msg);
                 throw new Error(msg);
             }
+            if (!authResult.id_token) {
+                const msg = 'Failed to fetch idToken. Can not login.';
+                console.log(msg);
+                throw new Error(msg);
+            }
+
+            this.accessToken = authResult.access_token;
+            this.idToken = authResult.id_token;
+
             console.info('API#init: Successfully fetched access token:');
         }
 
@@ -81,6 +92,68 @@ class Api {
         }
     }
 
+    applyAuthHeaders(headers = {}) {
+        return Object.assign(headers, {
+            'Authorization': 'Bearer ' + this.accessToken,
+            'X-USER-ID-TOKEN': this.idToken
+        });
+    }
+
+    async head(url) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
+        let options = {
+            url: this.applyBaseUrl(url),
+            method: 'HEAD',
+            headers: this.applyAuthHeaders()
+        };
+
+        return new Promise((resolve, reject) => {
+            request(options, (err, res, body) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({res, body});
+                };
+            });
+        });
+    }
+
+    async patchJson(url, json) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
+        let options = {
+            url: this.applyBaseUrl(url),
+            method: 'PATCH',
+            headers: this.applyAuthHeaders(),
+            json
+        };
+
+        return new Promise((resolve, reject) => {
+            request(options, (err, res, body) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (body && typeof body === 'string') {
+                        let parsed;
+                        try {
+                            parsed = JSON.parse(body);
+                            resolve(parsed, res);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    } else {
+                        resolve(body);
+                    }
+                };
+            });
+        });
+    }
+
     async postJson(url, json) {
         if (!this.initialized) {
             await this.init();
@@ -89,9 +162,7 @@ class Api {
         let options = {
             url: this.applyBaseUrl(url),
             method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + this.accessToken
-            },
+            headers: this.applyAuthHeaders(),
             json
         };
 
@@ -125,10 +196,7 @@ class Api {
             let options = {
                 url: this.applyBaseUrl(url),
                 method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + this.accessToken,
-                    'Content-Type': 'applicatoin/json'
-                },
+                headers: this.applyAuthHeaders(),
                 body: buffer
             };
 
@@ -176,7 +244,7 @@ class Api {
                 if (body) {
                     let result = JSON.parse(body);
 
-                    resolve(result.access_token);
+                    resolve(result);
                 } else {
                     reject('Empty response');
                 }

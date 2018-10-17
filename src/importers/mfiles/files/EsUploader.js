@@ -31,9 +31,15 @@ module.exports = class EsUploader {
         this.done = [];
         this.failed = [].concat(archiveEntries.failed);
 
+        let timeLast = Date.now();
         let i = 0;
         for (const entry of archiveEntries.done) {
-            console.log(`Creating ES document ${++i}/${archiveEntries.done.length} `);
+            const dts = Math.ceil((Date.now() - timeLast) / 1000);
+
+            if (dts >= 10) {
+                console.log(`Creating ES document ${++i}/${archiveEntries.done.length} `);
+                timeLast = Date.now();
+            }
 
             /* Remove uneccessary data before writing to ES */
             let cleanedEntry = Object.assign({}, entry);

@@ -60,11 +60,14 @@ class Mapper {
         return owner;
     }
 
+    setItems(items) {
+        this.items = items;
+    }
+
     /**
+     * Triggers the actual mapping of the data given to the constructor.
+     *
      * @function do
-     *
-     * description
-     *
      * @returns {object} The resulting ES archive document
      */
     do() {
@@ -88,7 +91,7 @@ class Mapper {
 
         } catch (e) {
             /* handle error */
-            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document.');
+            this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document. Exception: ', e);
         }
 
         return this.document;
@@ -99,21 +102,25 @@ class Mapper {
     }
 
     _buildDocument() {
-        let buildAmount = () => {
-            return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.amount) {
-                    return elem.document.amount;
-                } else {
-                    return acc;
-                }
-            }, null);
-        };
 
         let buildFiles = () => {
-            let outboundAttachments = this.items.reduce((acc, val) => {
-                let attachments = ((val.document || {}).files || {}).outbound_attachments || [];
-                return acc.concat(attachments);
-            }, []);
+            let outboundAttachments = this.items
+                .reduce((acc, val) => {
+                    let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
+                    return acc.concat(attachments);
+                }, [])
+                .filter(e => e.archivable === true || e.archivable === 'true')
+                .filter(e => e.refType === 'blob')
+                .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
+
+            let inboundAttachments = this.items
+                .reduce((acc, val) => {
+                    let attachments = ((val.document || {}).files || {}).inboundAttachments || [];
+                    return acc.concat(attachments);
+                }, [])
+                .filter(e => e.archivable === true || e.archivable === 'true')
+                .filter(e => e.refType === 'blob')
+                .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
 
             let canonical = this.items.reduce((acc, val) => {
                 const c = ((val.document || {}).files || {}).canonical || null;
@@ -124,15 +131,15 @@ class Mapper {
                 inbound: {}, // Not implemented
                 outbound: {}, // Not implemented
                 canonical,
-                inboundAttachments: [], // Not implemented
+                inboundAttachments: inboundAttachments || [], // Not implemented
                 outboundAttachments: outboundAttachments || []
             };
         };
 
         let buildMsgType = () => {
             return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.msgtype) {
-                    return elem.document.msgtype;
+                if (elem.document && elem.document.msgType) {
+                    return elem.document.msgType;
                 } else {
                     return acc;
                 }
@@ -141,8 +148,8 @@ class Mapper {
 
         let buildMsgSubType = () => {
             return this.items.reduce((acc, elem) => {
-                if (elem.document && elem.document.msgtypeSub) {
-                    return elem.document.msgtypeSub;
+                if (elem.document && elem.document.msgTypeSub) {
+                    return elem.document.msgTypeSub;
                 } else {
                     return acc;
                 }
@@ -150,7 +157,6 @@ class Mapper {
         };
 
         return {
-            amount: buildAmount(),
             msgType: buildMsgType(),
             msgSubType: buildMsgSubType(),
             files: buildFiles()
@@ -158,12 +164,13 @@ class Mapper {
     }
 
     _buildEnd() {
-        let lastTimestamp = this.items[this.items.length - 1].timestamp || null;
+        let lastTimestamp = (this.items[this.items.length - 1] || {}).timestamp || null;
 
+        /** FIXME should this fallback be allowed? Cause the transaction
+         * ends with the last entry not with a random one. */
         if (lastTimestamp === null) {
-            let l = lastTimestamp = this.items
-                .find((i) => i.timestamp);
-            if (l) {
+            let l = lastTimestamp = this.items.find((i) => i.timestamp);
+            if (l && l.timestamp) {
                 lastTimestamp = l.timestamp;
             }
         }
@@ -171,12 +178,35 @@ class Mapper {
         return lastTimestamp;
     }
 
+    _buildExternalReference() {
+        let result = this.items
+            .filter(e => !this._isEmtpyObj(e.externalReference))
+            .reduce((acc, e) => {
+                if (e.externalReference && e.externalReference.type && e.externalReference.value) {
+                    return {
+                        type: e.externalReference.type,
+                        value: e.externalReference.value
+                    };
+                } else {
+                    return acc;
+                }
+            }, {});
+
+
+        if (result.type && result.value) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
     _buildHistory() {
         return this.items
             .map((i) => {
                 return {
                     date: i.timestamp || null,
-                    description: i.eventText || '',
+                    shortEventText: i.shortEventText || '',
+                    eventText: i.eventText || '',
                     status: i.stepStatus || ''
                 };
             });
@@ -193,7 +223,15 @@ class Mapper {
     _buildReceiver() {
         let receiver = this.items
             .map((i) => i.receiver || null)
-            .filter((r) => r !== null)
+            .filter(r => r !== null)
+            .filter(r => typeof r === 'object')
+            .map(r => {
+                if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
+                    return r;
+                } else {
+                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
+                }
+            })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
         return this._isEmtpyObj(receiver) ? null : receiver;
@@ -203,6 +241,14 @@ class Mapper {
         let sender = this.items
             .map((i) => i.sender || null)
             .filter((s) => s !== null)
+            .filter(r => typeof r === 'object')
+            .map(r => {
+                if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
+                    return r;
+                } else {
+                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
+                }
+            })
             .reduce((acc, elem) => Object.assign(acc, elem) , {});
 
         return this._isEmtpyObj(sender) ? null : sender;
@@ -211,7 +257,7 @@ class Mapper {
     _buildStart() {
         let firstTimestamp = this.items.find((i) => i.timestamp);
 
-        return firstTimestamp.timestamp;
+        return firstTimestamp && firstTimestamp.timestamp;
     }
 
     _buildSupplierId() {

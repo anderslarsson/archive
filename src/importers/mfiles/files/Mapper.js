@@ -102,6 +102,21 @@ class Mapper {
         return this._fetchFromPropsByName('Date');
     }
 
+    _buildExternalReference() {
+        let mailId = this._fetchFromPropsByName('MailID');
+
+        if (mailId && typeof mailId.toString) {
+            mailId = mailId.toString();
+
+            return {
+                type: 'gdp',
+                value: mailId
+            };
+        } else {
+            return null;
+        }
+    }
+
     _buildHistory() {
         // Nothing to do here
         return [];
@@ -112,19 +127,14 @@ class Mapper {
     }
 
     _buildReceiver() {
-        let mailId = this._fetchFromPropsByName('MailID');
-        if (mailId && typeof mailId.toString) {
-            mailId = mailId.toString();
-        }
-
         return {
-            physical: 'M-FILES',
+            intermediator: 'M-FILES',
             target: 'Not implemented',
             protocolAttributes: {
                 to: this._fetchFromPropsByName('To'),
                 from: this._fetchFromPropsByName('From'),
                 subject: this._fetchFromPropsByName('Subject'),
-                mailId
+                type: 'email'
             }
         };
     }

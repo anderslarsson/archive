@@ -4,6 +4,8 @@ const fs  = require('fs');
 const xml = require('fast-xml-parser');
 const csv = require('csvtojson');
 
+const {Readable} = require('stream');
+
 const ApiHelper = require('./ApiHelper');
 
 const outPath = 'src/importers/mfiles/customers/out';
@@ -11,7 +13,7 @@ const outPath = 'src/importers/mfiles/customers/out';
 module.exports = class CustomerBuilder {
 
     constructor() {
-        const config = this.hostsConfig[process.env.NODE_ENV];
+        const config = this.hostsConfig[process.env.TARGET_ENV];
         this.api = new ApiHelper(config);
     }
 
@@ -31,12 +33,15 @@ module.exports = class CustomerBuilder {
 
         let writeStream = fs.createWriteStream(`${outPath}/${prefix}.csv`, {flags: 'a+'});
 
-        await writeStream.write('email;tenantId\n');
-
+        let data = ['email;tenantId'];
         for (const m of mappings) {
-            let res = await writeStream.write(`${m.email};${m.tenantId}\n`);
-            console.log(res);
+            data.push(`${m.email};${m.tenantId}`);
         }
+
+        let buf = data.join('\n');
+        buf = buf + '\n';
+
+        await writeStream.write(buf);
 
         return await writeStream.end();
     }
@@ -47,7 +52,7 @@ module.exports = class CustomerBuilder {
         for (const t of uniqTenantIds) {
             let response = await this.api.post('archive/api/tenantconfig', {tenantId: t});
             if (response && response.data) {
-                console.log(t, response.data.success);
+                console.log('CustomerBuilder#createArchiveConfig ', t, response.data.success);
             }
         }
     }
@@ -155,6 +160,14 @@ module.exports = class CustomerBuilder {
                 username: process.env.TOKEN_AUTH_USERNAME,
                 password: process.env.TOKEN_AUTH_PASSWORD_STAGE,
                 clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_STAGE
+            },
+            prod: {
+                host: 'businessnetwork.opuscapita.com',
+                port: '443',
+                scheme: 'https',
+                username: process.env.TOKEN_AUTH_USERNAME,
+                password: process.env.TOKEN_AUTH_PASSWORD_PROD,
+                clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
             }
         };
     }

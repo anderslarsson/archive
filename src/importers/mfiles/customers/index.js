@@ -33,8 +33,8 @@ async function main() {
     }
 }
 
-if (!process.env.NODE_ENV) {
-    process.env.NODE_ENV = 'devbox';
+if (!process.env.TARGET_ENV) {
+    process.env.TARGET_ENV = 'devbox';
 }
 
 let env = dotenv.config({path: path.resolve(process.cwd(), '.env.local')});

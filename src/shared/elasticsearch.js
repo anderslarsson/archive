@@ -1,35 +1,57 @@
 'use strict';
 
-const {Client} = require('elasticsearch');
+const elasticsearch = require('elasticsearch');
 
 const Logger = require('ocbesbn-logger');
+const config = require('@opuscapita/config');
 
 const {
     ErrCodes,
     InvoiceArchiveConfig
 } = require('./invoice_archive_config');
 
-const {
-    normalizeTenantId
-} = require('./helpers');
-
-const ES_HOST = process.env.ES_HOST || 'elasticsearch:9200';
+const {normalizeTenantId} = require('./helpers');
 
 class Elasticsearch {
 
     constructor() {
-        this.logger = new Logger();
-
+        this.logger         = new Logger();
+        this.initialized    = false;
         this.defaultDocType = 'doc';
 
-        this.conn = new Client({
+        this.InvoiceArchiveConfig = InvoiceArchiveConfig;
+    }
+
+    async init() {
+        if (this.initialized) {
+            return true;
+        }
+
+        await config.init();
+        let endpointsFromConfig = await config.getEndPoints('elasticsearch');
+
+        this.esEndpoints = endpointsFromConfig.map(e => `${e.host}:${e.port}`);
+
+        this.logger.info('Elasticsearch#init: Got elasticsearch endpoint from consul: ', this.esEndpoints);
+
+        /**
+         * FIXME
+         * The config should use the sniffOnStart parameter to enable
+         * cluster discovery by the ES client itself.
+         * This does not work at the moment cause the cluster itself
+         * exposes a wrong publish_address that points to localhost.
+         * See `GET /_nodes/_all/http` on ES.
+         *
+         * Fixed by https://github.com/OpusCapita/elasticsearch/pull/3
+         */
+        this.conn = new elasticsearch.Client({
             apiVersion: '5.5',
-            hosts: [
-                ES_HOST
-            ]
+            hosts: this.esEndpoints,
+            // sniffOnStart: true,
+            // sniffInterval: 60000
         });
 
-        this.InvoiceArchiveConfig = InvoiceArchiveConfig;
+        return this.initialized = true;
     }
 
     get client() {
@@ -228,8 +250,10 @@ class Elasticsearch {
                 // Use existing index
                 statusDstIndex = await this.openIndex(dstIndexName, false);
 
-                // Assuming the  dstIndex has the srcIndex mapping
-                // TODO Implement check
+                /**
+                 * Relying on the assumption that the dstIndex has the srcIndex mapping,
+                 * can not update the mapping at this point.
+                 */
                 dstHasSrcMapping = true;
             }
 
@@ -247,15 +271,16 @@ class Elasticsearch {
                     body.source.query = query;
                 }
 
-                // Return the actual result of the reindex action
-                // to the caller.
+                /**
+                 * Return the actual result of the reindex action
+                 * to the caller.
+                 */
                 return await this.conn.reindex({
                     waitForCompletion: true,
                     body: body
                 });
             }
         } catch (e) {
-            // TODO Do something with the error?
             this.logger.error('Elasticsearch#reindex: Failed to execute reindex.', e);
             throw e;
         }
@@ -358,12 +383,16 @@ class Elasticsearch {
                 if (create) {
                     await this.conn.indices.create({index: indexName});
 
-                    if (opts && opts.mapping && typeof opts.mapping === 'object') {
-                        await this.conn.indices.putMapping({
-                            body: opts.mapping.mappings.doc,
-                            index: indexName,
-                            type: this.defaultDocType
-                        });
+                    if (opts && opts.mapping) {
+                        if (typeof opts.mapping === 'object') {
+                            await this.conn.indices.putMapping({
+                                body: opts.mapping.mappings.doc,
+                                index: indexName,
+                                type: this.defaultDocType
+                            });
+                        } else {
+                            console.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
+                        }
                     }
 
                     return true;

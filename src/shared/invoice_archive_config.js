@@ -35,34 +35,96 @@ const esMapping = {
                     type: 'keyword'
                 },
                 customerId: {
-                    type: 'keyword' // tenantId
+                    type: 'keyword' // customerId (w/o c_)
                 },
                 supplierId: {
-                    type: 'keyword' // tenantId
+                    type: 'keyword' // supplierId (w/o s_)
+                },
+                externalReference: {
+                    properties: {
+                        type: {
+                            type: 'keyword'
+                        },
+                        value: {
+                            type: 'keyword'
+                        }
+                    }
                 },
                 sender: {
                     properties: {
-                        physical: {
+                        intermediator: {
                             type: 'keyword'
                         },
                         originator: {
                             type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
-                            type: 'object'
+                            type: 'object',
+                            properties: {
+                                type: {
+                                    type: 'keyword'
+                                },
+                                to: {
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            ignore_above: 256
+                                        }
+                                    }
+                                },
+                                from: {
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            ignore_above: 256
+                                        }
+                                    }
+                                },
+                                subject: {
+                                    type: 'text'
+                                }
+                            }
                         }
                     }
                 },
                 receiver: {
                     properties: {
-                        physical: {
+                        intermediator: {
                             type: 'keyword'
                         },
                         target: {
                             type: 'keyword' // tenantId
                         },
                         protocolAttributes: {
-                            type: 'object'
+                            type: 'object',
+                            properties: {
+                                type: {
+                                    type: 'keyword'
+                                },
+                                to: {
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            ignore_above: 256
+                                        }
+                                    }
+                                },
+                                from: {
+                                    type: 'text',
+                                    fields: {
+                                        keyword: {
+                                            type: 'keyword',
+                                            ignore_above: 256
+                                        }
+                                    }
+                                },
+                                subject: {
+                                    type: 'text'
+                                }
+                            }
                         }
                     }
                 },
@@ -71,7 +133,10 @@ const esMapping = {
                         date: {
                             type: 'date'
                         },
-                        description: {
+                        shortEventText: {
+                            type: 'text'
+                        },
+                        eventText: {
                             type: 'text'
                         },
                         status: {
@@ -86,9 +151,6 @@ const esMapping = {
                         },
                         msgSubType: {
                             type: 'keyword'
-                        },
-                        amount: {
-                            type: 'float'
                         },
                         files: {
                             properties: {
@@ -209,7 +271,7 @@ class InvoiceArchiveConfig {
     }
 
     static get esMapping() {
-        return esMapping; // TODO
+        return esMapping;
     }
 }
 

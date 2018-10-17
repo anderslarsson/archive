@@ -45,19 +45,24 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
     }
 
     if (!index) {
-        res.status(400).json({success: false, message: 'Missing params.'});
+        return res.status(400).json({success: false, message: 'Missing params.'});
     }
 
     if (!isValidIndexIdentifier(index)) {
-        res.status(404).json({success: false, message: 'Not found'});
+        return res.status(404).json({success: false, message: 'Not found'});
     }
 
     let tenants = [];
-    let tenantId = index.split('-')[2];
+    let tenantId = index.split('-')[1];
+
+    if (!tenantId || !(!tenantId.startsWith('c_') || !tenantId.startsWith('s_'))) {
+        return res.status(404).json({success: false, message: 'Invalid index name.'});
+    }
+
     try {
         tenants = (await req.opuscapita.getUserTenants());
         if (!hasTenantAccess(tenantId, tenants)) {
-            res.status(403).json({success: false, message: 'Access denied.'});
+            res.status(403).json({success: false, message: 'You are not allowed to access this index.'});
         }
     } catch (e) {
         res.status(400).json({
@@ -77,7 +82,9 @@ function hasTenantAccess(tenantId, tenants = []) {
         allowed = true;
     }
 
-    let hasTenant = tenants.find(t => t === tenantId);
+    let hasTenant = tenants.find(t => {
+        return t.toLowerCase() === tenantId.toLowerCase();
+    });
     if (hasTenant) {
         allowed = true;
     }

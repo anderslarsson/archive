@@ -1,0 +1,62 @@
+{
+    "event": {
+        "version": "1.0",
+        "transactionId": "12345-3d2f-4921-87e0-1c7c2e1d22b9",
+        "archivable": true,
+        "wmTransactionId": "12345-3d2f-4921-87e0-1c7c2e1d22b9",
+        "externalReference": {
+            "type": "gdp",
+            "value": "2022"
+        },
+        "timestamp": "2018-10-09T13:12:54.755Z",
+        "logAccess": "Both",
+        "stepStatus": "Completed",
+        "processingFinished": true,
+        "severity": "Info",
+        "product": "BNArchiveA2A",
+        "routeId": "N/A",
+        "deliveryChannelId": "N/A",
+        "shortEventText": "A2A archive zip split and attachments created to be archived",
+        "eventText": "Received zip file containing a csv and eml file. Extracted the 1 attachment(s). Saved and move request sent to eArchive.  Email subject: Testing archiving Customer: ArchiveTest Buyer: OC Email Arc Test Customer Mail ID: 2022 Email data: To: ArchiveTest.SE.P.000046-3@pubtest.docinbound.com 26.06.2018 10:09 From: Jaana.Kallioniemi@posti.com",
+        "stepType": "Prepare",
+        "eventOrigin": {
+            "systemNode": "dev",
+            "systemType": "WM",
+            "flowId": "N/A",
+            "componentId": "Oc_BNArchive_A2A.services:processA2AZip4EArchive",
+            "integrationId": "N/A"
+        },
+        "customerId": "OC001",
+        "sender": {
+            "protocolAttributes": {
+                "from": "foo.bar@opuscapita.com"
+            }
+        },
+        "receiver": {
+            "target": "c_OC001",
+            "protocolAttributes": {
+                "type": "email",
+                "to": "test@opuscapita.com",
+                "from": "foo.bar@opuscapita.com",
+                "subject": "Testing archiving"
+            }
+        },
+        "document": {
+            "msgType": "invoice",
+            "files": {
+                "inboundAttachments": [
+                    {
+                        "archivable": true,
+                        "reference": "/c_OC001/data/private/sirius/inbound/12345-3d2f-4921-87e0-1c7c2e1d22b9/fake19-3d2f-4921-87e0-1c7c2e1d22b9_1.pdf",
+                        "refType": "blob",
+                        "name": "12345-3d2f-4921-87e0-1c7c2e1d22b9_1.pdf"
+                    }
+                ]
+            }
+        },
+        "timing": {
+            "received": "2018-10-09T13:12:54.166Z",
+            "sent": "2018-06-26T10:09:00.000Z"
+        }
+    }
+}

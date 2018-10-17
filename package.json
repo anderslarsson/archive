@@ -38,6 +38,7 @@
     "moment": "^2.22.2",
     "ocbesbn-blob-client": "^2.0.8",
     "ocbesbn-logger": "^1.0.9",
+    "ocbesbn-service-client": "^1.1.10",
     "react-bootstrap": "^0.32.3",
     "request": "^2.88.0",
     "typescript": "^3.0.3",
@@ -75,6 +76,7 @@
     "react-table": "^6.8.6",
     "react-virtualized": "^9.20.1",
     "rimraf": "^2.6.2",
+    "sequelize-to-markdown": "^1.2.5",
     "style-loader": "^0.19.0",
     "superagent": "^3.8.3",
     "webpack": "^3.8.1",
@@ -91,7 +93,7 @@
     "rest-doc": "mkdir -p wiki/rest-doc ; npx raml2md -o file-per-resource -p wiki/rest-doc --output-ext=.endpoint.md rest-doc/main.raml",
     "setup-consul": "sh setup-consul.sh",
     "start": "node src/server/index.js",
-    "test": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --timeout 30000 --recursive -R mocha-junit-reporter",
+    "test": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha test --timeout 30000 --recursive --reporter mocha-junit-reporter --exit",
     "test:local": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive --watch",
     "worker:invoice": "npx nodemon --watch src/workers/ --inspect=0.0.0.0:9230 src/workers/invoice/run.js"
   }

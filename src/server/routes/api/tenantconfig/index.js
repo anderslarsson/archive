@@ -8,6 +8,23 @@ const validTypes = [
     'invoice_receiving'
 ];
 
+/**
+ * Handler function that responds to an request with a list customerIds and the respective
+ * company name.  The customerIds are fetched from getUserTenants() and the company
+ * names from the customer service.
+ *
+ * @async
+ * @function get
+ *
+ * @param {express.Request} req
+ * @param {object} req.body - POST data
+ * @param {String} req.body.transactionId - ID of the transaction to archive
+ * @param {express.Response} res
+ * @param {express.App} app
+ * @param {Sequelize} db
+ *
+ * @returns undefined
+ */
 module.exports.get = async function (req, res, app, db) {
 
     try {
@@ -18,7 +35,6 @@ module.exports.get = async function (req, res, app, db) {
 
         /* Check if owning tenantId has valid archive configuration */
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-
         let tenantConfigs = [];
         if (isAdmin(req)) {
             tenantConfigs = await tenantConfigModel.findAll();
@@ -29,7 +45,8 @@ module.exports.get = async function (req, res, app, db) {
                 where: {
                     tenantId: {
                         $in: tenants
-                    }
+                    },
+                    type: type
                 }
             });
         }

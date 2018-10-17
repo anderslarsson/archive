@@ -9,26 +9,63 @@
             "de": "Erlaubt lesenden Zugriff auf Archive und Dokumente."
         },
         "resources": [
-          {
-            "type": "rest",
-            "resourceId": "^(/api)?/invoices",
-            "actions": ["view"]
-          },
-          {
-            "type": "rest",
-            "resourceId": "^/api/indices.*",
-            "actions": ["view", "create"]
-          },
-          {
-            "type": "rest",
-            "resourceId": "^/api/tenantconfig/.*",
-            "actions": ["view"]
-          },
-          {
-            "type": "rest",
-            "resourceId": "^/api/searches.*",
-            "actions": ["view", "create"]
-          }
+            {
+                "type": "rest",
+                "resourceId": "^(/api)?/",
+                "actions": ["view"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^(/api)?/invoices",
+                "actions": ["view"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/indices.*",
+                "actions": ["view"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/indices/.*/open",
+                "actions": ["create"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/tenantconfig/.*",
+                "actions": ["view"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/searches.*",
+                "actions": ["view", "create"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/ping",
+                "actions": ["view"]
+            }
+        ]
+    },
+    "archive-job-creator": {
+        "name": {
+            "en": "Archive job creation",
+            "de": "Archiv Job Verwaltung"
+        },
+        "description": {
+            "en": "Allows external services to trigger the creation of archiver jobs.",
+            "de": "Erlaubt externen Systemen das Anlegen von Archivjobs."
+        },
+        "resources": [
+            {
+                "type": "rest",
+                "resourceId": "^/api/archive/invoices/job",
+                "actions": ["create"]
+            },
+            {
+                "type": "rest",
+                "resourceId": "^/api/ping",
+                "actions": ["view"]
+            }
         ]
     },
     "archive-tenant-mgmt": {
@@ -41,11 +78,11 @@
             "de": "Erlaubt das hinzufügen neuer Mandanten."
         },
         "resources": [
-          {
-            "type": "rest",
-            "resourceId": "^/tenantconfig",
-            "actions": ["create"]
-          }
+            {
+                "type": "rest",
+                "resourceId": "^/tenantconfig",
+                "actions": ["create"]
+            }
         ]
     }
 }

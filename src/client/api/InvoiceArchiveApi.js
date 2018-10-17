@@ -32,6 +32,18 @@ class InvoiceArchiveApi extends ApiBase {
             .then(res => res.body)
             .catch(this.getErrorFromResponse);
     }
+
+    deleteInvoiceArchiveSearch(params) {
+        let scrollId = params.scrollId;
+
+        if (scrollId) {
+            return this.ajax.delete(`/archive/api/searches/${scrollId}`)
+                .then(res => res.body)
+                .catch(this.getErrorFromResponse);
+        } else {
+            return Promise.resolve(false); // As this is a fire and forget op it is ok to not throw
+        }
+    }
 }
 
 export default InvoiceArchiveApi;

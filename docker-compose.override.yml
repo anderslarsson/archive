@@ -19,6 +19,7 @@ services:
       - ./test:/home/node/archive/test
       - ./config:/home/node/archive/config
       - ./wiki:/home/node/archive/wiki
+      - ./rest-doc:/home/node/archive/rest-doc
     command: 'npm run debug'
     env_file:
       - .env.local
