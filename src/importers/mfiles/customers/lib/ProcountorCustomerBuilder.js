@@ -11,15 +11,15 @@ module.exports = class ProcountorCustomerBuilder extends CustomerBuilder {
     async run() {
         let customer = null;
         try {
-            let response = await this.api.get(`customer/api/customers?id=ProcountorSE`);
+            let response = await this.api.get('customer/api/customers?id=ProcountorSE');
 
             if (response && response.data && response.data.length === 0) {
-                /* Create IKEAAB if it does not exist */
                 let result = await this.createCustomer({
                     id: 'ProcountorSE',
                     name: 'Procountor SE',
                     cityOfRegistration: '',
-                    countryOfRegistration: 'SE'
+                    countryOfRegistration: 'SE',
+                    vatIdentificationNo: '' // tba
                 });
 
                 customer = result.data;
