@@ -152,6 +152,7 @@ class Api {
                             parsed = JSON.parse(body);
                             resolve(parsed, res);
                         } catch (e) {
+                            console.error('API#patchJson: Failed to parse response. ', e);
                             reject(e);
                         }
                     } else {
@@ -231,6 +232,8 @@ class Api {
     }
 
     async fetchApiAccessToken() {
+        const config = this.hostsConfig[this.targetEnv];
+
         let options = {
             url: this.applyBaseUrl('/auth/token'),
             method: 'POST',
@@ -239,12 +242,12 @@ class Api {
             // },
             auth: {
                 username: 'oidcCLIENT',
-                password: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
+                password: config.clientSecret
             },
             form: {
                 'grant_type': 'password',
-                'username': process.env.TOKEN_AUTH_USERNAME,
-                'password': process.env.TOKEN_AUTH_PASSWORD_PROD,
+                'username': config.username,
+                'password': config.password,
                 'scope': 'email phone userInfo roles'
             }
         };
