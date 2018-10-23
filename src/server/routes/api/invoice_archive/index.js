@@ -31,7 +31,7 @@ const logger = new Logger({
  * @param {express.App} app
  * @param {Sequelize} db
  */
-module.exports.createArchiverJob = async function (req, res, app, db) {
+module.exports.createArchiverJob = async function (req, res) {
     let transactionId = ((req || {}).body || {}).transactionId || null;
 
     if (!transactionId) {
@@ -178,24 +178,28 @@ module.exports.createDocument = async function (req, res, app, db) {
         success = false;
         msg = 'Failed to insert archive document to elasticsearch';
 
-        logger.error('InvoiceArchiveHandler#archiveTransaction: ', msg, e);
-    }
-
-    if (docIsMapped) {
-        if (success) {
-            await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req); // TODO Do sth with result
-            await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
-        } else {
-            await updateArchiveTransactionLog(doc.transactionId, 'status', 'failed', db);
-        }
+        logger && logger.error('InvoiceArchiveHandler#archiveTransaction: ', msg, e);
     }
 
     if (success) {
+        if (docIsMapped) {
+            /**
+             * TODO Do sth with result
+             * TODO Remove as soon as M-Files imports to prod are done, readonly is set by importer
+             */
+            await setReadonly((((doc || {}).document || {}).files || {}).inboundAttachments || [], req);
+        }
+
+        await updateArchiveTransactionLog(doc.transactionId, 'status', 'done', db);
+
         res.status(200).json({
             success: true,
             message: msg || `Successfully created archive document for ${transactionId}.`
         });
+
     } else {
+        await updateArchiveTransactionLog(doc.transactionId, 'status', 'failed', db);
+
         res.status(400).json({
             success: false,
             error: msg || 'Failed to write document.'
@@ -585,8 +589,8 @@ async function updateArchiveTransactionLog(transactionId, key, value, db) {
             success = true;
         }
     } catch (e) {
+        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId} with key ${key} and value ${value}.`, e);
         success = false;
-        logger && logger.error(`Failed to update ArchiveTransactionLog entry for transactionId ${transactionId}.`, e);
     }
     return success;
 }
