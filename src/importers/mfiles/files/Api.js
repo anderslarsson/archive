@@ -47,6 +47,14 @@ class Api {
                 username: process.env.TOKEN_AUTH_USERNAME,
                 password: process.env.TOKEN_AUTH_PASSWORD_STAGE,
                 clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_STAGE
+            },
+            prod: {
+                host: 'businessnetwork.opuscapita.com',
+                port: '443',
+                scheme: 'https',
+                username: process.env.TOKEN_AUTH_USERNAME,
+                password: process.env.TOKEN_AUTH_PASSWORD_STAGE,
+                clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
             }
         };
     }
@@ -226,13 +234,17 @@ class Api {
         let options = {
             url: this.applyBaseUrl('/auth/token'),
             method: 'POST',
-            headers: {
-                'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
+            // headers: {
+            //     'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
+            // },
+            auth: {
+                username: 'oidcCLIENT',
+                password: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
             },
             form: {
                 'grant_type': 'password',
                 'username': process.env.TOKEN_AUTH_USERNAME,
-                'password': process.env.TOKEN_AUTH_PASSWORD,
+                'password': process.env.TOKEN_AUTH_PASSWORD_PROD,
                 'scope': 'email phone userInfo roles'
             }
         };

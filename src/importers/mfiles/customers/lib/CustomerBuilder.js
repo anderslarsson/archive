@@ -4,8 +4,6 @@ const fs  = require('fs');
 const xml = require('fast-xml-parser');
 const csv = require('csvtojson');
 
-const {Readable} = require('stream');
-
 const ApiHelper = require('./ApiHelper');
 
 const outPath = 'src/importers/mfiles/customers/out';

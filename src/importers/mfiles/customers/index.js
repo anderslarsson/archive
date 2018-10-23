@@ -18,11 +18,12 @@ async function main() {
         await siemens.init();
         await pc.init();
 
-        /* Create mapping for customers */
+        /* Create customers */
         let ikeaResult       = await ikea.run();
         let siemensResult   = await siemens.run();
         let procountorResult = await pc.run();
 
+        /** Create archive coonfig for customers */
         await ikea.createArchiveConfig(ikeaResult);
         await siemens.createArchiveConfig(siemensResult);
         await pc.createArchiveConfig(procountorResult);
