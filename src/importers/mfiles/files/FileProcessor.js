@@ -5,6 +5,8 @@ const path          = require('path');
 const he            = require('he');
 const onDeath       = require('death');
 
+const uuidv4 = require('uuid/v4'); // random
+
 const api    = require('./Api');
 
 class FileProcessor {
@@ -261,6 +263,12 @@ class FileProcessor {
 
                 try {
                     let tenantId = `c_${archiveEntry.customerId}`;
+
+                    if (!attachment.filename || typeof attachment.filename !== 'string') {
+                        let ext = attachment.contentType ? '.' + attachment.contentType.split('/').pop() : '';
+                        attachment.filename = `${uuidv4()}${ext}`;
+                    }
+
                     let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, tenantId, attachment.filename);
                     result.tenantId = tenantId;
                     done.push(result);
@@ -287,6 +295,7 @@ class FileProcessor {
      */
     async uploadFile(data, transactionId, tenantId, filename) {
         filename = encodeURI(filename);
+
 
         let blobPath = `/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}`;
 
