@@ -63,6 +63,7 @@
     "eslint": "^5.5.0",
     "eslint-plugin-react": "^7.11.1",
     "jsdoc-to-markdown": "^4.0.1",
+    "mime-types": "^2.1.21",
     "minimist": "^1.2.0",
     "mocha": "^5.0.1",
     "mocha-junit-reporter": "^1.18.0",

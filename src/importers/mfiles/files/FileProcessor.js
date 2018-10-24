@@ -6,6 +6,7 @@ const he            = require('he');
 const onDeath       = require('death');
 
 const uuidv4 = require('uuid/v4'); // random
+const mime = require('mime-types');
 
 const api    = require('./Api');
 
@@ -264,10 +265,7 @@ class FileProcessor {
                 try {
                     let tenantId = `c_${archiveEntry.customerId}`;
 
-                    if (!attachment.filename || typeof attachment.filename !== 'string') {
-                        let ext = attachment.contentType ? '.' + attachment.contentType.split('/').pop() : '';
-                        attachment.filename = `${uuidv4()}${ext}`;
-                    }
+                    attachment.filename = this.guessFilename(attachment);
 
                     let result = await this.uploadFile(attachment.content, archiveEntry.transactionId, tenantId, attachment.filename);
                     result.tenantId = tenantId;
@@ -312,8 +310,45 @@ class FileProcessor {
             }
         } else {
             /** File does not exist, upload */
-            return api.putChunked(`${blobPath}?createMissing=true`, data);
+            let  result = await api.putChunked(`${blobPath}?createMissing=true`, data);
+
+            if (!result.path) {
+                console.error('FileProcessor#uploadFile: Path missing from upload result.', result);
+            }
+
+            return result;
         }
+    }
+
+    /**
+     * Create a filename for a given attachment object.
+     *
+     * This is needed b/c there may be files w/o filename or extension. In the first case
+     * we need to generate on to be able to reference to it, in the second case we need
+     * to come up with an extension b/c blob service prevents us from uploading files without.
+     *
+     * @function guessFilename
+     * @param {object} attachment
+     * @param {string} attachment.filename
+     * @param {string} attachment.contentType
+     * @return {string} The filename
+     */
+    guessFilename(attachment) {
+        let filename = '';
+
+        if (!attachment.filename || typeof attachment.filename !== 'string' || attachment.filename === '') {
+            filename = uuidv4();
+        } else {
+            filename = attachment.filename;
+        }
+
+        const extname = path.extname(filename);
+        if (!extname || typeof extname !== 'string' || extname === '') {
+            let extension = attachment.contentType ? '.' + (mime.extension(attachment.contentType) || 'bin') : '.bin';
+            filename = `${filename}${extension}`;
+        }
+
+        return filename;
     }
 
 }
