@@ -52,8 +52,9 @@ class Api {
                 host: 'businessnetwork.opuscapita.com',
                 port: '443',
                 scheme: 'https',
+                bearer: process.env.TOKEN_AUTH_BEARER_PROD,
                 username: process.env.TOKEN_AUTH_USERNAME,
-                password: process.env.TOKEN_AUTH_PASSWORD_STAGE,
+                password: process.env.TOKEN_AUTH_PASSWORD_PROD,
                 clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
             }
         };
@@ -152,7 +153,7 @@ class Api {
                             parsed = JSON.parse(body);
                             resolve(parsed, res);
                         } catch (e) {
-                            console.error('API#patchJson: Failed to parse response. ', e);
+                            console.error('API#patchJson: Failed to parse response for call to URL ${url}', e);
                             reject(e);
                         }
                     } else {
@@ -238,7 +239,7 @@ class Api {
             url: this.applyBaseUrl('/auth/token'),
             method: 'POST',
             // headers: {
-            //     'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
+            //     'Authorization': `Basic ${config.bearer}`
             // },
             auth: {
                 username: 'oidcCLIENT',
