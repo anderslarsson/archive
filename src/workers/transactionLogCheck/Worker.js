@@ -1,6 +1,9 @@
 'use strict';
 
+const axios = require('axios');
+
 const EventClient   = require('@opuscapita/event-client');
+const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
 const elasticsearch = require('../../shared/elasticsearch');
 
@@ -16,6 +19,7 @@ class Worker {
         this.eventClient   = null;
         this.logger        = null;
         this.activeSince   = null; // Contains a timestamp of the last processing start if active, otherwise null
+        this.report        = []; // Array of strings containing report entries
 
     }
 
@@ -33,6 +37,9 @@ class Worker {
                 host: 'consul'
             }
         });
+
+
+        await config.init();
 
         await this.elasticsearch.init();
         await this.initEventSubscriptions();
@@ -58,6 +65,9 @@ class Worker {
 
     async checkTransactionLog(msg) {
         this.activeSince = Date.now();
+        this.report = [];
+
+        this.report.push(`Starting check ${this.activeSince}`);
 
         let success = false;
         try {
@@ -77,15 +87,15 @@ class Worker {
         this.logger.log(msg);
 
         const transactionLogs = await this.fetchTransactionLogs();
-        let documentExistance = await this.checkDocumentExistance(transactionLogs);
 
-        let failed = documentExistance.filter(e => e.docCount !== 1);
-
-        if (failed.lenght > 0) {
-            this.logger.error('TransactionLogCheckWorker: found ', failed.lenght, ' failed transactions.', failed);
+        if (transactionLogs && transactionLogs.length === 0) {
+            this.report.push('No transactions found in the current timeframe. Quitting. \n');
         } else {
-            this.logger.log('TransactionLogCheckWorker: All transactions good! ');
+            await this.reportFailed(transactionLogs);
+            await this.checkDocumentExistance(transactionLogs);
         }
+
+        await this.sendReport();
 
         return true;
     }
@@ -125,17 +135,40 @@ class Worker {
      */
     async checkDocumentExistance(transactionLogs) {
         let documentExistance = [];
-        for (const log of transactionLogs) {
+
+        this.report.push('---\n');
+        this.report.push('Checking existance of documents on elasticsearch: \n');
+
+        const doneTransactions = transactionLogs.filter(e => e.dataValues.status === 'done');
+
+        for (const log of doneTransactions) {
             let {transactionId, status} = log.dataValues;
             let docCount = 0;
             try {
                 docCount = await this.existsOnEs(transactionId);
             } catch (e) {
-                this.logger.error('Failed to query for existence of transactionId ', transactionId, 'with exception ', e);
+                this.report.push('Failed to query for existence of transactionId ', transactionId, 'with exception ', e);
                 docCount = false;
             }
             documentExistance.push({transactionId, status, docCount});
         }
+
+
+        let failed = documentExistance.filter(e => e.docCount !== 1);
+
+        if (failed.length > 0) {
+            this.report.push(`Found ${failed.length} transactions with status=DONE that exist in log but not on elasticsearch. \n`);
+            this.report.push('transactionId, status, document count');
+
+            for (const t of failed) {
+                this.report.push(`${t.transactionId}, ${t.status}, ${t.docCount}\n`);
+            }
+
+            this.report.push('\n');
+        } else {
+            this.report.push('TransactionLogCheckWorker: All transactions with status=DONE good! \n');
+        }
+
         return documentExistance;
     }
 
@@ -148,7 +181,7 @@ class Worker {
      * @return {number} count of documents found for the given transactionId
      */
     async existsOnEs(transactionId) {
-        if (!transactionId || typeof transactionId !== 'string' || transactionId.lenght <= 0) {
+        if (!transactionId || typeof transactionId !== 'string' || transactionId.length <= 0) {
             throw new Error('Empty transactionId');
         }
 
@@ -175,6 +208,52 @@ class Worker {
         return result.hits.total;
     }
 
+    /**
+     * Reports all transactions that have state that is != 'done'.
+     *
+     * @function reportFailed
+     * @param {array} transactionLogs
+     * @return {array<object>} List of transactionIds and their existance state
+     */
+    reportFailed(transactionLogs) {
+        this.report.push('---\n');
+        this.report.push('Checking for transactions that with status != DONE: \n');
+
+        const failed = transactionLogs.filter(e => e.dataValues.status !== 'done');
+
+        if (failed.length > 0) {
+            for (const log of failed) {
+                let {transactionId, status} = log.dataValues;
+
+                this.report.push(`${transactionId}, ${status}`);
+            }
+        } else {
+            this.report.push('All transactions have status == DONE, all good! \n');
+        }
+
+        this.report.push('\n');
+    }
+
+    /**
+     * Sends the report via email service.
+     *
+     * @async
+     * @function sendReport
+     */
+    async sendReport() {
+        try {
+            const emailService = config.getEndPoint('email');
+
+            await axios.send(`http://${emailService.host}:${emailService.port}/api/send`, {
+                to: 'dennis.buecker@opuscapita.com',
+                customId: 'abs40djas9ek',
+                subject: 'Invoice transaction log check report',
+                text: this.report.join('\n'),
+            });
+        } catch (e) {
+            this.logger.error('Failed to send report.', this.report);
+        }
+    }
 };
 
 module.exports = Worker;
