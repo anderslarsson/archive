@@ -293,7 +293,7 @@ class FileProcessor {
      */
     async uploadFile(data, transactionId, tenantId, filename) {
         filename = encodeURI(filename);
-
+        filename = filename.replace(/\?|\#/g, '_');
 
         let blobPath = `/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}`;
 

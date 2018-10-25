@@ -22,47 +22,41 @@ async function main(dataDir, mappingFile) {
     // }
 
     try {
-        /* STAGE 1: Preprocessing, fetching all object elemaents from content XML */
-
+        /** STAGE 1: Preprocessing, fetching all object elemaents from content XML */
         console.log('--- STAGE 1 ---');
-
         archiveEntriesStage1  = preprocessXml(dataDir);
 
-        /* STAGE 2: Create mapping */
-
+        /** STAGE 2: Create mapping */
         console.log('--- STAGE 2 ---');
-
         archiveEntriesStage2 = {
             done: xmlToArchiveMapping(archiveEntriesStage1),
             failed: []
         };
 
-        /* STAGE 3: Fetch owner information (tenantId) */
-
+        /** STAGE 3: Fetch owner information (tenantId) */
         console.log('--- STAGE 3 ---');
-
         archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2, mappingFile);
 
-        /* STAGE 4: Parse EML files, upload extracted files to blob */
+        debugger; // process.exit() if an error happened here -> missing email in mapping file
 
+        /**
+         * TODO apply filter of transactions that need reprocessing here:
+         *        - list of transactionIds in file
+         *        - filter archiveEntriesStage2 by this transactionIds
+         */
+
+        /** STAGE 4: Parse EML files, upload extracted files to blob */
         console.log('--- STAGE 4 ---');
-
         await api.init(args['target-env'] || 'devbox');
-
         archiveEntriesStage4 = await processAttachments(archiveEntriesStage3, dataDir);
 
-        /* STAGE 5: Store in ES */
-
+        /** STAGE 5: Store in ES */
         console.log('--- STAGE 5 ---');
-
         archiveEntriesStage5 = await persistToEs(archiveEntriesStage4);
-
         console.log(`Processing finished. Took ${(Date.now() - startTime) / 1000}  seconds.`);
-
         saveResult(archiveEntriesStage5);
 
         debugger;
-
 
         // TODO handle archiveEntries.failed
 
