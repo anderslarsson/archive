@@ -243,7 +243,7 @@ class Worker {
     async sendReport() {
         try {
             let result = await this.serviceClient.post('email', '/api/send', {
-                to: 'dennis.buecker@opuscapita.com',
+                to: 'dennis.buecker@opuscapita.com, thomas.klassen@opuscapita.com',
                 subject: 'Invoice transaction log check report',
                 text: this.report.join('\n'),
             }, true);
