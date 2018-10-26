@@ -242,7 +242,7 @@ class Worker {
      */
     async sendReport() {
         try {
-            const emailService = config.getEndPoint('email');
+            const emailService = await config.getEndPoint('email');
 
             let result = await axios.post(`http://${emailService.host}:${emailService.port}/api/send`, {
                 to: 'dennis.buecker@opuscapita.com',
