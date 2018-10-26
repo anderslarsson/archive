@@ -252,7 +252,7 @@ class Worker {
 
             this.logger.log('Email report sent with status: ', result);
         } catch (e) {
-            this.logger.error('Failed to send report.', this.report);
+            this.logger.error('Failed to send report.', this.report, e);
         }
     }
 };
