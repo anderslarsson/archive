@@ -13,13 +13,14 @@ const CustomerMapper  = require('./CustomerMapper');
 
 async function main(dataDir, mappingFile) {
     let startTime = Date.now();
+    let transactionsToReprocess = [];
 
     let archiveEntriesStage1, archiveEntriesStage2, archiveEntriesStage3, archiveEntriesStage4, archiveEntriesStage5;
 
-    // if (args.resume) {
-    //     let content = fs.readFileSync(args.resume);
-    //     resumeFrom = JSON.parse(content);
-    // }
+    if (args.rep) {
+        let content = fs.readFileSync(args.rep);
+        transactionsToReprocess = JSON.parse(content).transactionIds;
+    }
 
     try {
         /** STAGE 1: Preprocessing, fetching all object elemaents from content XML */
@@ -36,6 +37,10 @@ async function main(dataDir, mappingFile) {
         /** STAGE 3: Fetch owner information (tenantId) */
         console.log('--- STAGE 3 ---');
         archiveEntriesStage3 = await doCustomerMapping(archiveEntriesStage2, mappingFile);
+
+        if (transactionsToReprocess.length > 0) {
+            archiveEntriesStage3.done = archiveEntriesStage3.done.filter(e => transactionsToReprocess.includes(e.transactionId));
+        }
 
         debugger; // process.exit() if an error happened here -> missing email in mapping file
 
