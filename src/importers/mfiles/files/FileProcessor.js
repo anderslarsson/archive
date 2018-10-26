@@ -122,7 +122,9 @@ class FileProcessor {
                         data: uploadResult.failed
                     });
                     this.failed.push(entry);
-                } else {
+                }
+
+                if (uploadResult.done.length > 0) {
                     /* Map result from Blob storage to archive schema. */
                     let inboundAttachments = uploadResult.done.map((e) => {
                         return {
@@ -260,7 +262,7 @@ class FileProcessor {
         let failed = [];
 
         for (const attachment of attachments) {
-            if (attachment && attachment.content && attachment.content instanceof Buffer) {
+            if (attachment && attachment.size > 0 && attachment.content && attachment.content instanceof Buffer) {
 
                 try {
                     let tenantId = `c_${archiveEntry.customerId}`;
