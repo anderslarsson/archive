@@ -1,7 +1,6 @@
 'use strict';
 
-const axios = require('axios');
-
+const ServiceClient = require('ocbesbn-service-client');
 const EventClient   = require('@opuscapita/event-client');
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
@@ -38,6 +37,7 @@ class Worker {
             }
         });
 
+        this.serviceClient = new ServiceClient();
 
         await config.init();
 
@@ -242,9 +242,7 @@ class Worker {
      */
     async sendReport() {
         try {
-            const emailService = await config.getEndPoint('email');
-
-            let result = await axios.post(`http://${emailService.host}:${emailService.port}/api/send`, {
+            let result = await this.serviceClient.post('email', '/api/send', {
                 to: 'dennis.buecker@opuscapita.com',
                 subject: 'Invoice transaction log check report',
                 text: this.report.join('\n'),

@@ -38,7 +38,7 @@
     "moment": "^2.22.2",
     "ocbesbn-blob-client": "^2.0.8",
     "ocbesbn-logger": "^1.0.9",
-    "ocbesbn-service-client": "^1.1.10",
+    "ocbesbn-service-client": "^1.1.12",
     "react-bootstrap": "^0.32.3",
     "request": "^2.88.0",
     "webpack-config": "^7.5.0",
