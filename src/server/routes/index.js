@@ -11,6 +11,8 @@ const {
     documentsHandler
 } = require('./api/indices/');
 
+const invoiceCuratorHandler = require('./api/curator/invoice');
+
 /**
  * Initializes all routes for RESTful access.
  *
@@ -44,6 +46,9 @@ module.exports.init = async function (app, db) {
 
     /** *** Ping *** */
     app.get(['/api/ping', '/public/api/ping'], (req, res) => res.status(200).json({success: true, data: 'pong'}));
+
+    /** *** Curator *** */
+    app.get('/public/api/curator/invoice/check', (req, res) => invoiceCuratorHandler.checkTransactionLog(req, res));
 
 };
 

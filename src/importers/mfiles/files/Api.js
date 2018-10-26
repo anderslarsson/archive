@@ -7,10 +7,9 @@ const request       = require('request');
 class Api {
 
     constructor() {
+        this.tokenInfo   = null;
         this.accessToken = null;
         this.idToken     = null;
-
-        this.initialized = false;
 
         this.targetEnv = 'devbox';
 
@@ -52,8 +51,9 @@ class Api {
                 host: 'businessnetwork.opuscapita.com',
                 port: '443',
                 scheme: 'https',
+                bearer: process.env.TOKEN_AUTH_BEARER_PROD,
                 username: process.env.TOKEN_AUTH_USERNAME,
-                password: process.env.TOKEN_AUTH_PASSWORD_STAGE,
+                password: process.env.TOKEN_AUTH_PASSWORD_PROD,
                 clientSecret: process.env.TOKEN_AUTH_CLIENT_SECRET_PROD
             }
         };
@@ -61,12 +61,6 @@ class Api {
 
     async init(targetEnv = 'devbox') {
         this.targetEnv = targetEnv;
-
-        if (this.initialized !== false) {
-            return true;
-        }
-
-        // TODO Add accessToken renewal
 
         if (!this.accessToken) {
             let authResult = await this.fetchApiAccessToken();
@@ -81,13 +75,36 @@ class Api {
                 throw new Error(msg);
             }
 
+            this.tokenInfo = authResult;
+            this.tokenInfo.expires_at = new Date(this.tokenInfo.expires_in * 1000 + new Date().getTime()).getTime();
+
             this.accessToken = authResult.access_token;
-            this.idToken = authResult.id_token;
+            this.idToken     = authResult.id_token;
 
             console.info('API#init: Successfully fetched access token:');
         }
 
-        return this.initialized = true;
+        return true;
+    }
+
+
+    /**
+     * Makes sure we have a valid access_token
+     */
+    ensureSession() {
+        if (!this.tokenInfo) {
+            return Promise.reject('Api#ensureSession: not initialized! Call init(config) first...');
+        }
+
+        if (new Date().getTime() > this.tokenInfo.expires_at - 5000) {
+            console.log('Api refreshing token which is valid until', new Date(this.tokenInfo.expires_at));
+
+            this.accessToken = null;
+
+            return this.init(this.targetEnv);
+        }
+
+        return Promise.resolve(true);
     }
 
     applyBaseUrl(pathOrUrl) {
@@ -108,9 +125,7 @@ class Api {
     }
 
     async head(url) {
-        if (!this.initialized) {
-            await this.init();
-        }
+        await this.ensureSession();
 
         let options = {
             url: this.applyBaseUrl(url),
@@ -130,9 +145,7 @@ class Api {
     }
 
     async patchJson(url, json) {
-        if (!this.initialized) {
-            await this.init();
-        }
+        await this.ensureSession();
 
         let options = {
             url: this.applyBaseUrl(url),
@@ -152,7 +165,7 @@ class Api {
                             parsed = JSON.parse(body);
                             resolve(parsed, res);
                         } catch (e) {
-                            console.error('API#patchJson: Failed to parse response. ', e);
+                            console.error('API#patchJson: Failed to parse response for call to URL ${url}', e);
                             reject(e);
                         }
                     } else {
@@ -164,9 +177,7 @@ class Api {
     }
 
     async postJson(url, json) {
-        if (!this.initialized) {
-            await this.init();
-        }
+        await this.ensureSession();
 
         let options = {
             url: this.applyBaseUrl(url),
@@ -197,9 +208,7 @@ class Api {
     }
 
     async putChunked(url, buffer) {
-        if (!this.initialized) {
-            await this.init();
-        }
+        await this.ensureSession();
 
         return new Promise((resolve, reject) => {
             let options = {
@@ -238,7 +247,7 @@ class Api {
             url: this.applyBaseUrl('/auth/token'),
             method: 'POST',
             // headers: {
-            //     'Authorization': `Basic ${process.env.TOKEN_AUTH_BEARER}`
+            //     'Authorization': `Basic ${config.bearer}`
             // },
             auth: {
                 username: 'oidcCLIENT',

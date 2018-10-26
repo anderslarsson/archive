@@ -35,9 +35,10 @@ module.exports = class EsUploader {
         let i = 0;
         for (const entry of archiveEntries.done) {
             const dts = Math.ceil((Date.now() - timeLast) / 1000);
+            i++;
 
             if (dts >= 10) {
-                console.log(`Creating ES document ${++i}/${archiveEntries.done.length} `);
+                console.log(`Creating ES document ${i}/${archiveEntries.done.length} `);
                 timeLast = Date.now();
             }
 
