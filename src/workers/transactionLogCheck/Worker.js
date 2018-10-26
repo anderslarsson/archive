@@ -246,7 +246,7 @@ class Worker {
                 to: 'dennis.buecker@opuscapita.com',
                 subject: 'Invoice transaction log check report',
                 text: this.report.join('\n'),
-            });
+            }, true);
 
             this.logger.log('Email report sent with status: ', result);
         } catch (e) {
