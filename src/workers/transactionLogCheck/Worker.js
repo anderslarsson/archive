@@ -244,12 +244,13 @@ class Worker {
         try {
             const emailService = config.getEndPoint('email');
 
-            await axios.send(`http://${emailService.host}:${emailService.port}/api/send`, {
+            let result = await axios.send(`http://${emailService.host}:${emailService.port}/api/send`, {
                 to: 'dennis.buecker@opuscapita.com',
-                customId: 'abs40djas9ek',
                 subject: 'Invoice transaction log check report',
                 text: this.report.join('\n'),
             });
+
+            this.logger.log('Email report sent with status: ', result);
         } catch (e) {
             this.logger.error('Failed to send report.', this.report);
         }
