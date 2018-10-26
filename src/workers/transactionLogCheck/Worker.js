@@ -244,7 +244,7 @@ class Worker {
         try {
             const emailService = config.getEndPoint('email');
 
-            let result = await axios.send(`http://${emailService.host}:${emailService.port}/api/send`, {
+            let result = await axios.post(`http://${emailService.host}:${emailService.port}/api/send`, {
                 to: 'dennis.buecker@opuscapita.com',
                 subject: 'Invoice transaction log check report',
                 text: this.report.join('\n'),
