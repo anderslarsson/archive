@@ -1,6 +1,7 @@
 'use strict';
 const simpleParser  = require('mailparse').simpleParser;
 const fs            = require('fs');
+const find          = require('find');
 const path          = require('path');
 const he            = require('he');
 const onDeath       = require('death');
@@ -193,20 +194,22 @@ class FileProcessor {
             readFailed = true;
         }
 
-        /* Retry with fallback to read file in the given directory in /L/L */
+        /** Retry with fallback to read file in the given directory in /L/L */
         try {
             if (readFailed) {
                 const dirname = path.dirname(`${this.dataDir}/${fileName}`);
-                const ls = fs.readdirSync(dirname);
+                const files = find.fileSync(/\.eml$/i, dirname);
 
-                if (ls && ls.length >= 1) {
-                    let fallbackFileName = ls.find((e) => e.toLowerCase().endsWith('.eml'));
+                if (files && files.length === 1) {
+                    let fallbackFileName = files.pop();
 
                     if (fallbackFileName) {
-                        eml = fs.readFileSync(`${dirname}/${fallbackFileName}`, 'utf8');
+                        eml = fs.readFileSync(fallbackFileName, 'utf8');
                     } else {
                         throw new Error('No EML in directory ' + dirname + ' and filename ' + fallbackFileName);
                     }
+                } else {
+                    throw new Error('Failed to apply fallback file reading with find: ' + dirname + ' and files ' + files);
                 }
             }
         } catch (e) {
