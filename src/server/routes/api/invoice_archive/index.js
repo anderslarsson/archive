@@ -123,6 +123,8 @@ module.exports.createCuratorJob = async function (req, res, app, db) {
 module.exports.createDocument = async function (req, res, app, db) {
     logger && logger.info('InvoiceArchiveHandler#createDocument: Creating new document from req: ', req.body);
 
+    const isUpdate = req.query.update ? true : false; // Check if we should update document instead of insert it.
+
     let doc = req.body;
     let docIsMapped = false;
 
@@ -134,7 +136,7 @@ module.exports.createDocument = async function (req, res, app, db) {
 
     logger && logger.info('InvoiceArchiveHandler#createDocument: Starting to process document: ', doc);
 
-    /* Basic param checking */
+    /** Basic param checking */
     if (!doc.transactionId || (!doc.supplierId && !doc.customerId) || !doc.document.msgType || doc.document.msgType !== 'invoice') {
         res.status(422).send({
             success: false,
@@ -143,8 +145,14 @@ module.exports.createDocument = async function (req, res, app, db) {
         return false;
     }
 
-    // Log process start only after basic validity check
-    await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
+    /**
+     * Log process start only after basic validity check.
+     *
+     * TODO Use return value from call to createInitialArchiveTransactionLogEntry to determine
+     *      if we should continue processing the document.
+     */
+    const shouldContinue = await createInitialArchiveTransactionLogEntry(doc.transactionId, db);
+    logger && logger.info('Call to createInitialArchiveTransactionLogEntry returned with value: ', shouldContinue);
 
     /** Extract owner and type information from document */
     const transactionId = doc.transactionId;
@@ -173,7 +181,7 @@ module.exports.createDocument = async function (req, res, app, db) {
 
     let success, msg;
     try {
-        ({success, msg} = await insertInvoiceArchiveDocument(doc));
+        ({success, msg} = await insertInvoiceArchiveDocument(doc, isUpdate));
     } catch (e) {
         success = false;
         msg = 'Failed to insert archive document to elasticsearch';
@@ -497,8 +505,9 @@ async function hasArchiving(tenantId, type, db) {
  * @async
  * @function insertInvoiceArchiveDocument
  * @param {object} document - The document to insert. Needs to be in the correct format.
+ * @param {boolean} [isUpdate=false] - Indicates wether the document should be created or updated.
  */
-async function insertInvoiceArchiveDocument(doc) {
+async function insertInvoiceArchiveDocument(doc, isUpdate = false) {
     const tenantId = extractOwnerFromDocument(doc);
     const archiveName = InvoiceArchiveConfig.yearlyTenantArchiveName(tenantId, doc.end);
 
@@ -510,20 +519,36 @@ async function insertInvoiceArchiveDocument(doc) {
         });
 
         if (indexOpened) {
-            let createResult;
+            let createResult = null;
+
+            // const clientFn = isUpdate ? elasticContext.client.update : elasticContext.client.create;
 
             try {
-                /* ES insertion */
-                createResult = await elasticContext.client.create({
-                    index: archiveName,
-                    id: doc.transactionId,
-                    type: elasticContext.defaultDocType,
-                    body: doc
-                });
+                if (isUpdate) {
+                    createResult = await elasticContext.client.update({
+                        index: archiveName,
+                        id: doc.transactionId,
+                        type: elasticContext.defaultDocType,
+                        // doc_as_upsert: true,
+                        body: {
+                            doc
+                        }
+                    });
+                } else {
+                    createResult = await elasticContext.client.create({
+                        index: archiveName,
+                        id: doc.transactionId,
+                        type: elasticContext.defaultDocType,
+                        body: doc
+                    });
+                }
 
-                if (createResult && createResult.created === true) {
+                if (createResult && ['created', 'updated', 'noop'].includes(createResult.result)) {
                     success = true;
                     msg = `Successfully created archive document for ${doc.transactionId}.`;
+                } else {
+                    success = false;
+                    msg = `Failed to create archive document in ${archiveName}. (TX id: ${doc.transactionId})`;
                 }
             } catch (e) {
                 if (e && e.body && e.body.error && e.body.error.type && e.body.error.type === 'version_conflict_engine_exception') {
