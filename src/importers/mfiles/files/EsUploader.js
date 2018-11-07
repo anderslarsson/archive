@@ -6,9 +6,11 @@ const api = require('./Api');
 
 module.exports = class EsUploader {
 
-    constructor() {
-        this.done = [];
+    constructor(shouldUpdate = false) {
+        this.done   = [];
         this.failed = [];
+
+        this.shouldUpdate = shouldUpdate;
 
         this.disposeDeath = onDeath(() => {
             let d = Date.now();
@@ -49,7 +51,9 @@ module.exports = class EsUploader {
             }
 
             try {
-                let result = await api.postJson('/archive/api/archive/invoices', cleanedEntry);
+                const updateParam = this.shouldUpdate ? '?update=true' : '';
+
+                let result = await api.postJson(`/archive/api/archive/invoices${updateParam}`, cleanedEntry);
 
                 if (result && result.success === true) {
                     this.done.push(entry);

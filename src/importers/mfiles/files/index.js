@@ -115,7 +115,7 @@ function xmlToArchiveMapping(objectElements) {
  * @return {Object} Object  of successful and failed mappings
  */
 async function persistToEs(archiveEntries) {
-    const esUploader = new EsUploader();
+    const esUploader = new EsUploader(args.u);
     let result = await esUploader.run(archiveEntries);
 
     esUploader.dispose();
