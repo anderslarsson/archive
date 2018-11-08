@@ -31,7 +31,7 @@
     "csvtojson": "^2.0.8",
     "date-fns": "^1.29.0",
     "dotenv": "^6.0.0",
-    "elasticsearch": "^15.1.1",
+    "elasticsearch": "^15.2.0",
     "fast-xml-parser": "^3.12.5",
     "he": "^1.1.1",
     "mailparse": "^2.2.2",
@@ -47,7 +47,7 @@
   "devDependencies": {
     "@opuscapita/react-select": "^1.0.0-rc.5-oc.6",
     "@opuscapita/service-base-ui": "^1.1.75",
-    "@types/elasticsearch": "^5.0.26",
+    "@types/elasticsearch": "^5.0.28",
     "@types/superagent": "^3.8.4",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.5",
