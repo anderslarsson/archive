@@ -251,7 +251,8 @@ module.exports.search = async function search(req, res) {
                     }
                 }
             }
-        }
+        },
+        sort: [{'start': {'order': 'asc'}}]
     };
 
     if (query.from || query.to) {
