@@ -75,6 +75,8 @@ class GenericArchiver {
         const day = format(date, 'YYYY-MM-DD');
 
         /**
+         * @see tnt service how it is done there
+         *
          * 0. Log start of processing
          * 1. Find all transactionIds on that day where tenantId is receiver or sender
          * 2. Iterate result from 1. and fetch all events for a single transaction
