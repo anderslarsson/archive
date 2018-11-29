@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@opuscapita/react-select": "^1.0.0-rc.5-oc.6",
-    "@opuscapita/service-base-ui": "^1.1.82",
+    "@opuscapita/service-base-ui": "^1.1.83",
     "@types/elasticsearch": "^5.0.26",
     "@types/superagent": "^3.8.4",
     "axios": "^0.18.0",
