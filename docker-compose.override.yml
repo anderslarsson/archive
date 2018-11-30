@@ -16,6 +16,7 @@ services:
       - customer
     volumes:
       - ./src:/home/node/archive/src
+      - ./local:/home/node/archive/local
       - ./test:/home/node/archive/test
       - ./config:/home/node/archive/config
       - ./wiki:/home/node/archive/wiki
@@ -24,12 +25,9 @@ services:
     env_file:
       - .env.local
     ports:
-      - 9229:9229
-      - 9230:9230
+      - '9229:9229'
+      - '9230:9230'
       - '${PORT}:${PORT}'
-    expose:
-        - 9229
-        - 9230
 
   blob:
     env_file:

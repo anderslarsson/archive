@@ -191,8 +191,8 @@ export default class InvoiceArchive extends Components.ContextComponent {
             index: selectedValues.index,
             query: {
                 year: selectedValues.index.split('-').pop(),
-                from: selectedValues.from,
-                to: selectedValues.to,
+                from: selectedValues.from && format(selectedValues.from, 'YYYY-MM-DD'),
+                to: selectedValues.to && format(selectedValues.to, 'YYYY-MM-DD'),
                 fullText: selectedValues.fullTextQuery
             },
             pageSize: search.pageSize
