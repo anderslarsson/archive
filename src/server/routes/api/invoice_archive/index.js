@@ -230,8 +230,22 @@ module.exports.createDocument = async function (req, res, app, db) {
  * @param {Sequelize} db
  */
 module.exports.search = async function search(req, res) {
-    let index = req.query.index;
-    let {query, pageSize} = req.body;
+    const index = req.query.index;
+    const {query, pageSize, sort} = req.body;
+
+    let sortOptions = {};
+    let sortBy    = InvoiceArchiveConfig.getSortMappingForField(sort.field) || 'start';
+
+    let sortOrder = 'asc';
+    if (sort.order && ['asc', 'desc'].includes(sort.order)) {
+        sortOrder = sort.order;
+    }
+
+    sortOptions[sortBy] = {
+        'order': sortOrder
+    };
+
+    debugger;
 
     let es = elasticContext.client;
 
@@ -252,7 +266,7 @@ module.exports.search = async function search(req, res) {
                 }
             }
         },
-        sort: [{'start': {'order': 'asc'}}]
+        sort: [sortOptions]
     };
 
     if (query.from || query.to) {

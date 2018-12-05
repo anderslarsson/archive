@@ -228,6 +228,13 @@ const esMapping = {
     }
 };
 
+const sortFieldMappings = {
+    'sourceFrom': 'receiver.protocolAttributes.from.keyword',
+    'transactionId': 'transactionId.keyword',
+    'start': 'start',
+    'lastStatus': 'lastStatus.keyword'
+};
+
 class InvoiceArchiveConfig {
 
     static get errCodes() {
@@ -254,6 +261,10 @@ class InvoiceArchiveConfig {
         let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
+    }
+
+    static getSortMappingForField(fieldName = '') {
+        return sortFieldMappings[fieldName];
     }
 
     static get newArchiveTransactionJobQueueName() {

@@ -30,7 +30,9 @@ export default class InvoiceArchive extends Components.ContextComponent {
                 currentPage: 0,
                 currentDocs: [],
                 pageSize: 20,
-                scrollId: null
+                scrollId: null,
+                sortBy: 'start',
+                sortOrder: 'asc'
             },
             selectedValues: {
                 tenant: null,
@@ -189,6 +191,10 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
         let queryOptions = {
             index: selectedValues.index,
+            sort: {
+                field: this.state.search.sortBy,
+                order: this.state.search.sortOrder
+            },
             query: {
                 year: selectedValues.index.split('-').pop(),
                 from: selectedValues.from && format(selectedValues.from, 'YYYY-MM-DD'),
@@ -226,33 +232,51 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     scrollSearch(state) {
         if (this.state.search.docs.length <= 0) {
-            return;
+            return; // !!!
         }
 
-        let isBackNav = state.page < this.state.search.currentPage;
-        let alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
+        let sortOrder = 'asc';
 
-        if (isBackNav || alreadyFetched) {
-            let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
-            let searchUpdate = Object.assign({}, this.state.search, {
-                currentPage: state.page,
-                currentDocs
+        let sortChanged = false;
+        if (state && state.sorted && state.sorted[0]) {
+            sortOrder = state.sorted[0].desc ? 'desc' : 'asc';
+            sortChanged = this.state.search.sortBy !== state.sorted[0].id || this.state.search.sortOrder !== sortOrder;
+        }
+
+        if (sortChanged) {
+            const searchUpdate = Object.assign({}, this.state.search, {
+                sortBy: state.sorted[0].id,
+                sortOrder: sortOrder
             });
-            this.setState({search: searchUpdate});
+
+            this.setState({search: searchUpdate}, () => this.handleSearch());
+            return; // !!!
         } else {
-            /* Forward navigation. Fetch next result from ES */
-            this.api.getInvoiceArchiveSearch(this.state.search)
-                .then((res) => {
-                    let hits = res.data.hits.hits;
+            const isBackNav = state.page < this.state.search.currentPage;
+            const alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
 
-                    let searchUpdate = Object.assign({}, this.state.search, {
-                        currentPage: state.page,
-                        docs: this.state.search.docs.concat(hits),
-                        currentDocs: hits
-                    });
-
-                    this.setState({search: searchUpdate});
+            if (isBackNav || alreadyFetched) {
+                let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
+                let searchUpdate = Object.assign({}, this.state.search, {
+                    currentPage: state.page,
+                    currentDocs
                 });
+                this.setState({search: searchUpdate});
+            } else {
+                /* Forward navigation. Fetch next result from ES */
+                this.api.getInvoiceArchiveSearch(this.state.search)
+                    .then((res) => {
+                        let hits = res.data.hits.hits;
+
+                        let searchUpdate = Object.assign({}, this.state.search, {
+                            currentPage: state.page,
+                            docs: this.state.search.docs.concat(hits),
+                            currentDocs: hits
+                        });
+
+                        this.setState({search: searchUpdate});
+                    });
+            }
         }
     }
 
@@ -398,6 +422,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                     loading={loading}
 
                     manual
+                    multiSort={false}
                     pages={search.pages}
                     defaultPageSize={20}
                     showPageSizeOptions={false}
@@ -438,6 +463,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
                     columns={[
                         {
+                            id: 'transactionId',
                             accessor: '_source.transactionId',
                             Header: i18n.getMessage('Archive.table.columns.id.title'),
                             Cell: (row) => {
@@ -450,12 +476,12 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             }
                         },
                         {
-                            id: 'startDate',
+                            id: 'start',
                             accessor: doc => format(doc._source.start, 'YYYY-MM-DD'),
-                            Header: i18n.getMessage('Archive.table.columns.startDate.title')
+                            Header: i18n.getMessage('Archive.table.columns.start.title')
                         },
                         {
-                            id: 'from',
+                            id: 'sourceFrom',
                             accessor: '_source.receiver.protocolAttributes.from',
                             Header: i18n.getMessage('Archive.table.columns.from.title')
                         },
