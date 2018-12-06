@@ -245,8 +245,6 @@ module.exports.search = async function search(req, res) {
         'order': sortOrder
     };
 
-    debugger;
-
     let es = elasticContext.client;
 
     /* TODO add query.{year, to, from} validation */
