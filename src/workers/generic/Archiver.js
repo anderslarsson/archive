@@ -1,6 +1,6 @@
 'use strict';
 
-const {format} = require('date-fns');
+const {format, subDays} = require('date-fns');
 
 const dbInit        = require('@opuscapita/db-init'); // Database
 const Logger        = require('ocbesbn-logger');
@@ -8,8 +8,6 @@ const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch');
 // const Mapper        = require('./Mapper');
-
-const tntLogPrefix = 'bn_tx_logs-';
 
 class GenericArchiver {
 
@@ -21,7 +19,9 @@ class GenericArchiver {
 
         this.db = null;
 
-        this._logger = logger;
+        this._logger       = logger;
+        this._tntLogPrefix = 'bn_tx_logs-';
+        this._tntOffset    = 60; // Number of days to go back in TnT history for fetching logs
     }
 
     /** *** GETTER *** */
@@ -66,18 +66,18 @@ class GenericArchiver {
      * TnT log to the archive.
      *
      * @async
-     * @function createDailyArchive
+     * @function updateDailyArchive
      * @param {string} tenantId
      * @param {date} date - The day that should be archived
      * @returns {boolean} Success indicator
      */
-    async createDailyArchive(tenantId, date) {
-        const day = format(date, 'YYYY-MM-DD');
+    async updateDailyArchive(tenantId, date = Date.now()) {
+        const day = format(subDays(date, this._tntOffset), 'YYYY-MM-DD');
 
         /**
          * @see tnt service how it is done there
          *
-         * 0. Log start of processing
+         * 0. Log start of processing / Check that job has not already run
          * 1. Find all transactionIds on that day where tenantId is receiver or sender
          * 2. Iterate result from 1. and fetch all events for a single transaction
          * 3. Filter result from 2. based on:

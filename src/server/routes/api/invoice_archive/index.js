@@ -72,6 +72,8 @@ module.exports.createArchiverJob = async function (req, res) {
 };
 
 /**
+ * @deprecated -> delete
+ *
  * @function createCuratorJob
  * @param {express.Request} req
  * @param {object} req.body - POST data

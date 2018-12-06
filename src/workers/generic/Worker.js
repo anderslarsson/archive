@@ -3,6 +3,7 @@
 const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 
+const ArchiveConfig   = require('../../shared/ArchiveConfig');
 const GenericArchiver = require('./Archiver');
 
 class GenericWorker {
@@ -13,21 +14,21 @@ class GenericWorker {
      */
     constructor(db) {
         this._db              = db;
-        this._archiver        = new GenericArchiver(this.eventClient, this.logger);
+        // this._archiver        = new GenericArchiver(this.eventClient, this.logger);
         this._mainLoopTimeout = null;
     }
 
     async init() {
         await this.initEventSubscriptions();
-        await this.archiver.init();
+        // await this.archiver.init();
         return true;
     }
 
     /** *** GETTER *** */
 
-    get archiver() {
-        return this._archiver;
-    }
+    // get archiver() {
+    //     return this._archiver;
+    // }
 
     get db() {
         return this._db;
@@ -39,11 +40,7 @@ class GenericWorker {
 
     get logger() {
         if (!this._logger) {
-            this._logger = new Logger({
-                context: {
-                    serviceName: 'archive'
-                }
-            });
+            this._logger = new Logger({context: {serviceName: 'archive'}});
         }
 
         return this._logger;
@@ -64,35 +61,23 @@ class GenericWorker {
     }
 
     async initEventSubscriptions() {
+        if (process.env.NODE_ENV === 'testing') {
+            return true; // !!!
+        }
 
-        if (process.env.NODE_ENV !== 'testing') {
-            try {
-                /* Subscribe w/o callback to trigger queue creation and binding. */
-                // await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
-                // await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
-            } catch (e) {
-                this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
-                throw e;
-            }
-
-            /** Enter main loop to keep the process running. */
-            this.mainLoop();
+        try {
+            await this.eventClient.subscribe(ArchiveConfig.logrotationJobCreatedQueueName, this.onLogrotationMessage.bind(this));
+        } catch (e) {
+            this.logger.error(this.klassName, '#init: Failed to subscribe to the message queues.');
+            throw e;
         }
 
         return true;
     }
 
-    /**
-     * @todo remove as soon as worker supports subscribing to a event topic.
-     */
-    async mainLoop() {
-        try {
-            console.log(Date.now(), ' - I am alive');
-        } catch (e) {
-        } finally {
-            // Restart the timer
-            this._mainLoopTimeout = setTimeout(this.mainLoop.bind(this), 5000);
-        }
+    async onLogrotationMessage(message, ctx, topic) {
+        this.logger.info(this.klassName, '#onLogrotationMessage: Received request to rotate logs.', message);
+        return true;
     }
 
     /**

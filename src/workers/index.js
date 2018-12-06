@@ -5,7 +5,7 @@
 const {fork} = require('child_process');
 
 const isProduction = process.env.NODE_ENV === 'production';
-let debugStartPort = 9230;
+let debugStartPort = 9230; // Start debugger sessions beginning with this port.
 
 const buildArgs = (args = []) => {
     let result = [].concat(args);
@@ -13,7 +13,7 @@ const buildArgs = (args = []) => {
     return result;
 };
 
-// Fork
+// Fork workers
 console.info('Forking generic archiver worker proccess...');
 const genericArchiveWorker = fork(process.cwd() + '/src/workers/generic/run.js', [], {execArgv: buildArgs()});
 

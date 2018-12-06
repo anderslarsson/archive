@@ -1,17 +1,16 @@
 'use strict';
 
 const invoiceArchiveHandler     = require('./api/invoice_archive/');
+const invoiceCuratorHandler     = require('./api/curator/invoice');
 const tenantConfigHandler       = require('./api/tenantconfig/');
-
-const can = require('./api/can');
-
+const archiveJobsHandler        = require('./api/archive/jobs');
 const {
     indicesInvoiceHandler,
     indicesCmdHandler,
     documentsHandler
 } = require('./api/indices/');
 
-const invoiceCuratorHandler = require('./api/curator/invoice');
+const can = require('./api/can');
 
 /**
  * Initializes all routes for RESTful access.
@@ -33,6 +32,9 @@ module.exports.init = async function (app, db) {
     /** *** Invoice archive *** */
     app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
     app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
+
+    /** *** Generic archive *** */
+    app.post('/api/archive/jobs/:type', (req, res) => archiveJobsHandler.create(req, res, app, db));
 
     /** *** Indices *** */
     app.get('/api/indices', can.listInvoiceIndicesByTenantId, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
