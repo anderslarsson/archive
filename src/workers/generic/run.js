@@ -16,14 +16,10 @@ async function init() {
     await worker.init();
 
     process.on('message', (m) => {
-        console.log('GenericWorker got message ...');
+        logger.info('GenericWorker got message ...');
 
-        if (m === 'print_status') {
-            console.log('Eventclient: ', worker.eventClient);
-            console.log('logWaitDispatcherTimeout: ', worker.logWaitDispatcherTimeout);
-        }
         if (m === 'ping') {
-            console.log('Pong');
+            logger.info('Pong');
         }
     });
 }

@@ -14,7 +14,7 @@ class GenericWorker {
      */
     constructor(db) {
         this._db              = db;
-        // this._archiver        = new GenericArchiver(this.eventClient, this.logger);
+        this._archiver        = new GenericArchiver(this.eventClient, this.logger);
         this._mainLoopTimeout = null;
     }
 
@@ -26,9 +26,9 @@ class GenericWorker {
 
     /** *** GETTER *** */
 
-    // get archiver() {
-    //     return this._archiver;
-    // }
+    get archiver() {
+        return this._archiver;
+    }
 
     get db() {
         return this._db;
@@ -66,18 +66,41 @@ class GenericWorker {
         }
 
         try {
-            await this.eventClient.subscribe(ArchiveConfig.logrotationJobCreatedQueueName, this.onLogrotationMessage.bind(this));
+            await this.eventClient.subscribe(ArchiveConfig.dailyArchiveJobPendingTopic, this.onDailyArchiveJobPending.bind(this));
         } catch (e) {
-            this.logger.error(this.klassName, '#init: Failed to subscribe to the message queues.');
+            this.logger.error(this.klassName, '#init: Failed to subscribe to the message queue(s).', e);
             throw e;
         }
 
         return true;
     }
 
-    async onLogrotationMessage(message, ctx, topic) {
-        this.logger.info(this.klassName, '#onLogrotationMessage: Received request to rotate logs.', message);
-        return true;
+    /**
+     * Event handler for event queue messages on the 'dailyArchiveJob.pending' topic.
+     *
+     * @async
+     * @function onDailyArchiveJobPending
+     * @param {object} message - Application payload received on the topic subscription
+     * @param {object} ctx - Context provided by the EventClient (extracted from the message)
+     * @param {string} topic - The topic the message was created with.
+     * @param {string} subject - The subject (routingKey in Rabbit) the message was produuced with
+     */
+    async onDailyArchiveJobPending(message, ctx, topic, subject) {
+        this.logger.info(this.klassName, `#onDailyArchiveJobPending: Received request to run daily TnT logs to archive on subject >>> ${subject} <<<.`, message);
+
+        const {tenantConfig, date} = message;
+
+        debugger;
+
+        let result = true;
+        try {
+            result = await this.archiver.doDailyArchiving(tenantConfig.tenantId, date);
+        } catch (e) {
+            this.logger.error(this.klassName, `#onDailyArchiveJobPending: Failed to run daily archive job for tenantId ${tenantConfig.tenantId}. Got exception.`, e);
+            result = false;
+        }
+
+        return result;
     }
 
     /**

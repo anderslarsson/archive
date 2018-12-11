@@ -49,6 +49,7 @@ class GenericArchiver {
      *
      * @async
      * @function init
+     * @return {boolean=true}
      */
     async init() {
         try {
@@ -71,13 +72,14 @@ class GenericArchiver {
      * @param {date} date - The day that should be archived
      * @returns {boolean} Success indicator
      */
-    async updateDailyArchive(tenantId, date = Date.now()) {
+    async doDailyArchiving(tenantId, date = Date.now()) {
         const day = format(subDays(date, this._tntOffset), 'YYYY-MM-DD');
 
         /**
          * @see tnt service how it is done there
          *
-         * 0. Log start of processing / Check that job has not already run
+         * 0. Log start of processing
+         *     0.1. Check that job has not already run
          * 1. Find all transactionIds on that day where tenantId is receiver or sender
          * 2. Iterate result from 1. and fetch all events for a single transaction
          * 3. Filter result from 2. based on:
@@ -87,7 +89,7 @@ class GenericArchiver {
          * 5. Log end of processing
          */
 
-        console.log(this.klassName, date);
+        this.logger.info(this.klassName, day);
 
         return false;
     }

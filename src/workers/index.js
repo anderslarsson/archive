@@ -1,5 +1,7 @@
 /**
- * Cache references to archive service child processes in this module.
+ * This module encapsulates the actual reference to forked
+ * worker process. These references can be used to communicate
+ * via IPC to the processes.
  */
 
 const {fork} = require('child_process');

@@ -1,6 +1,6 @@
 'use strict';
 
-const moment              = require('moment');
+const {format}            = require('date-fns');
 const {normalizeTenantId} = require('./helpers');
 const ErrCodes            = require('./error_codes');
 const MsgTypes            = require('./msg_types');
@@ -32,11 +32,20 @@ class ArchiveConfig {
      */
     static getYearlyArchiveName(tenantId, date) {
         let tId = normalizeTenantId(tenantId);
-        let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
+        let fmtYear = format(date, 'YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
     }
 
+    /**
+     * Given a table column (frontend) name this method
+     * returns the corresponding elasticsearch field
+     * to apply sorting on.
+     *
+     * @function getSortMappingForField
+     * @param {string} fieldName
+     * @return {string} Sortable elasticsearch field name
+     */
     static getSortMappingForField(fieldName = '') {
 
         const m = {
@@ -49,11 +58,11 @@ class ArchiveConfig {
         return m[fieldName];
     }
 
-    static get logrotationJobCreatedQueueName() {
-        return 'archive.logrotationJob.created';
+    static get dailyArchiveJobPendingTopic() {
+        return 'archive.dailyArchiveJob.pending';
     }
-    static get finishedLogrotationJobQueueName() {
-        return 'archive.logrotationJob.finished';
+    static get dailyArchiveJobDoneTopic() {
+        return 'archive.dailyArchiveJob.done';
     }
 
     static get esMapping() {
