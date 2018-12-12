@@ -6,7 +6,7 @@
 
 const Logger                 = require('ocbesbn-logger');
 const lastDayOfYear          = require('date-fns/last_day_of_year');
-const elasticContext         = require('../../../../shared/elasticsearch');
+const elasticContext         = require('../../../../shared/elasticsearch/elasticsearch');
 const invoiceArchiveContext  = require('../../../invoice_archive');
 const MsgTypes               = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');

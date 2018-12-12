@@ -5,12 +5,9 @@ const elasticsearch = require('elasticsearch');
 const Logger = require('ocbesbn-logger');
 const config = require('@opuscapita/config');
 
-const {
-    ErrCodes,
-    InvoiceArchiveConfig
-} = require('./invoice_archive_config');
+const {ErrCodes, InvoiceArchiveConfig} = require('../invoice_archive_config');
 
-const {normalizeTenantId} = require('./helpers');
+const {normalizeTenantId} = require('../helpers');
 
 class Elasticsearch {
 
@@ -110,6 +107,9 @@ class Elasticsearch {
 
         let indicesPattern = '';
 
+        /**
+         * @todo Add generic archive type.
+         */
         switch (type) {
             case 'invoice':
                 indicesPattern = `${InvoiceArchiveConfig.indexPrefix}tenant_yearly-${normalizedTenantId}-*`;

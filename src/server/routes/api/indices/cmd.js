@@ -1,6 +1,6 @@
 'use strict';
 
-const elasticContext = require('../../../../shared/elasticsearch');
+const elasticContext = require('../../../../shared/elasticsearch/elasticsearch');
 
 /**
  * Open the given ES index and return the success of this operation.

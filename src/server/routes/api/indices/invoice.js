@@ -1,6 +1,6 @@
 'use strict';
 
-const elasticContext = require('../../../../shared/elasticsearch');
+const elasticContext = require('../../../../shared/elasticsearch/elasticsearch');
 
 /**
  * Get all invoice indices for the tenant given in the request params.

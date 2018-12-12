@@ -6,7 +6,7 @@ const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
 const invoiceArchiveContext  = require('./invoice_archive');
-const elasticsearch          = require('../shared/elasticsearch');
+const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
 const {genericArchiveWorker} = require('../workers/');
 
 const isProduction = process.env.NODE_ENV === 'production';

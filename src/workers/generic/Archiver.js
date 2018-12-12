@@ -6,7 +6,7 @@ const dbInit        = require('@opuscapita/db-init'); // Database
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
 
-const elasticsearch = require('../../shared/elasticsearch');
+const elasticsearch = require('../../../shared/elasticsearch/elasticsearch');
 // const Mapper        = require('./Mapper');
 
 class GenericArchiver {
@@ -75,6 +75,8 @@ class GenericArchiver {
     async doDailyArchiving(tenantId, date = Date.now()) {
         const day = format(subDays(date, this._tntOffset), 'YYYY-MM-DD');
 
+        this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', day);
+
         /**
          * @see tnt service how it is done there
          *
@@ -89,9 +91,7 @@ class GenericArchiver {
          * 5. Log end of processing
          */
 
-        this.logger.info(this.klassName, day);
-
-        return false;
+        return true;
     }
 
     /**
