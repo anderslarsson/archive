@@ -1,7 +1,7 @@
 const dbInit = require('@opuscapita/db-init');
 const Logger = require('ocbesbn-logger');
 
-const GenericWorker = require('./Worker');
+const GenericWorker = require('./GenericWorker');
 
 const logger = new Logger({
     context: {

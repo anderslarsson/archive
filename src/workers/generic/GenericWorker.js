@@ -4,7 +4,7 @@ const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 
 const ArchiveConfig   = require('../../shared/ArchiveConfig');
-const GenericArchiver = require('./Archiver');
+const GenericArchiver = require('./GenericArchiver');
 
 class GenericWorker {
 
