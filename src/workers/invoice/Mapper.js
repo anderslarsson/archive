@@ -271,6 +271,8 @@ class Mapper {
     }
 
     _isEmtpyObj(obj) {
+        if (!obj) return true;
+
         Object.keys(obj).length === 0 && obj.constructor === Object;
     }
 
