@@ -3,19 +3,25 @@
 const Logger = require('ocbesbn-logger');
 const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 
-class Mapper {
+class GenericMapper {
     /**
      * Creates a new instance of the Mapper.
      * Sets instance variables for transactionId and transaction items.
      *
      * @constructor
+     * @param {string} tenantId
      * @param {string} transactionId - The transaction that should be mapped
      * @param {array} items - List of transactions that belong to the transactionId
      */
-    constructor(transactionId, items) {
+    constructor(tenantId, transactionId, items = []) {
+        if (!tenantId || !transactionId) {
+            throw new Error('Missing parameters.');
+        }
+
         this.transactionId = transactionId;
         this.items         = items || [];
         this.document      = {transactionId};
+        this.owner         = tenantId;
 
         this.logger = new Logger({
             context: {
@@ -25,43 +31,10 @@ class Mapper {
         });
     }
 
-    get owner() {
-        let owner = null;
+    /** *** GETTER *** */
 
-        let tOwners = this.items
-            .map((h) => {
-                if (h.customerId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === `c_${h.customerId}`) {
-                        // Invoice receiving
-                        return `c_${h.customerId}`;
-                    }
-                }
-
-                if (h.supplierId) {
-                    if (h.receiver && h.receiver.target && h.receiver.target === `s_${h.supplierId}`) {
-                        // Invoice sending
-                        return `s_${h.supplierId}`;
-                    }
-                }
-
-                return null;
-            })
-            .filter((o) => o !== null)
-            .filter((el, i, a) => i === a.indexOf(el));
-
-        if (tOwners.length !== 1) {
-            // Inform Sirius about failure state. TODO
-            this.logger.error('InvoiceArchiveMapper#_buildOwner: Multiple possible owners found.', tOwners);
-            throw new Error('Unable to detect owning tenantId');
-        } else {
-            owner = tOwners[0];
-        }
-
-        return owner;
-    }
-
-    setItems(items) {
-        this.items = items;
+    get klassName() {
+        return this.constructor.name || 'GenericMapper';
     }
 
     /**
@@ -85,13 +58,13 @@ class Mapper {
                 if (typeof this[`_build${upper}`] === 'function') {
                     this.document[field] = this[`_build${upper}`]();
                 } else {
-                    this.logger.info(`InvoiceArchiveMapper#do: No mapper function found for field "${field}"`);
+                    this.logger.info(this.klassName, `#do: No mapper function found for field "${field}"`);
                 }
             });
 
         } catch (e) {
-            /* handle error */
             this.logger.error('InvoiceArchiveMapper#do: Failed to build invoice archive document. Exception: ', e);
+            // TODO maybe return a falsy value instead of an incomplete document?
         }
 
         return this.document;
@@ -102,7 +75,6 @@ class Mapper {
     }
 
     _buildDocument() {
-
         let buildFiles = () => {
             let outboundAttachments = this.items
                 .reduce((acc, val) => {
@@ -131,7 +103,7 @@ class Mapper {
                 inbound: {}, // Not implemented
                 outbound: {}, // Not implemented
                 canonical,
-                inboundAttachments: inboundAttachments || [], // Not implemented
+                inboundAttachments: inboundAttachments || [],
                 outboundAttachments: outboundAttachments || []
             };
         };
@@ -271,9 +243,11 @@ class Mapper {
     }
 
     _isEmtpyObj(obj) {
+        if (!obj) return true;
+
         Object.keys(obj).length === 0 && obj.constructor === Object;
     }
 
 }
 
-module.exports = Mapper;
+module.exports = GenericMapper;

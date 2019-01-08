@@ -8,7 +8,7 @@ const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch/elasticsearch');
 const helpers       = require('../../shared/helpers');
-// const Mapper        = require('./Mapper');
+const GenericMapper = require('./GenericMapper');
 
 class GenericArchiver {
 
@@ -98,6 +98,8 @@ class GenericArchiver {
             const transactionIds = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day);
             const archiveEntries = await this.mapTransactionsToArchiveEntries(tenantId, transactionIds);
 
+            // TODO insert docs to archive ES
+
             success = true;
         } catch (e) {
             this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenent ', tenantId, ' with exception.', e);
@@ -111,14 +113,16 @@ class GenericArchiver {
      * Map a list of events to a single archive entry.
      *
      * @function eventsToArchive
+     * @param {string} tenantId
      * @param {string} transactionId
      * @param {array} events - List of TnT events
      * @return {object} Archive entry aggregated from all incomingn events.
      */
-    eventsToArchive(transactionId, events) {
+    eventsToArchive(tenantId, transactionId, events) {
         let result;
+        const mapper = new GenericMapper(tenantId, transactionId, events);
 
-        const mapper = new Mapper(transactionId, events);
+        result = mapper.do();
 
         return result;
     }
@@ -180,7 +184,7 @@ class GenericArchiver {
                 },
                 sort: {
                     'event.timestamp': {
-                        order: 'desc'
+                        order: 'asc'
                     }
                 },
                 size: 1000 // Use count before to get actual number of documents. TODO raise if max shard count is exceeded.
@@ -238,7 +242,7 @@ class GenericArchiver {
             }
         });
 
-        /** Fetch unique transactions IDs by tenantId and date. */ 
+        /** Fetch unique transactions IDs by tenantId and date. */
         result = await this.elasticsearch.search({
             index,
             body: {
@@ -282,7 +286,7 @@ class GenericArchiver {
         for (const transactionId of transactionIds) {
             const events         = await this.getEventsByTransactionId(transactionId);
             const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
-            const archiveEntry   = this.eventsToArchive(transactionId, filteredEvents);
+            const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
 
             result.push(archiveEntry);
         }
