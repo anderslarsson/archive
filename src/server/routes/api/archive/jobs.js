@@ -31,7 +31,7 @@ async function triggerDailyRotation(db, eventClient) {
     try {
         // Fetch all configured tenants
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        const configs           = await tenantConfigModel.findAll();
+        const configs           = await tenantConfigModel.findAll({where: {type: 'generic'}});
 
         // Enqueue a job for every tenant who has archive activated
         for (let config of configs) {

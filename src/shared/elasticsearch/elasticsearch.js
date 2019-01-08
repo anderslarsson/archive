@@ -67,6 +67,14 @@ class Elasticsearch {
         return res;
     }
 
+    /**
+     * Get the document count by the given config.
+     *
+     * @async
+     * @function count
+     * @param {object} [conf] - Config obj denoting the count query
+     * @return {Promise}
+     */
     async count(conf) {
         return this.conn.count(conf);
     }

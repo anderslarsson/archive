@@ -19,8 +19,8 @@ class GenericWorker {
     }
 
     async init() {
+        await this.archiver.init();
         await this.initEventSubscriptions();
-        // await this.archiver.init();
         return true;
     }
 
@@ -89,8 +89,6 @@ class GenericWorker {
         this.logger.info(this.klassName, `#onDailyArchiveJobPending: Received request to run daily TnT logs to archive on subject >>> ${subject} <<<.`, message);
 
         const {tenantConfig, date} = message;
-
-        debugger;
 
         let result = true;
         try {

@@ -16,7 +16,7 @@ const buildArgs = (args = []) => {
 };
 
 // Fork workers
-console.info('Forking generic archiver worker proccess...');
+console.info('Forking generic archive worker proccess...');
 const genericArchiveWorker = fork(process.cwd() + '/src/workers/generic/run.js', [], {execArgv: buildArgs()});
 
 // Export references to processes
