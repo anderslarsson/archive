@@ -349,6 +349,8 @@ class Elasticsearch {
                 status = status[0].status;
             }
         } catch (e) {
+            this.logger.error('Elasticsearch#openIndex: Caught exception while trying to fetch status for index ', indexName, ': ', e);
+
             exists = false;
             error = new Error(`Index ${indexName} does not exist`);
             error.code = ErrCodes.ERR_INDEX_DOES_NOT_EXIST;
@@ -369,6 +371,7 @@ class Elasticsearch {
                     return openResult;
                 } catch (e) {
                     // Throw error if index can not be opened
+                    this.logger.error('Elasticsearch#openIndex: Caught exception while trying to open index ', indexName, ': ', e);
 
                     error = new Error(`Can not open index ${indexName}.`);
                     error.code = ErrCodes.ERR_INDEX_OPEN_FAILED;
@@ -391,7 +394,7 @@ class Elasticsearch {
                                 type: this.defaultDocType
                             });
                         } else {
-                            console.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
+                            this.logger.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
                         }
                     }
 
