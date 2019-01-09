@@ -20,12 +20,12 @@ class Elasticsearch {
     }
 
     async init() {
-        if (this.initialized) {
+        if (this.isInitialized) {
             return true;
         }
 
         await config.init();
-        let endpointsFromConfig = await config.getEndPoints('elasticsearch');
+        const endpointsFromConfig = await config.getEndPoints('elasticsearch');
 
         this.esEndpoints = endpointsFromConfig.map(e => `${e.host}:${e.port}`);
 
@@ -41,7 +41,7 @@ class Elasticsearch {
          *
          * Fixed by https://github.com/OpusCapita/elasticsearch/pull/3
          */
-        this.conn = new elasticsearch.Client({
+        this._conn = new elasticsearch.Client({
             apiVersion: '5.5',
             hosts: this.esEndpoints,
             // sniffOnStart: true,
@@ -51,11 +51,39 @@ class Elasticsearch {
         return this.initialized = true;
     }
 
+    get conn() {
+        if (!this._conn) {
+            this.logger.error('Elasticsearch#conn: Trying to access an uninitialized connection. Call init() first!');
+        }
+        return this._conn;
+    }
+
     get client() {
-        return this.conn;
+        if (!this._conn) {
+            this.logger.error('Elasticsearch#conn: Trying to access an uninitialized connection. Call init() first!');
+        }
+        return this._conn;
+    }
+
+    get isInitialized() {
+        return this.initialized && typeof this.conn !== 'undefined';
+    }
+
+    async create(conf) {
+        await this.ensureInitialized();
+        return this.conn.create(conf);
+    }
+
+    async ensureInitialized() {
+        if (!this.isInitialized) {
+            await this.init();
+        }
+        return true;
     }
 
     async printClusterHealth() {
+        await this.ensureInitialized();
+
         let res;
 
         try {
@@ -76,6 +104,7 @@ class Elasticsearch {
      * @return {Promise}
      */
     async count(conf) {
+        await this.ensureInitialized();
         return this.conn.count(conf);
     }
 
@@ -87,6 +116,7 @@ class Elasticsearch {
      * @param {object} data - document data to index
      */
     async index(index, data) {
+        await this.ensureInitialized();
         return this.conn.index({
             index: index,
             type: this.defaultDocType,
@@ -127,6 +157,7 @@ class Elasticsearch {
                 throw new Error('Index type unknown');
         }
 
+        await this.ensureInitialized();
         return this.conn.indices.get({
             expandWildcards: 'all',
             index: indicesPattern
@@ -136,6 +167,7 @@ class Elasticsearch {
     // --- Snapshot stuff ---
 
     async createRepository(name) {
+        await this.ensureInitialized();
         return this.conn.snapshot.createRepository({
             repository: name,
             body: {
@@ -148,6 +180,7 @@ class Elasticsearch {
     }
 
     async createSnapshot(repositoryName, index) {
+        await this.ensureInitialized();
         let snapshotName = `${index}_${Date.now()}`;
 
         return this.conn.snapshot.create({
@@ -161,6 +194,7 @@ class Elasticsearch {
     }
 
     async getLatestSnapshotName(repo) {
+        await this.ensureInitialized();
         let res = await this.conn.snapshot.get({
             repository: repo,
             snapshot: '_all'
@@ -176,6 +210,7 @@ class Elasticsearch {
     }
 
     async restoreSnapshot(repo, index, dryRun = false) {
+        await this.ensureInitialized();
         let snapshotName = await this.getLatestSnapshotName(repo);
 
         console.log(`Restoring snapshot ${snapshotName} in repo ${repo}`);
@@ -198,6 +233,7 @@ class Elasticsearch {
 
 
     async deleteSnapshot(repositoryName, index) {
+        await this.ensureInitialized();
         return this.conn.snapshot.delete({
             repository: repositoryName,
             snapshot: index
@@ -221,6 +257,7 @@ class Elasticsearch {
      * @returns {Promise<object>} Object containing the result of the reindex operation coming from ES.
      */
     async reindex(srcIndexName, dstIndexName, query) {
+        await this.ensureInitialized();
         try {
 
             let dstHasSrcMapping,
@@ -319,6 +356,7 @@ class Elasticsearch {
             indicesPattern = `${indicesPattern}*-${normalizedTenantId}-*`;
         }
 
+        await this.ensureInitialized();
         return this.conn.indices.get({
             expandWildcards: 'all',
             index: indicesPattern
@@ -340,6 +378,8 @@ class Elasticsearch {
      *
      */
     async openIndex(indexName, create = false, opts = null) {
+        await this.ensureInitialized();
+
         let exists = false;
         let status = null;
         let error  = null;
@@ -357,6 +397,8 @@ class Elasticsearch {
                 status = status[0].status;
             }
         } catch (e) {
+            this.logger.error('Elasticsearch#openIndex: Caught exception while trying to fetch status for index ', indexName, ': ', e);
+
             exists = false;
             error = new Error(`Index ${indexName} does not exist`);
             error.code = ErrCodes.ERR_INDEX_DOES_NOT_EXIST;
@@ -377,6 +419,7 @@ class Elasticsearch {
                     return openResult;
                 } catch (e) {
                     // Throw error if index can not be opened
+                    this.logger.error('Elasticsearch#openIndex: Caught exception while trying to open index ', indexName, ': ', e);
 
                     error = new Error(`Can not open index ${indexName}.`);
                     error.code = ErrCodes.ERR_INDEX_OPEN_FAILED;
@@ -399,7 +442,7 @@ class Elasticsearch {
                                 type: this.defaultDocType
                             });
                         } else {
-                            console.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
+                            this.logger.error('Elasticsearch#openIndex: Failed to putMapping on ES. The given mapping is not an object.');
                         }
                     }
 
@@ -424,6 +467,8 @@ class Elasticsearch {
      *
      */
     async copyMapping(srcIndex, dstIndex, shouldThrow = false) {
+        await this.ensureInitialized();
+
         let retVal = false;
 
         try {
@@ -455,7 +500,8 @@ class Elasticsearch {
         return retVal;
     }
 
-    search(query) {
+    async search(query) {
+        await this.ensureInitialized();
         return this.conn.search(query);
     }
 
