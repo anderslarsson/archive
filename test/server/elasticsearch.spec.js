@@ -5,7 +5,7 @@
 const assert = require('assert');
 const uuid   = require('uuid/v4');
 
-const elasticContext = require('../../src/shared/elasticsearch');
+const elasticContext = require('../../src/shared/elasticsearch/elasticsearch');
 
 const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
 
