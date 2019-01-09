@@ -1,13 +1,12 @@
 'use strict';
 
-const {format, subDays} = require('date-fns');
-
 const dbInit        = require('@opuscapita/db-init'); // Database
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch/elasticsearch');
 const helpers       = require('../../shared/helpers');
+const ArchiveConfig = require('../../shared/ArchiveConfig');
 const GenericMapper = require('./GenericMapper');
 
 class GenericArchiver {
@@ -96,9 +95,8 @@ class GenericArchiver {
 
         try {
             const transactionIds = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day);
-            const archiveEntries = await this.mapTransactionsToArchiveEntries(tenantId, transactionIds);
-
-            // TODO insert docs to archive ES
+            const archiveDocs    = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds);
+            const insertResult   = await this.insertArchiveDocuments(tenantId, day, archiveDocs);
 
             success = true;
         } catch (e) {
@@ -269,6 +267,45 @@ class GenericArchiver {
     }
 
     /**
+     * Insert arvchive documents for a given tenantId.
+     *
+     * @function insertArchiveDocuments
+     * @param {string} tenantId
+     * @param {string} day - Day of the archive run
+     * @param {array} documents
+     * @return {Promise}
+     * @fulfil {boolean} Insert successful?
+     * @reject {Error}
+     */
+    async insertArchiveDocuments(tenantId, day, documents) {
+        let done   = [];
+        let failed = [];
+
+        const indexName = ArchiveConfig.getYearlyArchiveName(tenantId, day);
+
+        for (const doc of documents) {
+            try {
+                const result = await this.elasticsearch.create({
+                    index: indexName,
+                    id: doc.transactionId,
+                    type: this.elasticsearch.defaultDocType,
+                    body: doc
+                });
+
+                if (result && result.created) {
+                    done.push(doc.transactionId);
+                } else {
+                    failed.push(doc.transactionId);
+                }
+            } catch (e) {
+                failed.push(doc.transactionId);
+            }
+        }
+
+        return failed.length === 0;
+    }
+
+    /**
      * Iterate a list of transactions Ids, fetch all events for that transaction,
      * filter them by visibility taken from individual events and map them to archive entries.
      *
@@ -280,7 +317,7 @@ class GenericArchiver {
      * @fulfil {array} List of archive entries, ready for insert do elasticsearch
      * @reject {Error} ???
      */
-    async mapTransactionsToArchiveEntries(tenantId, transactionIds) {
+    async mapTransactionsToArchiveDocument(tenantId, transactionIds) {
         let result = [];
 
         for (const transactionId of transactionIds) {
