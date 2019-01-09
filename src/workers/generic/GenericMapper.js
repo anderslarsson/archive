@@ -75,8 +75,34 @@ class GenericMapper {
     }
 
     _buildDocument() {
-        let buildFiles = () => {
-            let outboundAttachments = this.items
+        const buildFiles = () => {
+            /**
+             * Reduce a given list of events and return the last valid document
+             * from the  inbound or outbound struct of 'event.document.files.inbound|outbound'
+             *
+             * @param {string} type
+             * @return {object} Last inbound or outbound document from list.
+             */
+            const inOutBoundReducer = (type) => {
+                return (acc, val) => {
+                    const c = ((val.document || {}).files || {})[type] || null;
+
+                    if (!c) return acc;
+
+                    const isArchivable = c && (c.archivable === true || c.archivable === 'true');
+                    const isBlob = c && c.refType === 'blob';
+                    const isInTenantContainer = c && c.reference && c.reference.indexOf(this.owner) >= 0;
+
+                    const isValid = isArchivable && isBlob && isInTenantContainer;
+
+                    return isValid ? c : acc;
+                };
+            };
+
+            const inbound = this.items.reduce(inOutBoundReducer('inbound'), null);
+            const outbound = this.items .reduce(inOutBoundReducer('outbound'), null);
+
+            const outboundAttachments = this.items
                 .reduce((acc, val) => {
                     let attachments = ((val.document || {}).files || {}).outboundAttachments || [];
                     return acc.concat(attachments);
@@ -85,7 +111,7 @@ class GenericMapper {
                 .filter(e => e.refType === 'blob')
                 .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
 
-            let inboundAttachments = this.items
+            const inboundAttachments = this.items
                 .reduce((acc, val) => {
                     let attachments = ((val.document || {}).files || {}).inboundAttachments || [];
                     return acc.concat(attachments);
@@ -94,14 +120,14 @@ class GenericMapper {
                 .filter(e => e.refType === 'blob')
                 .filter(e => e.reference && e.reference.indexOf(this.owner) >= 0);
 
-            let canonical = this.items.reduce((acc, val) => {
+            const canonical = this.items.reduce((acc, val) => {
                 const c = ((val.document || {}).files || {}).canonical || null;
                 return c ? c : acc;
             }, null);
 
             return {
-                inbound: {}, // Not implemented
-                outbound: {}, // Not implemented
+                inbound,
+                outbound,
                 canonical,
                 inboundAttachments: inboundAttachments || [],
                 outboundAttachments: outboundAttachments || []
@@ -138,8 +164,10 @@ class GenericMapper {
     _buildEnd() {
         let lastTimestamp = (this.items[this.items.length - 1] || {}).timestamp || null;
 
-        /** FIXME should this fallback be allowed? Cause the transaction
-         * ends with the last entry not with a random one. */
+        /**
+         * FIXME should this fallback be allowed? Cause the transaction
+         * ends with the last entry not with a random one.
+        */
         if (lastTimestamp === null) {
             let l = lastTimestamp = this.items.find((i) => i.timestamp);
             if (l && l.timestamp) {
@@ -228,12 +256,15 @@ class GenericMapper {
 
     _buildStart() {
         let firstTimestamp = this.items.find((i) => i.timestamp);
-
         return firstTimestamp && firstTimestamp.timestamp;
     }
 
     _buildSupplierId() {
         return this._simpleReducer('supplierId');
+    }
+
+    _buildTransactionId() {
+        return this.transactionId;
     }
 
     _simpleReducer(fieldName) {

@@ -144,6 +144,15 @@ module.exports = {
                                         refType: {
                                             type: 'keyword'
                                         },
+                                        name: {
+                                            type: 'text',
+                                            fields: {
+                                                keyword: {
+                                                    type: 'keyword',
+                                                    'ignore_above': 256
+                                                }
+                                            }
+                                        }
                                     }
                                 },
                                 outbound: {
@@ -154,6 +163,15 @@ module.exports = {
                                         refType: {
                                             type: 'keyword'
                                         },
+                                        name: {
+                                            type: 'text',
+                                            fields: {
+                                                keyword: {
+                                                    type: 'keyword',
+                                                    'ignore_above': 256
+                                                }
+                                            }
+                                        }
                                     }
                                 },
                                 canonical: {
