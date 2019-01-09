@@ -44,7 +44,7 @@ class Elasticsearch {
          *
          * Fixed by https://github.com/OpusCapita/elasticsearch/pull/3
          */
-        this.conn = new elasticsearch.Client({
+        this._conn = new elasticsearch.Client({
             apiVersion: '5.5',
             hosts: this.esEndpoints,
             // sniffOnStart: true,
@@ -54,12 +54,27 @@ class Elasticsearch {
         return this.initialized = true;
     }
 
+    get conn() {
+        if (!this._conn) {
+            this.logger.error('Elasticsearch#conn: Trying to access an uninitialized connection. Call init() first!');
+        }
+        return this._conn;
+    }
+
     get client() {
-        return this.conn;
+        if (!this._conn) {
+            this.logger.error('Elasticsearch#conn: Trying to access an uninitialized connection. Call init() first!');
+        }
+        return this._conn;
     }
 
     get isInitialized() {
         return this.initialized && typeof this.conn !== 'undefined';
+    }
+
+    async create(conf) {
+        await this.ensureInitialized();
+        return this.conn.create(conf);
     }
 
     async ensureInitialized() {

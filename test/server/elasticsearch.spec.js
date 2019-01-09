@@ -3,6 +3,8 @@
 /* global after:true, beforeEach:true describe:true, it:true, before: true */
 
 const assert = require('assert');
+const uuid   = require('uuid/v4');
+
 const elasticContext = require('../../src/shared/elasticsearch');
 
 const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
@@ -39,13 +41,46 @@ describe('Elasticsearch', () => {
         });
 
         it('Should create a new index when create=true is set', async () => {
-            await elasticContext.openIndex('archive_unit_test', true);
+            await elasticContext.openIndex(indexName, true);
             let exists = await elasticContext.conn.indices.exists({index: indexName});
             assert.strictEqual(exists, true);
 
             return true;
         });
 
+    });
+
+    describe('create', () => {
+        let indexName = 'archive_unit_test_create';
+
+        beforeEach(async () => {
+            try {
+                await elasticContext.init();
+                await elasticContext.openIndex(indexName, true);
+            } catch (e) {
+                return true;
+            }
+        });
+
+        after(async () => {
+            await elasticContext.conn.indices.delete({index: indexName});
+        });
+
+        it('Should create successfully create a document.', async () => {
+            const {created} = await elasticContext.create({
+                index: indexName,
+                type: 'mytype',
+                id: uuid(),
+                body: {
+                    title: 'Test 1',
+                    tags: ['y', 'z'],
+                    published: true,
+                    publishedAt: '2013-01-01',
+                    counter: 1
+                }
+            });
+            assert.strictEqual(created, true);
+        });
     });
 
     describe('copyMapping', () => {
