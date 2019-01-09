@@ -20,7 +20,7 @@
   "dependencies": {
     "@opuscapita/bouncer": "^1.0.54",
     "@opuscapita/config": "^3.0.14",
-    "@opuscapita/db-init": "^2.0.22",
+    "@opuscapita/db-init": "^2.0.23",
     "@opuscapita/event-client": "^2.0.34",
     "@opuscapita/i18n": "^1.2.1",
     "@opuscapita/useridentity-middleware": "^3.0.14",
