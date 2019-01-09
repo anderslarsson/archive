@@ -23,7 +23,7 @@ class Elasticsearch {
     }
 
     async init() {
-        if (this.initialized) {
+        if (this.isInitialized) {
             return true;
         }
 
