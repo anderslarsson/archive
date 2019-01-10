@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Express middleware to check if the the given tenant is in the current user's tenant list.
+ *
+ * @param {string} res.query.tenantId
+ */
 module.exports.listInvoiceIndicesByTenantId = async function listInvoiceIndicesByTenantId(req, res, next) {
     if (!req.query.tenantId) {
         res.status(400).json({
@@ -33,8 +38,14 @@ module.exports.listInvoiceIndicesByTenantId = async function listInvoiceIndicesB
     }
 };
 
+/**
+ * Express middleware to check if the current user is allowed to read
+ * from the given Elasticsearch index.
+ *
+ * @param {string} [res.query.index] - Elasticsearch index name
+ * @param {string} [res.params.index] - Elasticsearch index name
+ */
 module.exports.accessIndex = async function canReadIndex(req, res, next) {
-
     let index = null;
 
     if (req.query && req.query.index) {
