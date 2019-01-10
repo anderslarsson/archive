@@ -18,14 +18,6 @@ class InvoiceArchiveApi extends ArchiveApi {
             .catch(this.getErrorFromResponse);
     }
 
-    getInvoiceArchiveSearch(params) {
-        let scrollId = params.scrollId;
-
-        return this.ajax.get(`/archive/api/searches/${scrollId}`)
-            .then(res => res.body)
-            .catch(this.getErrorFromResponse);
-    }
-
 }
 
 export default InvoiceArchiveApi;

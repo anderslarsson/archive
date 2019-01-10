@@ -51,6 +51,34 @@ class ArchiveApi extends ApiBase {
         }
     }
 
+    /**
+     * Fetch the next result from a previously created scroll.
+     *
+     * @function
+     * @param {string} scrollId
+     * @return {Promise}
+     * @fulfil {object} API response body
+     * @reject {Error}
+     */
+    getNextScrollPage(scrollId) {
+        return this.ajax.get(`/archive/api/searches/${scrollId}`)
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
+    }
+
+    getTenantOptions() {
+        return this.ajax.get('/archive/api/tenantconfig/all')
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
+    }
+
+    getYearOptions(tenantId) {
+        return this.ajax.get(`/archive/api/indices?type=all&tenantId=${tenantId}`)
+            .then(res => res.body)
+            .catch(this.getErrorFromResponse);
+    }
+
+
 }
 
 export default ArchiveApi;

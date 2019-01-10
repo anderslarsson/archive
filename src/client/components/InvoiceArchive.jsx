@@ -264,7 +264,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                 this.setState({search: searchUpdate});
             } else {
                 /* Forward navigation. Fetch next result from ES */
-                this.api.getInvoiceArchiveSearch(this.state.search)
+                this.api.getNextScrollPage(this.state.search.scrollId)
                     .then((res) => {
                         let hits = res.data.hits.hits;
 
