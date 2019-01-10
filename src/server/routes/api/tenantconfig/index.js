@@ -41,14 +41,20 @@ module.exports.get = async function (req, res, app, db) {
         } else {
             let tenants = await req.opuscapita.getUserTenants();
 
-            tenantConfigs = await tenantConfigModel.findAll({
-                where: {
-                    tenantId: {
-                        $in: tenants
-                    },
-                    type: type
+            if (tenants && Array.isArray(tenants)) {
+                if (tenants.some(e => e === '*')) {
+                    tenantConfigs = await tenantConfigModel.findAll();
+                } else {
+                    tenantConfigs = await tenantConfigModel.findAll({
+                        where: {
+                            tenantId: {
+                                $in: tenants
+                            },
+                            type: type
+                        }
+                    });
                 }
-            });
+            }
         }
 
         let tenantIds = tenantConfigs.map((config) => config.tenantId);
