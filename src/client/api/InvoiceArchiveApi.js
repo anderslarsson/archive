@@ -1,6 +1,6 @@
-import ApiBase from './ApiBase';
+import ArchiveApi from './ArchiveApi';
 
-class InvoiceArchiveApi extends ApiBase {
+class InvoiceArchiveApi extends ArchiveApi {
 
     constructor() {
         super();
@@ -18,13 +18,6 @@ class InvoiceArchiveApi extends ApiBase {
             .catch(this.getErrorFromResponse);
     }
 
-    createSearch(queryParams) {
-        return this.ajax.post(`/archive/api/searches?index=${queryParams.index}`)
-            .send(queryParams)
-            .then(res => res.body)
-            .catch(this.getErrorFromResponse);
-    }
-
     getInvoiceArchiveSearch(params) {
         let scrollId = params.scrollId;
 
@@ -33,17 +26,6 @@ class InvoiceArchiveApi extends ApiBase {
             .catch(this.getErrorFromResponse);
     }
 
-    deleteInvoiceArchiveSearch(params) {
-        let scrollId = params.scrollId;
-
-        if (scrollId) {
-            return this.ajax.delete(`/archive/api/searches/${scrollId}`)
-                .then(res => res.body)
-                .catch(this.getErrorFromResponse);
-        } else {
-            return Promise.resolve(false); // As this is a fire and forget op it is ok to not throw
-        }
-    }
 }
 
 export default InvoiceArchiveApi;
