@@ -5,13 +5,10 @@
  */
 
 const Logger                 = require('ocbesbn-logger');
-const lastDayOfYear          = require('date-fns/last_day_of_year');
 const elasticContext         = require('../../../../shared/elasticsearch/elasticsearch');
 const invoiceArchiveContext  = require('../../../invoice_archive');
-const MsgTypes               = require('../../../../shared/msg_types');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
 const Mapper                 = require('../../../../workers/invoice/Mapper');
-
 
 const logger = new Logger({
     context: {
@@ -22,6 +19,8 @@ const logger = new Logger({
 /**
  * This API is called by external systems that want to trigger the archiving of a
  * a specific transaction.
+ *
+ * TODO is this still needed or @deprecated?
  *
  * @function createArchiverJob
  * @param {express.Request} req
@@ -43,7 +42,6 @@ module.exports.createArchiverJob = async function (req, res) {
     }
 
     try {
-
         /**
          * TODO Initial logging deactivated as it conflicts with logging in #createDocument
          * endpoint. Figure out, how to do this without conflict.
@@ -68,43 +66,6 @@ module.exports.createArchiverJob = async function (req, res) {
             success: false,
             message: e.message || 'Unknown error'
         });
-    }
-};
-
-/**
- * @deprecated -> delete
- *
- * @function createCuratorJob
- * @param {express.Request} req
- * @param {object} req.body - POST data
- * @param {String} req.body.period - Identifies the period that should be curated
- * @param {express.Response} res
- * @param {express.App} app
- * @param {Sequelize} db
- */
-module.exports.createCuratorJob = async function (req, res, app, db) {
-    let period = req && req.body && req.body.period;
-
-    try {
-        switch (period) {
-            case MsgTypes.CREATE_GLOBAL_DAILY:
-                res.status(200).send(await invoiceArchiveContext.rotateGlobalDaily());
-                break;
-
-            case MsgTypes.UPDATE_TENANT_MONTHLY:
-                res.send(await invoiceArchiveContext.rotateTenantsDaily(db));
-                break;
-
-            case MsgTypes.UPDATE_TENANT_YEARLY:
-                res.send(await invoiceArchiveContext.rotateTenantsMonthly(db));
-                break;
-
-            default:
-                res.status(400).send(`Invalid value for paramater period: ${period}`);
-        }
-    } catch (e) {
-        req.opuscapita.logger.error('Failure in invoiceArchive API handler.', e);
-        res.status(500).send(e);
     }
 };
 
@@ -220,182 +181,10 @@ module.exports.createDocument = async function (req, res, app, db) {
 };
 
 /**
- * Search in a given index
- *
- * @async
- * @function search
- * @param {express.Request} req
- * @param {object} req.body - POST data
- * @param {String} req.body.transactionId - ID of the transaction to archive
- * @param {express.Response} res
- * @param {express.App} app
- * @param {Sequelize} db
- */
-module.exports.search = async function search(req, res) {
-    const index = req.query.index;
-    const {query, pageSize, sort} = req.body;
-
-    let sortOptions = {};
-    let sortBy    = InvoiceArchiveConfig.getSortMappingForField(sort.field) || 'start';
-
-    let sortOrder = 'asc';
-    if (sort.order && ['asc', 'desc'].includes(sort.order)) {
-        sortOrder = sort.order;
-    }
-
-    sortOptions[sortBy] = {
-        'order': sortOrder
-    };
-
-    let es = elasticContext.client;
-
-    /* TODO add query.{year, to, from} validation */
-
-    let queryOptions = {
-        query: {
-            bool: {
-                must: {
-                    match: {
-                        '_all': {
-                            query: query.fullText || '',
-                            operator: 'and',
-                            'zero_terms_query': 'all'
-                        }
-
-                    }
-                }
-            }
-        },
-        sort: [sortOptions]
-    };
-
-    if (query.from || query.to) {
-        queryOptions.query.bool.filter = {
-            bool: {
-                must: []
-            }
-        };
-
-        const firstOfJanuar = new Date(query.year);
-
-        if (query.from) {
-            queryOptions.query.bool.filter.bool.must.push({
-                range: {
-                    start: {
-                        gte: query.from,
-                        lte: query.to || lastDayOfYear(new Date(query.year))
-                    }
-                }
-            });
-        }
-        if (query.to) {
-            queryOptions.query.bool.filter.bool.must.push({
-                range: {
-                    end: {
-                        gte: query.from || firstOfJanuar.toISOString(),
-                        lte: query.to
-                    }
-                }
-            });
-        }
-
-    }
-
-    try {
-        let result = await es.search({
-            index,
-            body: queryOptions,
-            size: pageSize,
-            scroll: '30m'
-        });
-
-        res.status(200).json({
-            success: true,
-            data: {
-                hits: result.hits,
-                scrollId: result._scroll_id
-            }
-        });
-
-    } catch (e) {
-        req.opuscapita.logger.error('InvoiceArchiveHandler#search: Failed to query ES.', e);
-        res.status(400).json({success: false});
-    }
-};
-
-/**
- * Scroll for a given scrollId
- *
- * @async
- * @function search
- * @param {express.Request} req
- * @param {object} req.body - POST data
- * @param {String} req.body.scrollId - ID of the scroll API
- * @param {express.Response} res
- * @param {express.App} app
- * @param {Sequelize} db
- */
-module.exports.scroll = async function scroll(req, res) {
-    let scrollId = req.params.id;
-
-    let es = elasticContext.client;
-
-    try {
-        let result = await es.scroll({
-            scrollId,
-            scroll: '30m'
-        });
-
-        res.status(200).json({
-            success: true,
-            data: {
-                hits: result.hits,
-                scrollId: result._scroll_id
-            }
-        });
-
-    } catch (e) {
-        logger && logger.error('InvoiceArchiveHandler#scroll: Failed to scroll with exception.', e);
-        res.status(400).json({success: false});
-    }
-};
-
-/**
- * Delete a scroll for by the given scrollId
- *
- * @async
- * @function search
- * @param {express.Request} req
- * @param {object} req.body - POST data
- * @param {String} req.body.scrollId - ID of the scroll API
- * @param {express.Response} res
- * @param {express.App} app
- * @param {Sequelize} db
- */
-module.exports.clearScroll = async function clearScroll(req, res) {
-    const scrollId = req.params.id;
-    const es = elasticContext.client;
-
-    try {
-        await es.clearScroll({
-            scrollId
-        });
-
-        res.status(200).json({
-            success: true,
-            message: 'Cleared scroll successfully.'
-        });
-
-    } catch (e) {
-        logger && logger.error('InvoiceArchiveHandler#clearScroll: Failed to scroll with exception.', e);
-        res.status(400).json({success: false});
-    }
-};
-
-/**
  * Log the start of invoice archive processing to database.
  *
  * TODO refactor function name, not very intuitive
+ * TODO move to different module. It is not invoice archive specific
  *
  * @async
  * @function createInitialArchiveTransactionLogEntry
