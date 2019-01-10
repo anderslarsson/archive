@@ -35,8 +35,6 @@ class ArchiveApi extends ApiBase {
     /**
      * Delete a previous scroll context.
      *
-     * TODO rename to deleteScrollContext
-     *
      * @function
      * @param {string} scrollId - Elasticsearch scrollId
      * @return {Promise}
