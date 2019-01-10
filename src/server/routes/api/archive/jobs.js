@@ -1,11 +1,8 @@
 'use strict';
 
 const Logger         = require('ocbesbn-logger'); // Logger
-
 const ArchiveConfig  = require('../../../../shared/ArchiveConfig');
-
-const availableJobTypes = ['daily'];
-const logger            = new Logger();
+const logger         = new Logger();
 
 /**
  * Job creation endpoint.
@@ -34,13 +31,14 @@ async function triggerDailyRotation(db, eventClient) {
     try {
         // Fetch all configured tenants
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        const configs           = await tenantConfigModel.findAll();
+        const configs           = await tenantConfigModel.findAll({where: {type: 'generic'}});
 
         // Enqueue a job for every tenant who has archive activated
         for (let config of configs) {
             try {
-                let result = await eventClient.emit(ArchiveConfig.logrotationJobCreatedQueueName, {
+                let result = await eventClient.emit(ArchiveConfig.dailyArchiveJobPendingTopic, {
                     type: 'daily',
+                    date: Date.now(),
                     tenantConfig: config
                 });
 

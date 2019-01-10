@@ -1,9 +1,15 @@
+/**
+ * Route definitions
+ */
+
 'use strict';
 
 const invoiceArchiveHandler     = require('./api/invoice_archive/');
 const invoiceCuratorHandler     = require('./api/curator/invoice');
 const tenantConfigHandler       = require('./api/tenantconfig/');
 const archiveJobsHandler        = require('./api/archive/jobs');
+const searchHandler             = require('./api/search/search');
+
 const {
     indicesInvoiceHandler,
     indicesCmdHandler,
@@ -42,9 +48,9 @@ module.exports.init = async function (app, db) {
     app.get('/api/indices/:index/documents/:id', can.accessIndex, (req, res) => documentsHandler.get(req, res));
 
     /** *** Searches *** */
-    app.post('/api/searches', can.accessIndex, (req, res) => invoiceArchiveHandler.search(req, res, app, db));
-    app.get('/api/searches/:id', (req, res) => invoiceArchiveHandler.scroll(req, res, app, db));
-    app.delete('/api/searches/:id', (req, res) => invoiceArchiveHandler.clearScroll(req, res, app, db));
+    app.post('/api/searches', can.accessIndex, (req, res) => searchHandler.search(req, res, app, db));
+    app.get('/api/searches/:id', (req, res) => searchHandler.scroll(req, res, app, db));
+    app.delete('/api/searches/:id', (req, res) => searchHandler.clearScroll(req, res, app, db));
 
     /** *** Ping *** */
     app.get(['/api/ping', '/public/api/ping'], (req, res) => res.status(200).json({success: true, data: 'pong'}));

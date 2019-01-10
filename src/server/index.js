@@ -5,10 +5,9 @@ const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const invoiceArchiveContext = require('./invoice_archive');
-const elasticsearch         = require('../shared/elasticsearch');
-
-// const {genericArchiveWorker} = require('../workers/');
+const invoiceArchiveContext  = require('./invoice_archive');
+const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
+const {genericArchiveWorker} = require('../workers/');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -17,7 +16,6 @@ const logger = new Logger({
         serviceName: 'archive'
     }
 });
-
 
 if (isProduction) {
     logger.redirectConsoleOut(); // Force anyone using console.* outputs into Logger format.
@@ -77,9 +75,9 @@ async function init() {
         logger.error('Transaction log check worker died. :(');
     });
 
-    // genericArchiveWorker.on('exit', () => {
-    //     logger.error('GenericArchive worker died. :(');
-    // });
+    genericArchiveWorker.on('exit', () => {
+        logger.error('GenericArchive worker died. :(');
+    });
 
 }
 

@@ -1,6 +1,6 @@
 'use strict';
 
-const elasticContext = require('../../../../shared/elasticsearch');
+const elasticContext = require('../../../../shared/elasticsearch/elasticsearch');
 
 /**
  * Get a single document from the given index by its

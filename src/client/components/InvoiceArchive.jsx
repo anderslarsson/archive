@@ -140,7 +140,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
     }
 
     resetSearchForm(e) {
-        this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+        this.api.deleteScrollContext(this.state.search.scrollId); // Fire and forget
 
         e.preventDefault();
 
@@ -176,7 +176,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     handleSearch(e) {
         if (this.state.search.scrollId) {
-            this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+            this.api.deleteScrollContext(this.state.search.scrollId); // Fire and forget
         }
 
         e && e.preventDefault();

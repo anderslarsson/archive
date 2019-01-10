@@ -1,5 +1,7 @@
 /**
- * Cache references to archive service child processes in this module.
+ * This module encapsulates the actual reference to forked
+ * worker process. These references can be used to communicate
+ * via IPC to the processes.
  */
 
 const {fork} = require('child_process');
@@ -14,7 +16,7 @@ const buildArgs = (args = []) => {
 };
 
 // Fork workers
-console.info('Forking generic archiver worker proccess...');
+console.info('Forking generic archive worker proccess...');
 const genericArchiveWorker = fork(process.cwd() + '/src/workers/generic/run.js', [], {execArgv: buildArgs()});
 
 // Export references to processes

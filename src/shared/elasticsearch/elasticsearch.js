@@ -5,12 +5,9 @@ const elasticsearch = require('elasticsearch');
 const Logger = require('ocbesbn-logger');
 const config = require('@opuscapita/config');
 
-const {
-    ErrCodes,
-    InvoiceArchiveConfig
-} = require('./invoice_archive_config');
+const {ErrCodes, InvoiceArchiveConfig} = require('../invoice_archive_config');
 
-const {normalizeTenantId} = require('./helpers');
+const {normalizeTenantId} = require('../helpers');
 
 class Elasticsearch {
 
@@ -98,6 +95,14 @@ class Elasticsearch {
         return res;
     }
 
+    /**
+     * Get the document count by the given config.
+     *
+     * @async
+     * @function count
+     * @param {object} [conf] - Config obj denoting the count query
+     * @return {Promise}
+     */
     async count(conf) {
         await this.ensureInitialized();
         return this.conn.count(conf);
@@ -140,6 +145,9 @@ class Elasticsearch {
 
         let indicesPattern = '';
 
+        /**
+         * @todo Add generic archive type.
+         */
         switch (type) {
             case 'invoice':
                 indicesPattern = `${InvoiceArchiveConfig.indexPrefix}tenant_yearly-${normalizedTenantId}-*`;
