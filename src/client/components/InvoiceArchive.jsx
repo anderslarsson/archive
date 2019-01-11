@@ -4,7 +4,7 @@ import ReactTable from 'react-table';
 import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
 
-import {InvoiceArchiveApi} from '../api';
+import {ArchiveApi} from '../api';
 import InvoiceArchiveDocument from './InvoiceArchiveDocument.jsx';
 import translations from './i18n';
 
@@ -47,7 +47,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
             },
         };
 
-        this.api = new InvoiceArchiveApi();
+        this.api = new ArchiveApi();
         context.i18n.register('Archive', translations);
     }
 

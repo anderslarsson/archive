@@ -105,7 +105,11 @@ function hasTenantAccess(tenantId, tenants = []) {
 
 function isValidIndexIdentifier(index) {
     if (typeof index !== 'string') return false;
-    if (index.indexOf('archive_invoice_tenant_yearly-') !== 0) return false;
+
+    const validPrefix = ['archive_invoice_tenant_yearly-', 'archive_tenant_yearly-']
+        .some((p) => index.indexOf(p) === 0);
+    if (!validPrefix) return false;
+
     if (index.split('-').length !== 3) return false;
 
     return true;

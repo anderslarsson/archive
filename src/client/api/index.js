@@ -1,4 +1,3 @@
-import InvoiceArchiveApi from './InvoiceArchiveApi';
+import ArchiveApi from './ArchiveApi';
 
-export {InvoiceArchiveApi};
-export default {InvoiceArchiveApi};
+export {ArchiveApi};

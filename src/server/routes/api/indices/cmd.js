@@ -9,11 +9,11 @@ const elasticContext = require('../../../../shared/elasticsearch/elasticsearch')
  * @function openIndex
  */
 module.exports.openIndex = async function openIndex(req, res) {
-    let index = req.params && req.params.index;
+    const index = req.params && req.params.index;
 
     if (index) {
         try {
-            let result = await elasticContext.openIndex(index, false);
+            const result = await elasticContext.openIndex(index, false);
 
             if (result) {
                 res.status(200).json({success: true});

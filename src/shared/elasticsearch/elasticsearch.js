@@ -6,6 +6,7 @@ const Logger = require('ocbesbn-logger');
 const config = require('@opuscapita/config');
 
 const {ErrCodes, InvoiceArchiveConfig} = require('../invoice_archive_config');
+const ArchiveConfig = require('../ArchiveConfig');
 
 const {normalizeTenantId} = require('../helpers');
 
@@ -152,7 +153,9 @@ class Elasticsearch {
             case 'invoice':
                 indicesPattern = `${InvoiceArchiveConfig.indexPrefix}tenant_yearly-${normalizedTenantId}-*`;
                 break;
-
+            case 'all':
+                indicesPattern = `${ArchiveConfig.indexPrefix}*tenant_yearly-${normalizedTenantId}-*`;
+                break;
             default:
                 throw new Error('Index type unknown');
         }

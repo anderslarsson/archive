@@ -1,7 +1,7 @@
 import React from 'react';
 import {Components} from '@opuscapita/service-base-ui';
 
-import {InvoiceArchiveApi} from '../api';
+import {ArchiveApi} from '../api';
 import translations from './i18n';
 
 export default class InvoiceArchiveDocument extends Components.ContextComponent {
@@ -25,7 +25,7 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
             this.state.doc.id = props.data.id;
         }
 
-        this.api = new InvoiceArchiveApi();
+        this.api = new ArchiveApi();
         context.i18n.register('Archive', translations);
     }
 
