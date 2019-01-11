@@ -4,7 +4,7 @@ import {Components} from '@opuscapita/service-base-ui';
 import {ArchiveApi} from '../api';
 import translations from './i18n';
 
-export default class InvoiceArchiveDocument extends Components.ContextComponent {
+export default class ArchiveDocument extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);

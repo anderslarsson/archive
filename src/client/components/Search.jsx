@@ -5,13 +5,13 @@ import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
 
 import {ArchiveApi} from '../api';
-import InvoiceArchiveDocument from './InvoiceArchiveDocument.jsx';
+import ArchiveDocument from './ArchiveDocument.jsx';
 import translations from './i18n';
 
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
 
-export default class InvoiceArchive extends Components.ContextComponent {
+export default class Search extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);
@@ -295,7 +295,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             buttons={{'ok': 'OK'}}
                             onButtonClick={() => this.setState({showModal: false})}
                         >
-                            <InvoiceArchiveDocument
+                            <ArchiveDocument
                                 showedInModal={true}
                                 data={this.state.selectedDoc}
                             />
