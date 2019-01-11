@@ -430,7 +430,7 @@ export default class Search extends Components.ContextComponent {
 
                     onFetchData={(state) => this.scrollSearch(state) }
 
-                    defaultSorted={[{id: 'transactionId', desc: false}]}
+                    defaultSorted={[{id: 'start', desc: false}]}
 
                     loadingText={i18n.getMessage('Archive.table.loading')}
                     noDataText={i18n.getMessage('Archive.table.empty')}
