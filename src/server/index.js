@@ -46,7 +46,9 @@ async function init() {
             staticFilePath: process.cwd() + '/src/server/static/',
             indexFileRoutes: [
                 '/',
-                '/invoices*'
+                '/invoices*',
+                '/search*',
+                '/viewer*'
             ],
 
             webpack: {

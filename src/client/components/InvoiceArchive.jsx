@@ -469,7 +469,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             Cell: (row) => {
                                 let indexName = btoa(this.state.selectedValues.index);
                                 return (
-                                    <a target="blank" href={`/archive/invoices/${indexName}/documents/${row.original._id}`}>
+                                    <a target="blank" href={`/archive/viewer/${indexName}/documents/${row.original._id}`}>
                                         {row.value}
                                     </a>
                                 );
