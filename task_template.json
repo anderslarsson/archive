@@ -17,7 +17,8 @@
     "oc-consul-injection":{
       "redis/password": "${SECRET_:env_REDIS}",
       "mq/user": "${SECRET_:env_RABBITMQUSER}",
-      "mq/password": "${SECRET_:env_RABBITMQPASS}"
+      "mq/password": "${SECRET_:env_RABBITMQPASS}",
+      "config/archiver/generic/lookback": "${GENERIC_ARCHIVER_LOOKBACK_:env}"
     }
   }
 }
