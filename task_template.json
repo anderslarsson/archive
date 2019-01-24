@@ -15,11 +15,11 @@
            ],
     "oc-db-init":{"populate-test-data":"true"},
     "oc-consul-injection":{
-      "env": "${:env}",
+      "config/node-env": ":env",
       "redis/password": "${SECRET_:env_REDIS}",
       "mq/user": "${SECRET_:env_RABBITMQUSER}",
       "mq/password": "${SECRET_:env_RABBITMQPASS}",
-      "archiver/generic/lookback-dev": "1"
+      "config/archiver/generic/lookback-dev": "1"
     }
   }
 }
