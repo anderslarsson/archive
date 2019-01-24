@@ -150,7 +150,7 @@ class GenericArchiver {
             /** Check logAccess next. */
             const logAccess         = event.logAccess.trim().toLowerCase();
             const hasSenderAccess   = isSender && ['sender', 'both'].includes(logAccess);
-            const hasReceiverAccess = isReceiver && ['sender', 'both'].includes(logAccess);
+            const hasReceiverAccess = isReceiver && ['receiver', 'both'].includes(logAccess);
 
             if (hasReceiverAccess || hasSenderAccess) {
                 result.push(event);
