@@ -15,7 +15,8 @@ function putConsulData
     curl -X PUT -d 'svc_archive' http://consul:8500/v1/kv/archive/service-client/username &&
     curl -X PUT -d 'test' http://consul:8500/v1/kv/archive/service-client/password &&
     curl -X PUT -d 'oidcCLIENT' http://consul:8500/v1/kv/archive/service-client/client-key &&
-    curl -X PUT -d ${TOKEN_AUTH_CLIENT_SECRET_DEV} http://consul:8500/v1/kv/archive/service-client/client-secret
+    curl -X PUT -d ${TOKEN_AUTH_CLIENT_SECRET_DEV} http://consul:8500/v1/kv/archive/service-client/client-secret &&
+    curl -X PUT -d '1' http://consul:8500/v1/kv/archive/config/archiver/generic/lookback
 }
 
 putConsulData

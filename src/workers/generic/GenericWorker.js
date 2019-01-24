@@ -21,6 +21,7 @@ class GenericWorker {
     async init() {
         await this.archiver.init();
         await this.initEventSubscriptions();
+
         return true;
     }
 

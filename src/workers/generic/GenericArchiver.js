@@ -1,11 +1,13 @@
 'use strict';
+const {format, subDays} = require('date-fns');
 
 const dbInit        = require('@opuscapita/db-init'); // Database
+const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
 
 const elasticsearch = require('../../shared/elasticsearch/elasticsearch');
-const helpers       = require('../../shared/helpers');
+// const helpers       = require('../../shared/helpers');
 const ArchiveConfig = require('../../shared/ArchiveConfig');
 const GenericMapper = require('./GenericMapper');
 
@@ -53,8 +55,9 @@ class GenericArchiver {
      */
     async init() {
         try {
-            this.db = await dbInit.init();
+            await config.init({});
             await this.elasticsearch.init();
+            this.db = await dbInit.init();
         } catch (e) {
             this.logger.error(this.klassName, '#init: Failed to initialize with exception.' , e);
         }
@@ -86,8 +89,8 @@ class GenericArchiver {
      * @returns {boolean} Success indicator
      */
     async doDailyArchiving(tenantId, date = Date.now()) {
-        // const day = format(subDays(date, this._tntOffset), 'YYYY.MM.DD');
-        const day = '2018.12.05'; // FIXME
+        const lookback = await config.getProperty('config/archiver/generic/lookback');
+        const day = format(subDays(date, lookback), 'YYYY.MM.DD');
 
         let success = false;
 
@@ -98,9 +101,11 @@ class GenericArchiver {
             const archiveDocs    = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds);
             const insertResult   = await this.insertArchiveDocuments(tenantId, day, archiveDocs);
 
+            this.logger.info(`${this.klassName}#doDailyArchiving: Finished with insertResult: `, insertResult);
+
             success = true;
         } catch (e) {
-            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenent ', tenantId, ' with exception.', e);
+            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenantId ', tenantId, ' with exception.', e);
             success = false;
         }
 
