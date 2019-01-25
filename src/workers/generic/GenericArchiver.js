@@ -261,7 +261,11 @@ class GenericArchiver {
                     uniq: {
                         terms: {
                             field: 'event.transactionId',
-                            size: count // Set upper limit to number of total documents.
+                            /**
+                             * Set upper limit to number of total documents.
+                             * FIXME Reconsider how to iterate transactions for customers with +1000 transactions/day
+                             */
+                            size: count
                         }
                     }
                 }
