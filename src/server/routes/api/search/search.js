@@ -55,20 +55,42 @@ module.exports.search = async function search(req, res) {
     let queryOptions = {
         query: {
             bool: {
-                must: {
-                    match: {
-                        '_all': {
-                            query: query.fullText || '',
-                            operator: 'and',
-                            'zero_terms_query': 'all'
-                        }
-
-                    }
-                }
+                must: []
             }
         },
         sort: [sortOptions]
     };
+
+    if (query.email) {
+        queryOptions.query.bool.must.push({
+            bool: {
+                should: [
+                    {wildcard: {'receiver.protocolAttributes.from.keyword': query.email}},
+                    {wildcard: {'receiver.protocolAttributes.to.keyword': query.email}},
+                    {wildcard: {'sender.protocolAttributes.from.keyword': query.email}},
+                    {wildcard: {'sender.protocolAttributes.to.keyword': query.email}}
+                ]
+            }
+        });
+    }
+
+    if (query.fullText) {
+        queryOptions.query.bool.must.push({
+            'simple_query_string': {
+                query: query.fullText || '',
+                'default_operator': 'and',
+                fields: [
+                    '_all', // does not match subfields, thus adding keyword fields below, see analyze_wildcard for alternative approach
+                    'receiver.protocolAttributes.to.keyword',
+                    'receiver.protocolAttributes.from.keyword',
+                    'sender.protocolAttributes.to.keyword',
+                    'sender.protocolAttributes.from.keyword'
+                ],
+                'analyze_wildcard': true
+                // 'all_fields': true // More costly alternative to explicitly providing the keyword fields
+            }
+        });
+    }
 
     if (query.from || query.to) {
         queryOptions.query.bool.filter = {

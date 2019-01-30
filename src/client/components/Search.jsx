@@ -161,6 +161,7 @@ export default class Search extends Components.ContextComponent {
                 scrollId: null
             },
             selectedValues: {
+                email: null,
                 tenant: null,
                 index: null,
                 from: null,
@@ -196,6 +197,7 @@ export default class Search extends Components.ContextComponent {
                 order: this.state.search.sortOrder
             },
             query: {
+                email: selectedValues.email,
                 year: selectedValues.index.split('-').pop(),
                 from: selectedValues.from && format(selectedValues.from, 'YYYY-MM-DD'),
                 to: selectedValues.to && format(selectedValues.to, 'YYYY-MM-DD'),
@@ -390,6 +392,32 @@ export default class Search extends Components.ContextComponent {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="form-group">
+                                            <div className="col-md-2">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.email')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-2 col-md-3">
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={this.state.selectedValues.email}
+                                                    onChange={(event) => {
+                                                        let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
+                                                            email: event.target.value
+                                                        });
+                                                        this.setState({selectedValues: selectedValuesUpdate});
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     <div className="col-md-12">
                                         <div className="form-group">

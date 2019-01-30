@@ -4,6 +4,7 @@
 
   "Archive.forms.labels.tenant": "Firma/Käufer",
   "Archive.forms.labels.indices": "Jahr",
+  "Archive.forms.labels.email": "E-Mail",
   "Archive.forms.labels.from": "Von",
   "Archive.forms.labels.to": "Bis",
   "Archive.forms.labels.textSearch": "Suche im Text",

@@ -161,6 +161,11 @@ class Elasticsearch {
         }
 
         await this.ensureInitialized();
+
+        /**
+         * !Attention: indices#get will also resolve 
+         *   index aliases. Be careful.
+         */
         return this.conn.indices.get({
             expandWildcards: 'all',
             index: indicesPattern
