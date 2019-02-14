@@ -177,6 +177,7 @@ class GenericArchiver {
     async getEventsByTransactionId(transactionId) {
         const query = {
             body: {
+                index: `${this._tntLogPrefix}*`,
                 query: {
                     bool: {
                         filter: [
@@ -219,7 +220,10 @@ class GenericArchiver {
             bool: {
                 filter: {
                     bool: {
-                        should: []
+                        should: [],
+                        must: [
+                            {match: {'event.processingFinished': true}}
+                        ]
                     }
                 }
             }
