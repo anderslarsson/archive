@@ -175,15 +175,21 @@ class GenericArchiver {
      * @reject {Eroro}
      */
     async getEventsByTransactionId(transactionId) {
+        const index = `${this._tntLogPrefix}*`;
         const query = {
+            index,
             body: {
-                index: `${this._tntLogPrefix}*`,
                 query: {
                     bool: {
-                        filter: [
-                            {term: {'event.transactionId': transactionId}},
-                            {terms: {'event.logAccess': ['Sender', 'Receiver', 'Both']}}
-                        ]
+                        filter: {
+                            bool: {
+                                must: [
+                                    {match: {'event.archivable': true}},
+                                    {term: {'event.transactionId': transactionId}},
+                                    {terms: {'event.logAccess': ['Sender', 'Receiver', 'Both']}}
+                                ]
+                            }
+                        }
                     }
                 },
                 sort: {
@@ -249,10 +255,7 @@ class GenericArchiver {
             }
         });
 
-        /** Fetch unique transactions IDs by tenantId and date. */
-        result = await this.elasticsearch.search({
-            index,
-            body: {
+        const aggregationQuery = {
                 size: 0,
                 _source: ['event.transactionId'],
                 query: q,
@@ -273,7 +276,12 @@ class GenericArchiver {
                         }
                     }
                 }
-            }
+        };
+
+        /** Fetch unique transactions IDs by tenantId and date. */
+        result = await this.elasticsearch.search({
+            index,
+            body: aggregationQuery
         });
 
         return result.aggregations.uniq.buckets.map(({key}) => key);
@@ -338,7 +346,9 @@ class GenericArchiver {
             const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
             const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
 
-            result.push(archiveEntry);
+            if (archiveEntry) {
+                result.push(archiveEntry);
+            }
         }
 
         return result;

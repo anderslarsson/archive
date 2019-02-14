@@ -41,11 +41,11 @@ class GenericMapper {
      * Triggers the actual mapping of the data given to the constructor.
      *
      * @function do
-     * @returns {object} The resulting ES archive document
+     * @returns {object|null} The resulting ES archive document or null if no  events where given.
      */
     do() {
         if (this.items.length <= 0) {
-            return {};
+            return null;
         }
 
         /* Get the fields from the elasticsearch mapping definition */
