@@ -31,8 +31,6 @@ if (isProduction) {
 async function init() {
     const db = await dbInit.init();
 
-    logger.log('XXX--', db.config);
-
     await server.init({
         server: {
             port: process.env.port || 3031,
