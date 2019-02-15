@@ -158,10 +158,13 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                             <table className="table">
                                                 {
                                                     doc.history.map((h, i) =>
-                                                        <tr key={i}>
-                                                            <td>{h.name}</td>
-                                                            <td>{h.description}</td>
-                                                        </tr>
+                                                        <tbody key={i}>
+                                                            <tr>
+                                                                <td>{h.date}</td>
+                                                                <td>{h.shortEventText}</td>
+                                                                <td>{h.status}</td>
+                                                            </tr>
+                                                        </tbody>
                                                     )
                                                 }
                                             </table>
