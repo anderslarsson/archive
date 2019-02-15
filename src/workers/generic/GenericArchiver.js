@@ -169,29 +169,30 @@ class GenericArchiver {
      * Fetching all events for a distinct transactionId with log access set
      * to sender, receiver or both.
      *
-     * @param transactionId {string}
+     * @param {string} transactionId
+     * @param {string} tenantId
      * @returns {Promise}
      * @fulfil All events belonging to a transaction
      * @reject {Eroro}
      */
-    async getEventsByTransactionId(transactionId) {
+    async getEventsByTransactionId(transactionId, tenantId) {
         const index = `${this._tntLogPrefix}*`;
         const query = {
             index,
             body: {
-                query: {
+                query: this._addTenantIdClause({
                     bool: {
                         filter: {
                             bool: {
+                                should: [],
                                 must: [
-                                    {match: {'event.archivable': true}},
                                     {term: {'event.transactionId': transactionId}},
                                     {terms: {'event.logAccess': ['Sender', 'Receiver', 'Both']}}
                                 ]
                             }
                         }
                     }
-                },
+                }, tenantId),
                 sort: {
                     'event.timestamp': {
                         order: 'asc'
@@ -222,7 +223,7 @@ class GenericArchiver {
         let result = [];
         const index = `${this._tntLogPrefix}${day}`;
 
-        const q = {
+        let q = {
             bool: {
                 filter: {
                     bool: {
@@ -235,17 +236,7 @@ class GenericArchiver {
             }
         };
 
-        /** Set tenantId to all fields possibly containing it. */
-        q.bool.filter.bool.should.push({term: {'event.sender.originator': tenantId}});
-        q.bool.filter.bool.should.push({term: {'event.receiver.target': tenantId}});
-
-        if (tenantId.startsWith('c_')) {
-            const customerId = tenantId.replace(/^c_/, '');
-            q.bool.filter.bool.should.push({term: {'event.customerId': customerId}});
-        } else if (tenantId.startsWith('s_')) {
-            const supplierId = tenantId.replace(/^s_/, '');
-            q.bool.filter.bool.should.push({term: {'event.supplierId': supplierId}});
-        }
+        q = this._addTenantIdClause(q, tenantId);
 
         /** Fetch overall document count matching the query. */
         const {count} = await this.elasticsearch.count({
@@ -256,26 +247,26 @@ class GenericArchiver {
         });
 
         const aggregationQuery = {
-                size: 0,
-                _source: ['event.transactionId'],
-                query: q,
-                sort: {
-                    'event.timestamp': {
-                        order: 'asc'
-                    }
-                },
-                aggs: {
-                    uniq: {
-                        terms: {
-                            field: 'event.transactionId',
-                            /**
-                             * Set upper limit to number of total documents.
-                             * FIXME Reconsider how to iterate transactions for customers with +1000 transactions/day
-                             */
-                            size: count
-                        }
+            size: 0,
+            _source: ['event.transactionId'],
+            query: q,
+            sort: {
+                'event.timestamp': {
+                    order: 'asc'
+                }
+            },
+            aggs: {
+                uniq: {
+                    terms: {
+                        field: 'event.transactionId',
+                        /**
+                         * Set upper limit to number of total documents.
+                         * FIXME Reconsider how to iterate transactions for customers with +1000 transactions/day
+                         */
+                        size: count
                     }
                 }
+            }
         };
 
         /** Fetch unique transactions IDs by tenantId and date. */
@@ -342,12 +333,17 @@ class GenericArchiver {
         let result = [];
 
         for (const transactionId of transactionIds) {
-            const events         = await this.getEventsByTransactionId(transactionId);
-            const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
-            const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
+            const events = await this.getEventsByTransactionId(transactionId, tenantId);
 
-            if (archiveEntry) {
-                result.push(archiveEntry);
+            if (this.transactionHasArchivableContent(events)) {
+                const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
+                const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
+
+                if (archiveEntry) {
+                    result.push(archiveEntry);
+                }
+            } else {
+                this.logger.log(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has no archivable content. Skipping.}`);
             }
         }
 
@@ -381,6 +377,47 @@ class GenericArchiver {
         }
 
         return {done, failed};
+    }
+
+    /**
+     * Check if a given list of events has archivable content.
+     *
+     * @function transactionHasArchivableContent
+     * @param {array} events - List of events belonging to a single transaction
+     * @return {boolean}
+     */
+    transactionHasArchivableContent(events) {
+        return events.some((e) => e && e.archivable);
+    }
+
+    /**
+     * Augment a given ES query by tenantId clause.
+     * The query has to contain a valid bool query to be augmented.
+     *
+     * @function _addTenantIdClause
+     * @param {object} query - The ES query to augemnt
+     * @return {object} Augmented query
+     * @throws {Error} If the query is not in the right shape / does not already contain a bool filter.
+     */
+    _addTenantIdClause(q, tenantId) {
+        const hasFilter = ((((q || {}).bool || {}).filter || {}).bool || {}).should || null;
+        if (!Array.isArray(hasFilter)) {
+            throw new Error('Query not ready for augmentation.');
+        }
+
+        /** Set tenantId to all fields possibly containing it. */
+        q.bool.filter.bool.should.push({term: {'event.sender.originator': tenantId}});
+        q.bool.filter.bool.should.push({term: {'event.receiver.target': tenantId}});
+
+        if (tenantId.startsWith('c_')) {
+            const customerId = tenantId.replace(/^c_/, '');
+            q.bool.filter.bool.should.push({term: {'event.customerId': customerId}});
+        } else if (tenantId.startsWith('s_')) {
+            const supplierId = tenantId.replace(/^s_/, '');
+            q.bool.filter.bool.should.push({term: {'event.supplierId': supplierId}});
+        }
+
+        return q;
     }
 
 }
