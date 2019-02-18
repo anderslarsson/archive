@@ -26,7 +26,7 @@
     "@opuscapita/useridentity-middleware": "^3.0.14",
     "@opuscapita/web-init": "^3.0.77",
     "date-fns": "^1.29.0",
-    "elasticsearch": "^15.1.1",
+    "elasticsearch": "15.4.0",
     "moment": "^2.22.2",
     "ocbesbn-blob-client": "^2.0.8",
     "ocbesbn-logger": "^1.0.9",
