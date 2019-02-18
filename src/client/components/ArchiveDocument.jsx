@@ -138,7 +138,7 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                                         <tr key={i}>
                                                             <td>{a.name}</td>
                                                             <td>
-                                                                <a href={'/blob/api' + a.reference} target="_blank" rel="noopener noreferrer">Download</a>
+                                                                <a href={'/blob/api' + this._encodeFileName(a.reference)} target="_blank" rel="noopener noreferrer">Download</a>
                                                             </td>
                                                         </tr>
                                                     )
@@ -177,6 +177,20 @@ export default class ArchiveDocument extends Components.ContextComponent {
                 }
             </div>
         );
+    }
+
+    /**
+     * URI encode the filename of a given blob reference.
+     *
+     * @param {string} reference - Path to a file on blob storage
+     * @return {string} Encoded path
+     */
+    _encodeFileName(reference) {
+        let pathComponents = reference.split('/');
+        const encFilename = encodeURIComponent(pathComponents.pop());
+        const path = `${pathComponents.join('/')}/${encFilename}`;
+
+        return path;
     }
 
 }
