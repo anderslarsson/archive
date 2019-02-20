@@ -246,36 +246,45 @@ class GenericArchiver {
             }
         });
 
-        const aggregationQuery = {
-            size: 0,
-            _source: ['event.transactionId'],
-            query: q,
-            sort: {
-                'event.timestamp': {
-                    order: 'asc'
-                }
-            },
-            aggs: {
-                uniq: {
-                    terms: {
-                        field: 'event.transactionId',
-                        /**
-                         * Set upper limit to number of total documents.
-                         * FIXME Reconsider how to iterate transactions for customers with +1000 transactions/day
-                         */
-                        size: count
+        if (count) {
+            const aggregationQuery = {
+                size: 0,
+                _source: ['event.transactionId'],
+                query: q,
+                sort: {
+                    'event.timestamp': {
+                        order: 'asc'
+                    }
+                },
+                aggs: {
+                    uniq: {
+                        terms: {
+                            field: 'event.transactionId',
+                            /**
+                             * Set upper limit to number of total documents.
+                             * FIXME Reconsider how to iterate transactions for customers with +1000 transactions/day
+                             */
+                            size: count
+                        }
                     }
                 }
+            };
+
+            /** Fetch unique transactions IDs by tenantId and date. */
+            const aggregationResult = await this.elasticsearch.search({
+                index,
+                body: aggregationQuery
+            });
+
+            const buckets = (((aggregationResult || {}).aggregations || {}).uniq || {}).buckets || null;
+
+            if (Array.isArray(buckets)) {
+                result = buckets.map(({key}) => key);
             }
-        };
+        }
 
-        /** Fetch unique transactions IDs by tenantId and date. */
-        result = await this.elasticsearch.search({
-            index,
-            body: aggregationQuery
-        });
 
-        return result.aggregations.uniq.buckets.map(({key}) => key);
+        return result;
     }
 
     /**
