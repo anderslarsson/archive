@@ -19,7 +19,14 @@ const buildArgs = (args = []) => {
 console.info('Forking generic archive worker proccess...');
 const genericArchiveWorker = fork(process.cwd() + '/src/workers/generic/run.js', [], {execArgv: buildArgs()});
 
-// Export references to processes
+console.info('Forking invoice archiver worker proccess...');
+const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: []}); // @todo Move to workers module
+
+console.info('Forking transaction log checker worker proccess...');
+const transactionLogCheckWorker = fork(process.cwd() + '/src/workers/transactionLogCheck/run.js', [], {execArgv: []}); // @todo Move to workers module
+
 module.exports = {
-    genericArchiveWorker
+    genericArchiveWorker,
+    invoiceArchiveWorker,
+    transactionLogCheckWorker
 };
