@@ -8,7 +8,6 @@ const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
 
 const {
     genericArchiveWorker,
-    invoiceArchiveWorker,
     transactionLogCheckWorker
 } = require('../workers/');
 
