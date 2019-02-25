@@ -4,7 +4,6 @@ const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const invoiceArchiveContext  = require('./invoice_archive');
 const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
 
 const {
@@ -66,7 +65,6 @@ async function init() {
         }
     });
 
-    await invoiceArchiveContext.initEventSubscriptions();
     await elasticsearch.init();
 
     genericArchiveWorker.on('exit', () => logger.error('GenericArchive worker died. :('));

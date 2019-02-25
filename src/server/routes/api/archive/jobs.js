@@ -25,6 +25,17 @@ module.exports.create = async function create(req, res, app, db) {
     res.status(200).json({success: result});
 };
 
+/**
+ * Trigger the daily rotation of log files from TnT logs to
+ * tenant specific archive indices.
+ *
+ * @function triggerDailyRotation
+ * @param {object} db - Sequelize instance
+ * @param {object} eventClient - EventClient instance
+ * @return {Promise}
+ * @fulfil {boolean} true
+ * @reject {Error}
+ */
 async function triggerDailyRotation(db, eventClient) {
     let results = [];
 
