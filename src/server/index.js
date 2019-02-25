@@ -1,13 +1,15 @@
 'use strict';
 
-const {fork} = require('child_process');
 const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const invoiceArchiveContext  = require('./invoice_archive');
 const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
-const {genericArchiveWorker} = require('../workers/');
+
+const {
+    genericArchiveWorker,
+    transactionLogCheckWorker
+} = require('../workers/');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -62,24 +64,11 @@ async function init() {
         }
     });
 
-    await invoiceArchiveContext.initEventSubscriptions();
     await elasticsearch.init();
 
-    logger.info('Forking invoice archiver worker proccess...');
-    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: []}); // @todo Move to workers module
-    invoiceArchiveWorker.on('exit', () => {
-        logger.error('Invoice archive worker died. :(');
-    });
-
-    logger.info('Forking transaction log checker worker proccess...');
-    const transactionLogCheckWorker = fork(process.cwd() + '/src/workers/transactionLogCheck/run.js', [], {execArgv: []}); // @todo Move to workers module
-    transactionLogCheckWorker.on('exit', () => {
-        logger.error('Transaction log check worker died. :(');
-    });
-
-    genericArchiveWorker.on('exit', () => {
-        logger.error('GenericArchive worker died. :(');
-    });
+    genericArchiveWorker.on('exit', () => logger.error('GenericArchive worker died. :('));
+    invoiceArchiveWorker.on('exit', () => logger.error('Invoice archive worker died. :('));
+    transactionLogCheckWorker.on('exit', () => logger.error('Transaction log check worker died. :('));
 
 }
 

@@ -43,7 +43,6 @@ class Worker {
 
         this.db = db;
 
-        this.logWaitDispatcherTimeout = null;
         this.archiveWaitDispatcherTimeout = null;
 
         this.logger = new Logger({
@@ -74,7 +73,6 @@ class Worker {
         if (process.env.NODE_ENV !== 'testing') {
             try {
                 /* Subscribe w/o callback to trigger queue creation and binding. */
-                await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
                 await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
             } catch (e) {
                 this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
@@ -82,7 +80,6 @@ class Worker {
             }
 
             /** Enter main loop */
-            // this.logWaitDispatcher();
             this.archiveWaitDispatcher();
         }
 
@@ -140,73 +137,6 @@ class Worker {
         } finally {
             // Restart the timer
             this.archiveWaitDispatcherTimeout = setTimeout(this.archiveWaitDispatcher.bind(this), 1000);
-        }
-    }
-
-    /**
-     * Callback method for @see EventClient.subscribe method.
-     *
-     * @async
-     * @function logWaitDispatcher
-     * @param {Object} msg - Message received from MQ
-     * @returns {Boolean} - Indicates the success of the job processing
-     */
-    async logWaitDispatcher() {
-        let msg;
-
-        try {
-            let success = false;
-
-            msg = await this.eventClient.getMessage(InvoiceArchiveConfig.newLogrotationJobQueueName, false); // Get single message, no auto ack
-
-            if (msg && msg.payload && msg.payload.type) {
-                let payload = msg.payload;
-
-                switch (payload.type) {
-                    case MsgTypes.CREATE_GLOBAL_DAILY:
-                        success = await this.archiver.handleCreateGlobalDaily();
-                        break;
-                    case MsgTypes.UPDATE_TENANT_MONTHLY:
-                        success = await this.archiver.handleUpdateTenantMonthly(payload.tenantConfig);
-                        break;
-                    case MsgTypes.UPDATE_TENANT_YEARLY:
-                        success = await this.archiver.handleUpdateTenantYearly(payload.tenantConfig);
-                        break;
-                    default:
-                        this.logger.error('InvoiceArchiveWorker: No handle for msg.type ' + payload.type);
-                        success = null; // Dismiss message from the MQ as the given type is not implemented.
-                }
-
-                // Failure (false -> ES result contained failures)
-                // Failure (null -> catch was invoked in handler function)
-                if (success === false || success === null) {
-                    this.logger.error(`Nacking message with deliveryTag ${msg.tag}`);
-
-                    await this.eventClient.nackMessage(msg, false, false);
-                }
-
-                // Success
-                if (success) {
-                    this.logger.log(`Acking message with deliveryTag ${msg.tag}`);
-                    await this.eventClient.ackMessage(msg);
-                    this.logger.log('Finished job with result: \n' + success);
-                }
-            }
-        } catch (handleMessageError) {
-
-            this.logger.error(handleMessageError);
-
-            if (msg) {
-                try {
-                    // Requeu message
-                    await this.eventClient.nackMessage(msg);
-                } catch (nackErr) {
-                    this.logger.error(nackErr);
-                }
-            }
-        } finally {
-            // Restart the timer
-            this.logWaitDispatcherTimeout = setTimeout(this.logWaitDispatcher.bind(this), 1000);
         }
     }
 
