@@ -6,7 +6,6 @@
 
 const Logger                 = require('ocbesbn-logger');
 const elasticContext         = require('../../../../shared/elasticsearch/elasticsearch');
-const invoiceArchiveContext  = require('../../../invoice_archive');
 const {InvoiceArchiveConfig} = require('../../../../shared/invoice_archive_config');
 const Mapper                 = require('../../../../workers/invoice/Mapper');
 
@@ -15,59 +14,6 @@ const logger = new Logger({
         serviceName: 'archive'
     }
 });
-
-/**
- * This API is called by external systems that want to trigger the archiving of a
- * a specific transaction.
- *
- * TODO is this still needed or @deprecated?
- *
- * @function createArchiverJob
- * @param {express.Request} req
- * @param {object} req.body - POST data
- * @param {String} req.body.transactionId - ID of the transaction to archive
- * @param {express.Response} res
- * @param {express.App} app
- * @param {Sequelize} db
- */
-module.exports.createArchiverJob = async function (req, res) {
-    let transactionId = ((req || {}).body || {}).transactionId || null;
-
-    if (!transactionId) {
-        res.status(422).json({
-            success: false,
-            message: 'Param transactionId missing.'
-        });
-        return false;
-    }
-
-    try {
-        /**
-         * TODO Initial logging deactivated as it conflicts with logging in #createDocument
-         * endpoint. Figure out, how to do this without conflict.
-         */
-        // const continueProcessing = await createInitialArchiveTransactionLogEntry(transactionId, db);
-        const continueProcessing = true;
-
-        if (continueProcessing === true) {
-            /* Transaction not processed yet, continue */
-
-            await invoiceArchiveContext.archiveTransaction(transactionId);
-            res.status(202).json({success: true});
-        } else {
-            req.opuscapita.logger.warn('Trying to archive a transaction that was already processed.');
-            res.status(409).json({success: false, message: 'Transaction already processed'});
-        }
-
-    } catch (e) {
-        req.opuscapita.logger.error('Failed to start archiving of invoice transaction.', e);
-
-        res.status(500).json({
-            success: false,
-            message: e.message || 'Unknown error'
-        });
-    }
-};
 
 /**
  * This endpoint accepts transcation and archive documents and
