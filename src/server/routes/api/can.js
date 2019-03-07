@@ -56,11 +56,11 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
     }
 
     if (!index) {
-        return res.status(400).json({success: false, message: 'Missing params.'});
+        return res.status(400).json({success: false, message: 'Missing parameter :index.'});
     }
 
     if (!isValidIndexIdentifier(index)) {
-        return res.status(404).json({success: false, message: 'Not found'});
+        return res.status(404).json({success: false, message: 'Invalid index name.'});
     }
 
     let tenants = [];
@@ -76,10 +76,7 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
             res.status(403).json({success: false, message: 'You are not allowed to access this index.'});
         }
     } catch (e) {
-        res.status(400).json({
-            success: false,
-            message: 'Failed to fetch user tenants.'
-        });
+        res.status(400).json({ success: false, message: 'Failed to fetch user tenants.' });
     }
 
     next();
@@ -103,14 +100,26 @@ function hasTenantAccess(tenantId, tenants = []) {
     return allowed;
 }
 
+/**
+ * Check if a given string is valid archive
+ * index indentifier.
+ *
+ * @function isValidIndexIdentifier
+ * @param {string} index - Identifier to check
+ * @returns {boolean} Validity
+ */
 function isValidIndexIdentifier(index) {
-    if (typeof index !== 'string') return false;
+    if (typeof index !== 'string')
+        return false;
 
     const validPrefix = ['archive_invoice_tenant_yearly-', 'archive_tenant_yearly-']
         .some((p) => index.indexOf(p) === 0);
-    if (!validPrefix) return false;
 
-    if (index.split('-').length !== 3) return false;
+    if (!validPrefix)
+        return false;
+
+    if (index.split('-').length < 3)
+        return false;
 
     return true;
 }
