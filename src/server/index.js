@@ -67,7 +67,7 @@ async function init() {
     await elasticsearch.init();
 
     genericArchiveWorker.on('exit', () => logger.error('GenericArchive worker died. :('));
-    invoiceArchiveWorker.on('exit', () => logger.error('Invoice archive worker died. :('));
+    // invoiceArchiveWorker.on('exit', () => logger.error('Invoice archive worker died. :('));
     transactionLogCheckWorker.on('exit', () => logger.error('Transaction log check worker died. :('));
 
 }
