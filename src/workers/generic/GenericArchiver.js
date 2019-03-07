@@ -97,11 +97,17 @@ class GenericArchiver {
         this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', day);
 
         try {
-            const transactionIds = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day);
-            const archiveDocs    = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds);
-            const insertResult   = await this.insertArchiveDocuments(tenantId, day, archiveDocs);
+            const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day); // Fetch all IDs of finished transactions for the given day
+            const archiveDocs      = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds); // Create archive documents for every identified transaction from the step before
+            const insertResult     = await this.insertArchiveDocuments(tenantId, day, archiveDocs); // Create documents on Elasticsearch
+            const updateBlobResult = await this.processAttachments(insertResult.done);
 
-            this.logger.info(`${this.klassName}#doDailyArchiving: Finished with insertResult: `, insertResult);
+            const hasFailedTransactions = insertResult.failed.length > 0 || updateBlobResult.failed.length > 0;
+
+            if (hasFailedTransactions)
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors.`, hasFailedTransactions); // TODO persist failures.
+            else
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful`);
 
             success = true;
         } catch (e) {
@@ -314,16 +320,19 @@ class GenericArchiver {
                 });
 
                 if (result && result.created) {
-                    done.push(doc.transactionId);
+                    done.push(doc);
                 } else {
-                    failed.push(doc.transactionId);
+                    failed.push(doc);
                 }
             } catch (e) {
-                failed.push(doc.transactionId);
+                failed.push(doc);
             }
         }
 
-        return failed.length === 0;
+        return {
+            done,
+            failed
+        };
     }
 
     /**
@@ -357,6 +366,45 @@ class GenericArchiver {
         }
 
         return result;
+    }
+
+    /**
+     * Update metadata for all blob references found in the given archive documents.
+     *
+     * @function processAttachments
+     * @param {array} documents - List of archive docuemtns
+     * @return {object} Done and failed documents
+     */
+    async processAttachments(documents) {
+        let done = [];
+        let failed = [];
+
+        for (const doc of documents) {
+            try {
+
+                if ((((doc || {}).document || {}).files || {}).inbound)
+                    await this.setReadonly(doc.document.files.inbound);
+
+                if ((((doc || {}).document || {}).files || {}).outbound)
+                    await this.setReadonly(doc.document.files.outbound);
+
+                if ((((doc || {}).document || {}).files || {}).inboundAttachments && Array.isArray(doc.document.files.inboundAttachments) && doc.document.files.inboundAttachments.length > 0)
+                    await this.setReadonly(doc.document.files.inboundAttachments);
+
+                if ((((doc || {}).document || {}).files || {}).outboundAttachments && Array.isArray(doc.document.files.outboundAttachments) && doc.document.files.outboundAttachments.length > 0)
+                    await this.setReadonly(doc.document.files.outboundAttachments);
+
+                done.push(doc);
+            } catch (e) {
+                this.logger.error(`${this.klassName}#processAttachments: Failed to set readonly on files for docuemnt.`, doc, e);
+                failed.push(doc);
+            }
+        }
+
+        return {
+            done,
+            failed
+        };
     }
 
     /**

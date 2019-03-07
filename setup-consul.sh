@@ -21,7 +21,7 @@ function putConsulData
     then
         curl -X PUT -d '90' http://consul:8500/v1/kv/archive/config/archiver/generic/lookback
     else
-        curl -X PUT -d '5' http://consul:8500/v1/kv/archive/config/archiver/generic/lookback
+        curl -X PUT -d '1' http://consul:8500/v1/kv/archive/config/archiver/generic/lookback
     fi
 
 
