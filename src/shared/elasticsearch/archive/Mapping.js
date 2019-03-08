@@ -134,6 +134,9 @@ module.exports = {
                         msgSubType: {
                             type: 'keyword'
                         },
+                        number: {
+                            type: 'keyword'
+                        },
                         files: {
                             properties: {
                                 inbound: {

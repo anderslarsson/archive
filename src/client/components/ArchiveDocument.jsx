@@ -73,6 +73,10 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                             <td>{doc.transactionId}</td>
                                         </tr>
                                         <tr>
+                                            <td>Document Number</td>
+                                            <td>{doc.document.number}</td>
+                                        </tr>
+                                        <tr>
                                             <td>{t('Archive.invoice.page.labels.startDate')}</td>
                                             <td>{doc.start}</td>
                                         </tr>

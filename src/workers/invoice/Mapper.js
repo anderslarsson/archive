@@ -87,6 +87,7 @@ class Mapper {
                 } else {
                     this.logger.info(`InvoiceArchiveMapper#do: No mapper function found for field "${field}"`);
                 }
+
             });
 
         } catch (e) {
@@ -136,7 +137,7 @@ class Mapper {
             };
         };
 
-        let buildMsgType = () => {
+        const buildMsgType = () => {
             return this.items.reduce((acc, elem) => {
                 if (elem.document && elem.document.msgType) {
                     return elem.document.msgType;
@@ -146,7 +147,7 @@ class Mapper {
             }, null);
         };
 
-        let buildMsgSubType = () => {
+        const buildMsgSubType = () => {
             return this.items.reduce((acc, elem) => {
                 if (elem.document && elem.document.msgTypeSub) {
                     return elem.document.msgTypeSub;
@@ -156,9 +157,19 @@ class Mapper {
             }, null);
         };
 
+        const buildDocumentNumber = () => {
+            return this.items.reduce((acc, elem) => {
+                if (elem.document && elem.document.number)
+                    return elem.document.number;
+                else
+                    return acc;
+            }, null);
+        };
+
         return {
             msgType: buildMsgType(),
             msgSubType: buildMsgSubType(),
+            number: buildDocumentNumber(),
             files: buildFiles()
         };
     }

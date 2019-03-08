@@ -61,6 +61,10 @@ module.exports.search = async function search(req, res) {
         sort: [sortOptions]
     };
 
+    /**
+     * Add query options
+     */
+
     if (query.email) {
         queryOptions.query.bool.must.push({
             bool: {
@@ -92,7 +96,11 @@ module.exports.search = async function search(req, res) {
         });
     }
 
-    if (query.from || query.to) {
+    /**
+     * Add filter options
+     */
+
+    if (query.from || query.to || query.documentNumber) {
         queryOptions.query.bool.filter = {
             bool: {
                 must: []
@@ -111,6 +119,7 @@ module.exports.search = async function search(req, res) {
                 }
             });
         }
+
         if (query.to) {
             queryOptions.query.bool.filter.bool.must.push({
                 range: {
@@ -122,6 +131,13 @@ module.exports.search = async function search(req, res) {
             });
         }
 
+        if (query.documentNumber) {
+            queryOptions.query.bool.filter.bool.must.push({
+                match: {
+                    'document.number': query.documentNumber
+                }
+            });
+        }
     }
 
     try {
