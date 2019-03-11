@@ -1,10 +1,10 @@
 import React from 'react';
 import {Components} from '@opuscapita/service-base-ui';
 
-import {InvoiceArchiveApi} from '../api';
+import {ArchiveApi} from '../api';
 import translations from './i18n';
 
-export default class InvoiceArchiveDocument extends Components.ContextComponent {
+export default class ArchiveDocument extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);
@@ -25,7 +25,7 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
             this.state.doc.id = props.data.id;
         }
 
-        this.api = new InvoiceArchiveApi();
+        this.api = new ArchiveApi();
         context.i18n.register('Archive', translations);
     }
 
@@ -158,10 +158,13 @@ export default class InvoiceArchiveDocument extends Components.ContextComponent 
                                             <table className="table">
                                                 {
                                                     doc.history.map((h, i) =>
-                                                        <tr key={i}>
-                                                            <td>{h.name}</td>
-                                                            <td>{h.description}</td>
-                                                        </tr>
+                                                        <tbody key={i}>
+                                                            <tr>
+                                                                <td>{h.date}</td>
+                                                                <td>{h.shortEventText}</td>
+                                                                <td>{h.status}</td>
+                                                            </tr>
+                                                        </tbody>
                                                     )
                                                 }
                                             </table>

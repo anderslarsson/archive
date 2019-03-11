@@ -4,14 +4,14 @@ import ReactTable from 'react-table';
 import Select from '@opuscapita/react-select';
 import {Components} from '@opuscapita/service-base-ui';
 
-import {InvoiceArchiveApi} from '../api';
-import InvoiceArchiveDocument from './InvoiceArchiveDocument.jsx';
+import {ArchiveApi} from '../api';
+import ArchiveDocument from './ArchiveDocument.jsx';
 import translations from './i18n';
 
 import 'react-table/react-table.css';
 import 'react-select/dist/react-select.css';
 
-export default class InvoiceArchive extends Components.ContextComponent {
+export default class Search extends Components.ContextComponent {
 
     constructor(props, context) {
         super(props);
@@ -30,7 +30,9 @@ export default class InvoiceArchive extends Components.ContextComponent {
                 currentPage: 0,
                 currentDocs: [],
                 pageSize: 20,
-                scrollId: null
+                scrollId: null,
+                sortBy: 'start',
+                sortOrder: 'asc'
             },
             selectedValues: {
                 tenant: null,
@@ -45,7 +47,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
             },
         };
 
-        this.api = new InvoiceArchiveApi();
+        this.api = new ArchiveApi();
         context.i18n.register('Archive', translations);
     }
 
@@ -138,7 +140,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
     }
 
     resetSearchForm(e) {
-        this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+        this.api.deleteScrollContext(this.state.search.scrollId); // Fire and forget
 
         e.preventDefault();
 
@@ -159,6 +161,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                 scrollId: null
             },
             selectedValues: {
+                email: null,
                 tenant: null,
                 index: null,
                 from: null,
@@ -174,7 +177,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     handleSearch(e) {
         if (this.state.search.scrollId) {
-            this.api.deleteInvoiceArchiveSearch(this.state.search); // Fire and forget
+            this.api.deleteScrollContext(this.state.search.scrollId); // Fire and forget
         }
 
         e && e.preventDefault();
@@ -189,7 +192,12 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
         let queryOptions = {
             index: selectedValues.index,
+            sort: {
+                field: this.state.search.sortBy,
+                order: this.state.search.sortOrder
+            },
             query: {
+                email: selectedValues.email,
                 year: selectedValues.index.split('-').pop(),
                 from: selectedValues.from && format(selectedValues.from, 'YYYY-MM-DD'),
                 to: selectedValues.to && format(selectedValues.to, 'YYYY-MM-DD'),
@@ -226,33 +234,51 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
     scrollSearch(state) {
         if (this.state.search.docs.length <= 0) {
-            return;
+            return; // !!!
         }
 
-        let isBackNav = state.page < this.state.search.currentPage;
-        let alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
+        let sortOrder = 'asc';
 
-        if (isBackNav || alreadyFetched) {
-            let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
-            let searchUpdate = Object.assign({}, this.state.search, {
-                currentPage: state.page,
-                currentDocs
+        let sortChanged = false;
+        if (state && state.sorted && state.sorted[0]) {
+            sortOrder = state.sorted[0].desc ? 'desc' : 'asc';
+            sortChanged = this.state.search.sortBy !== state.sorted[0].id || this.state.search.sortOrder !== sortOrder;
+        }
+
+        if (sortChanged) {
+            const searchUpdate = Object.assign({}, this.state.search, {
+                sortBy: state.sorted[0].id,
+                sortOrder: sortOrder
             });
-            this.setState({search: searchUpdate});
+
+            this.setState({search: searchUpdate}, () => this.handleSearch());
+            return; // !!!
         } else {
-            /* Forward navigation. Fetch next result from ES */
-            this.api.getInvoiceArchiveSearch(this.state.search)
-                .then((res) => {
-                    let hits = res.data.hits.hits;
+            const isBackNav = state.page < this.state.search.currentPage;
+            const alreadyFetched = (state.page * this.state.search.pageSize) < this.state.search.docs.length;
 
-                    let searchUpdate = Object.assign({}, this.state.search, {
-                        currentPage: state.page,
-                        docs: this.state.search.docs.concat(hits),
-                        currentDocs: hits
-                    });
-
-                    this.setState({search: searchUpdate});
+            if (isBackNav || alreadyFetched) {
+                let currentDocs = this.state.search.docs.slice(state.page * this.state.search.pageSize, (state.page + 1) * this.state.search.pageSize);
+                let searchUpdate = Object.assign({}, this.state.search, {
+                    currentPage: state.page,
+                    currentDocs
                 });
+                this.setState({search: searchUpdate});
+            } else {
+                /* Forward navigation. Fetch next result from ES */
+                this.api.getNextScrollPage(this.state.search.scrollId)
+                    .then((res) => {
+                        let hits = res.data.hits.hits;
+
+                        let searchUpdate = Object.assign({}, this.state.search, {
+                            currentPage: state.page,
+                            docs: this.state.search.docs.concat(hits),
+                            currentDocs: hits
+                        });
+
+                        this.setState({search: searchUpdate});
+                    });
+            }
         }
     }
 
@@ -271,7 +297,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                             buttons={{'ok': 'OK'}}
                             onButtonClick={() => this.setState({showModal: false})}
                         >
-                            <InvoiceArchiveDocument
+                            <ArchiveDocument
                                 showedInModal={true}
                                 data={this.state.selectedDoc}
                             />
@@ -366,6 +392,32 @@ export default class InvoiceArchive extends Components.ContextComponent {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="form-group">
+                                            <div className="col-md-2">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.email')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-2 col-md-3">
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={this.state.selectedValues.email}
+                                                    onChange={(event) => {
+                                                        let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
+                                                            email: event.target.value
+                                                        });
+                                                        this.setState({selectedValues: selectedValuesUpdate});
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     <div className="col-md-12">
                                         <div className="form-group">
@@ -398,6 +450,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
                     loading={loading}
 
                     manual
+                    multiSort={false}
                     pages={search.pages}
                     defaultPageSize={20}
                     showPageSizeOptions={false}
@@ -405,7 +458,7 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
                     onFetchData={(state) => this.scrollSearch(state) }
 
-                    defaultSorted={[{id: 'transactionId', desc: false}]}
+                    defaultSorted={[{id: 'start', desc: false}]}
 
                     loadingText={i18n.getMessage('Archive.table.loading')}
                     noDataText={i18n.getMessage('Archive.table.empty')}
@@ -438,24 +491,25 @@ export default class InvoiceArchive extends Components.ContextComponent {
 
                     columns={[
                         {
+                            id: 'transactionId',
                             accessor: '_source.transactionId',
                             Header: i18n.getMessage('Archive.table.columns.id.title'),
                             Cell: (row) => {
                                 let indexName = btoa(this.state.selectedValues.index);
                                 return (
-                                    <a target="blank" href={`/archive/invoices/${indexName}/documents/${row.original._id}`}>
+                                    <a target="blank" href={`/archive/viewer/${indexName}/documents/${row.original._id}`}>
                                         {row.value}
                                     </a>
                                 );
                             }
                         },
                         {
-                            id: 'startDate',
+                            id: 'start',
                             accessor: doc => format(doc._source.start, 'YYYY-MM-DD'),
-                            Header: i18n.getMessage('Archive.table.columns.startDate.title')
+                            Header: i18n.getMessage('Archive.table.columns.start.title')
                         },
                         {
-                            id: 'from',
+                            id: 'sourceFrom',
                             accessor: '_source.receiver.protocolAttributes.from',
                             Header: i18n.getMessage('Archive.table.columns.from.title')
                         },

@@ -1,232 +1,10 @@
 'use strict';
 
-const moment = require('moment');
-const {
-    normalizeTenantId
-} = require('./helpers');
-
-const MsgTypes = {
-    CREATE_GLOBAL_DAILY: 'create_global_daily',
-    UPDATE_TENANT_MONTHLY: 'update_tenant_monthly',
-    UPDATE_TENANT_YEARLY: 'update_tenant_yearly',
-    ARCHIVE_TRANSACTION: 'archive_transaction'
-};
-
-const ErrCodes = {
-    ERR_INDEX_DOES_NOT_EXIST: 'ERR_INDEX_DOES_NOT_EXIST',
-    ERR_SRC_INDEX_DOES_NOT_EXIST: 'ERR_SRC_INDEX_DOES_NOT_EXIST',
-    ERR_INDEX_OPEN_FAILED: 'ERR_INDEX_OPEN_FAILED'
-};
-
-const esMapping = {
-    mappings: {
-        'doc': {
-            properties: {
-                transactionId: {
-                    type: 'keyword'
-                },
-                start: {
-                    type: 'date'
-                },
-                end: {
-                    type: 'date'
-                },
-                lastStatus: {
-                    type: 'keyword'
-                },
-                customerId: {
-                    type: 'keyword' // customerId (w/o c_)
-                },
-                supplierId: {
-                    type: 'keyword' // supplierId (w/o s_)
-                },
-                externalReference: {
-                    properties: {
-                        type: {
-                            type: 'keyword'
-                        },
-                        value: {
-                            type: 'keyword'
-                        }
-                    }
-                },
-                sender: {
-                    properties: {
-                        intermediator: {
-                            type: 'keyword'
-                        },
-                        originator: {
-                            type: 'keyword' // tenantId
-                        },
-                        protocolAttributes: {
-                            type: 'object',
-                            properties: {
-                                type: {
-                                    type: 'keyword'
-                                },
-                                to: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            ignore_above: 256
-                                        }
-                                    }
-                                },
-                                from: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            ignore_above: 256
-                                        }
-                                    }
-                                },
-                                subject: {
-                                    type: 'text'
-                                }
-                            }
-                        }
-                    }
-                },
-                receiver: {
-                    properties: {
-                        intermediator: {
-                            type: 'keyword'
-                        },
-                        target: {
-                            type: 'keyword' // tenantId
-                        },
-                        protocolAttributes: {
-                            type: 'object',
-                            properties: {
-                                type: {
-                                    type: 'keyword'
-                                },
-                                to: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            ignore_above: 256
-                                        }
-                                    }
-                                },
-                                from: {
-                                    type: 'text',
-                                    fields: {
-                                        keyword: {
-                                            type: 'keyword',
-                                            ignore_above: 256
-                                        }
-                                    }
-                                },
-                                subject: {
-                                    type: 'text'
-                                }
-                            }
-                        }
-                    }
-                },
-                history: {
-                    properties: {
-                        date: {
-                            type: 'date'
-                        },
-                        shortEventText: {
-                            type: 'text'
-                        },
-                        eventText: {
-                            type: 'text'
-                        },
-                        status: {
-                            type: 'keyword'
-                        }
-                    }
-                },
-                document: {
-                    properties: {
-                        msgType: {
-                            type: 'keyword'
-                        },
-                        msgSubType: {
-                            type: 'keyword'
-                        },
-                        files: {
-                            properties: {
-                                inbound: {
-                                    properties: {
-                                        reference: {
-                                            type: 'keyword'
-                                        },
-                                        refType: {
-                                            type: 'keyword'
-                                        },
-                                    }
-                                },
-                                outbound: {
-                                    properties: {
-                                        reference: {
-                                            type: 'keyword'
-                                        },
-                                        refType: {
-                                            type: 'keyword'
-                                        },
-                                    }
-                                },
-                                canonical: {
-                                    properties: {
-                                        content: {
-                                            type: 'text'
-                                        }
-                                    }
-                                },
-                                inboundAttachments: {
-                                    properties: {
-                                        reference: {
-                                            type: 'keyword'
-                                        },
-                                        refType: {
-                                            type: 'keyword'
-                                        },
-                                        name: {
-                                            type: 'text',
-                                            fields: {
-                                                keyword: {
-                                                    type: 'keyword',
-                                                    'ignore_above': 256
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                outboundAttachments: {
-                                    properties: {
-                                        reference: {
-                                            type: 'keyword'
-                                        },
-                                        refType: {
-                                            type: 'keyword'
-                                        },
-                                        name: {
-                                            type: 'text',
-                                            fields: {
-                                                keyword: {
-                                                    type: 'keyword',
-                                                    'ignore_above': 256
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
+const moment              = require('moment');
+const {normalizeTenantId} = require('./helpers');
+const ErrCodes            = require('./error_codes');
+const MsgTypes            = require('./msg_types');
+const Mapping             = require('./elasticsearch/archive/Mapping');
 
 class InvoiceArchiveConfig {
 
@@ -242,6 +20,9 @@ class InvoiceArchiveConfig {
         return 'archive_invoice_';
     }
 
+    /**
+     * @deprecated
+     */
     static monthlyTenantArchiveName(tenantId) {
         let tId = normalizeTenantId(tenantId);
         let fmtMonth = moment().format('YYYY.MM');
@@ -254,6 +35,18 @@ class InvoiceArchiveConfig {
         let fmtYear = moment(date).format('YYYY'); // Returns NOW when  date is undefined
 
         return `${this.indexPrefix}tenant_yearly-${tId}-${fmtYear}`;
+    }
+
+    static getSortMappingForField(fieldName = '') {
+
+        const m = {
+            'sourceFrom': 'receiver.protocolAttributes.from.keyword',
+            'transactionId': 'transactionId.keyword',
+            'start': 'start',
+            'lastStatus': 'lastStatus.keyword'
+        };
+
+        return m[fieldName];
     }
 
     static get newArchiveTransactionJobQueueName() {
@@ -271,8 +64,9 @@ class InvoiceArchiveConfig {
     }
 
     static get esMapping() {
-        return esMapping;
+        return Mapping;
     }
+
 }
 
 module.exports = {

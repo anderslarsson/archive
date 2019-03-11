@@ -4,6 +4,7 @@
 
   "Archive.forms.labels.tenant": "Company/Buyer",
   "Archive.forms.labels.indices": "Year",
+  "Archive.forms.labels.email": "Email",
   "Archive.forms.labels.from": "From",
   "Archive.forms.labels.to": "To",
   "Archive.forms.labels.textSearch": "Search in text",
@@ -22,7 +23,7 @@
   "Archive.table.columns.no.title": "Invoice No",
   "Archive.table.columns.from.title": "From",
   "Archive.table.columns.to.title": "To",
-  "Archive.table.columns.startDate.title": "Start Date",
+  "Archive.table.columns.start.title": "Start Date",
   "Archive.table.columns.endDate.title": "End Date",
   "Archive.table.columns.from.title": "Sender Email",
   "Archive.table.columns.detail": "Details",

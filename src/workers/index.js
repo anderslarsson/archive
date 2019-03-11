@@ -1,11 +1,13 @@
 /**
- * Cache references to archive service child processes in this module.
+ * This module encapsulates the actual reference to forked
+ * worker process. These references can be used to communicate
+ * via IPC to the processes.
  */
 
 const {fork} = require('child_process');
 
 const isProduction = process.env.NODE_ENV === 'production';
-let debugStartPort = 9230;
+let debugStartPort = 9230; // Start debugger sessions beginning with this port.
 
 const buildArgs = (args = []) => {
     let result = [].concat(args);
@@ -13,11 +15,21 @@ const buildArgs = (args = []) => {
     return result;
 };
 
-// Fork
-console.info('Forking generic archiver worker proccess...');
+// Fork workers
+console.info('Forking generic archive worker proccess...');
 const genericArchiveWorker = fork(process.cwd() + '/src/workers/generic/run.js', [], {execArgv: buildArgs()});
 
-// Export references to processes
+// TODO remove the whole invoiceArchiveWorker module, as it is not used
+// any more - except for the Mapper.js that is used by the InvoiceArchive API.
+//
+// console.info('Forking invoice archiver worker proccess...');
+// const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: []}); // @todo Move to workers module
+
+console.info('Forking transaction log checker worker proccess...');
+const transactionLogCheckWorker = fork(process.cwd() + '/src/workers/transactionLogCheck/run.js', [], {execArgv: []}); // @todo Move to workers module
+
 module.exports = {
-    genericArchiveWorker
+    genericArchiveWorker,
+    // invoiceArchiveWorker,
+    transactionLogCheckWorker
 };

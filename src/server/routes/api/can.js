@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Express middleware to check if the the given tenant is in the current user's tenant list.
+ *
+ * @param {string} res.query.tenantId
+ */
 module.exports.listInvoiceIndicesByTenantId = async function listInvoiceIndicesByTenantId(req, res, next) {
     if (!req.query.tenantId) {
         res.status(400).json({
@@ -33,8 +38,14 @@ module.exports.listInvoiceIndicesByTenantId = async function listInvoiceIndicesB
     }
 };
 
+/**
+ * Express middleware to check if the current user is allowed to read
+ * from the given Elasticsearch index.
+ *
+ * @param {string} [res.query.index] - Elasticsearch index name
+ * @param {string} [res.params.index] - Elasticsearch index name
+ */
 module.exports.accessIndex = async function canReadIndex(req, res, next) {
-
     let index = null;
 
     if (req.query && req.query.index) {
@@ -45,11 +56,11 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
     }
 
     if (!index) {
-        return res.status(400).json({success: false, message: 'Missing params.'});
+        return res.status(400).json({success: false, message: 'Missing parameter :index.'});
     }
 
     if (!isValidIndexIdentifier(index)) {
-        return res.status(404).json({success: false, message: 'Not found'});
+        return res.status(404).json({success: false, message: 'Invalid index name.'});
     }
 
     let tenants = [];
@@ -65,10 +76,7 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
             res.status(403).json({success: false, message: 'You are not allowed to access this index.'});
         }
     } catch (e) {
-        res.status(400).json({
-            success: false,
-            message: 'Failed to fetch user tenants.'
-        });
+        res.status(400).json({ success: false, message: 'Failed to fetch user tenants.' });
     }
 
     next();
@@ -92,10 +100,26 @@ function hasTenantAccess(tenantId, tenants = []) {
     return allowed;
 }
 
+/**
+ * Check if a given string is valid archive
+ * index indentifier.
+ *
+ * @function isValidIndexIdentifier
+ * @param {string} index - Identifier to check
+ * @returns {boolean} Validity
+ */
 function isValidIndexIdentifier(index) {
-    if (typeof index !== 'string') return false;
-    if (index.indexOf('archive_invoice_tenant_yearly-') !== 0) return false;
-    if (index.split('-').length !== 3) return false;
+    if (typeof index !== 'string')
+        return false;
+
+    const validPrefix = ['archive_invoice_tenant_yearly-', 'archive_tenant_yearly-']
+        .some((p) => index.indexOf(p) === 0);
+
+    if (!validPrefix)
+        return false;
+
+    if (index.split('-').length < 3)
+        return false;
 
     return true;
 }

@@ -4,7 +4,7 @@ const dbInit        = require('@opuscapita/db-init'); // Database
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
 
-const elasticsearch = require('../../shared/elasticsearch');
+const elasticsearch = require('../../shared/elasticsearch/elasticsearch');
 const Mapper        = require('./Mapper');
 
 const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');

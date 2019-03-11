@@ -1,12 +1,15 @@
 'use strict';
 
-const {fork} = require('child_process');
 const Logger = require('ocbesbn-logger'); // Logger
 const server = require('@opuscapita/web-init'); // Web server
 const dbInit = require('@opuscapita/db-init'); // Database
 
-const invoiceArchiveContext = require('./invoice_archive');
-const elasticsearch         = require('../shared/elasticsearch');
+const elasticsearch          = require('../shared/elasticsearch/elasticsearch');
+
+const {
+    genericArchiveWorker,
+    transactionLogCheckWorker
+} = require('../workers/');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -15,7 +18,6 @@ const logger = new Logger({
         serviceName: 'archive'
     }
 });
-
 
 if (isProduction) {
     logger.redirectConsoleOut(); // Force anyone using console.* outputs into Logger format.
@@ -46,7 +48,9 @@ async function init() {
             staticFilePath: process.cwd() + '/src/server/static/',
             indexFileRoutes: [
                 '/',
-                '/invoices*'
+                '/invoices*',
+                '/search*',
+                '/viewer*'
             ],
 
             webpack: {
@@ -60,22 +64,12 @@ async function init() {
         }
     });
 
-    await invoiceArchiveContext.initEventSubscriptions();
     await elasticsearch.init();
 
-    logger.info('Forking invoice archiver worker proccess...');
-    const invoiceArchiveWorker = fork(process.cwd() + '/src/workers/invoice/run.js', [], {execArgv: []});
-    invoiceArchiveWorker.on('exit', () => {
-        logger.error('Invoice archive worker died. :(');
-    });
+    genericArchiveWorker.on('exit', () => logger.error('GenericArchive worker died. :('));
+    // invoiceArchiveWorker.on('exit', () => logger.error('Invoice archive worker died. :('));
+    transactionLogCheckWorker.on('exit', () => logger.error('Transaction log check worker died. :('));
 
-    let args = [];
-    if (!isProduction) args.push('--inspect=0.0.0.0:9230');
-    logger.info('Forking transaction log checker worker proccess...');
-    const transactionLogCheckWorker = fork(process.cwd() + '/src/workers/transactionLogCheck/run.js', [], {execArgv: args});
-    transactionLogCheckWorker.on('exit', () => {
-        logger.error('Transaction log check worker died. :(');
-    });
 }
 
 (() => init().catch(console.error))();

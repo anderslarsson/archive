@@ -4,7 +4,7 @@ const ServiceClient = require('ocbesbn-service-client');
 const EventClient   = require('@opuscapita/event-client');
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
-const elasticsearch = require('../../shared/elasticsearch');
+const elasticsearch = require('../../shared/elasticsearch/elasticsearch');
 
 class Worker {
 

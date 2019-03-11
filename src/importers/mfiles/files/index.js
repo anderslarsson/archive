@@ -19,7 +19,7 @@ async function main(dataDir, mappingFile) {
 
     if (args.rep) {
         let content = fs.readFileSync(args.rep);
-        transactionsToReprocess = JSON.parse(content).transactionIds;
+        transactionsToReprocess = JSON.parse(content);
     }
 
     try {

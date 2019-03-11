@@ -3,7 +3,8 @@
 const EventClient = require('@opuscapita/event-client');
 const Logger      = require('ocbesbn-logger');
 
-const GenericArchiver = require('./Archiver');
+const ArchiveConfig   = require('../../shared/ArchiveConfig');
+const GenericArchiver = require('./GenericArchiver');
 
 class GenericWorker {
 
@@ -18,8 +19,9 @@ class GenericWorker {
     }
 
     async init() {
-        await this.initEventSubscriptions();
         await this.archiver.init();
+        await this.initEventSubscriptions();
+
         return true;
     }
 
@@ -39,11 +41,7 @@ class GenericWorker {
 
     get logger() {
         if (!this._logger) {
-            this._logger = new Logger({
-                context: {
-                    serviceName: 'archive'
-                }
-            });
+            this._logger = new Logger({context: {serviceName: 'archive'}});
         }
 
         return this._logger;
@@ -64,35 +62,44 @@ class GenericWorker {
     }
 
     async initEventSubscriptions() {
+        if (process.env.NODE_ENV === 'testing') {
+            return true; // !!!
+        }
 
-        if (process.env.NODE_ENV !== 'testing') {
-            try {
-                /* Subscribe w/o callback to trigger queue creation and binding. */
-                // await this.eventClient.subscribe(InvoiceArchiveConfig.newLogrotationJobQueueName);
-                // await this.eventClient.subscribe(InvoiceArchiveConfig.newArchiveTransactionJobQueueName);
-            } catch (e) {
-                this.logger.error('InvoiceArchiveWorker#init: faild to initially subscribe to the ');
-                throw e;
-            }
-
-            /** Enter main loop to keep the process running. */
-            this.mainLoop();
+        try {
+            await this.eventClient.subscribe(ArchiveConfig.dailyArchiveJobPendingTopic, this.onDailyArchiveJobPending.bind(this));
+        } catch (e) {
+            this.logger.error(this.klassName, '#init: Failed to subscribe to the message queue(s).', e);
+            throw e;
         }
 
         return true;
     }
 
     /**
-     * @todo remove as soon as worker supports subscribing to a event topic.
+     * Event handler for event queue messages on the 'dailyArchiveJob.pending' topic.
+     *
+     * @async
+     * @function onDailyArchiveJobPending
+     * @param {object} message - Application payload received on the topic subscription
+     * @param {object} ctx - Context provided by the EventClient (extracted from the message)
+     * @param {string} topic - The topic the message was created with.
+     * @param {string} subject - The subject (routingKey in Rabbit) the message was produuced with
      */
-    async mainLoop() {
+    async onDailyArchiveJobPending(message, ctx, topic, subject) {
+        this.logger.info(this.klassName, `#onDailyArchiveJobPending: Received request to run daily TnT logs to archive on subject >>> ${subject} <<<.`, message);
+
+        const {tenantConfig, date} = message;
+
+        let result = true;
         try {
-            console.log(Date.now(), ' - I am alive');
+            result = await this.archiver.doDailyArchiving(tenantConfig.tenantId, date);
         } catch (e) {
-        } finally {
-            // Restart the timer
-            this._mainLoopTimeout = setTimeout(this.mainLoop.bind(this), 5000);
+            this.logger.error(this.klassName, `#onDailyArchiveJobPending: Failed to run daily archive job for tenantId ${tenantConfig.tenantId}. Got exception.`, e);
+            result = false;
         }
+
+        return result;
     }
 
     /**

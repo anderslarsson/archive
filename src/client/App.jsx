@@ -1,15 +1,16 @@
 import React from 'react';
 import {Containers} from '@opuscapita/service-base-ui';
 import {Route, Redirect} from 'react-router';
-import InvoiceArchive from './components/InvoiceArchive.jsx';
-import InvoiceArchiveDocument from './components/InvoiceArchiveDocument.jsx';
+import Search from './components/Search.jsx';
+import ArchiveDocument from './components/ArchiveDocument.jsx';
 
 const App = () =>
     <Containers.ServiceLayout serviceName="archive">
-        <Route exact path='/invoices' component={InvoiceArchive}/>
-        <Route path='/invoices/:index/documents/:id' component={InvoiceArchiveDocument} />
+        <Route exact path='/search' component={Search}/>
+        <Route path='/viewer/:index/documents/:id' component={ArchiveDocument} />
 
-        <Redirect from='/' to='invoices' />
+        <Redirect from='/invoices' to='/search' />
+        <Redirect from='/' to='/search' />
     </Containers.ServiceLayout>;
 
 export default App;

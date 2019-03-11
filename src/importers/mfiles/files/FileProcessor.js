@@ -244,7 +244,10 @@ class FileProcessor {
 
         for (const attachment of attachments) {
             try {
-                const blobPath = `/blob/api${attachment.reference}`.replace('/data/private', '/data/metadata/private');
+                let pathComponents = attachment.reference.split('/');
+                const encFilename = encodeURIComponent(pathComponents.pop());
+                const ref = `${pathComponents.join('/')}/${encFilename}`;
+                const blobPath = `/blob/api${ref}`.replace('/data/private', '/data/metadata/private');
 
                 let result = await api.patchJson(blobPath, {
                     readOnly: true
@@ -297,10 +300,12 @@ class FileProcessor {
      * @return {Promise <Obkect>}
      */
     async uploadFile(data, transactionId, tenantId, filename) {
-        filename = encodeURI(filename);
-        filename = filename.replace(/\?|\#/g, '_');
 
-        let blobPath = `/blob/api/${tenantId}/data/private/archive/${transactionId}/${filename}`;
+        let encodedFilename = filename.replace(/[\x00-\x1F\x7F-\x9F]/g, ''); // Remove control codes
+        encodedFilename = encodeURIComponent(encodedFilename); // URL encode
+        encodedFilename = encodedFilename.replace(/\?|\#/g, '_'); // Remove remaining special characters (should not happen after encodeURIComponent)
+
+        let blobPath = `/blob/api/${tenantId}/data/private/archive/${transactionId}/${encodedFilename}`;
 
         /** Check existence of file */
         let {res} = await api.head(blobPath);

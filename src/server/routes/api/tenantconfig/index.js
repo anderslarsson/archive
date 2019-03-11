@@ -5,12 +5,16 @@
  */
 
 const validTypes = [
-    'invoice_receiving'
+    'invoice_receiving',
+    'all'
 ];
 
 /**
- * Handler function that responds to an request with a list customerIds and the respective
- * company name.  The customerIds are fetched from getUserTenants() and the company
+ * Creates a mapping from current user's tenants to customer names.
+ *
+ * TODO currently only supports "customers"!
+ *
+ * The customerIds are fetched from getUserTenants() and the company
  * names from the customer service.
  *
  * @async
@@ -28,41 +32,50 @@ const validTypes = [
 module.exports.get = async function (req, res, app, db) {
 
     try {
-        let type = req.params.type;
+        const type = req.params.type;
+
         if (!validTypes.includes(type)) {
             return sendErrorResponse(req, res, 400, 'Wrong parameters.');
         }
 
-        /* Check if owning tenantId has valid archive configuration */
+        /** Fetch config for all user tenants */
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
         let tenantConfigs = [];
+
         if (isAdmin(req)) {
             tenantConfigs = await tenantConfigModel.findAll();
         } else {
-            let tenants = await req.opuscapita.getUserTenants();
+            const tenants = await req.opuscapita.getUserTenants();
 
-            tenantConfigs = await tenantConfigModel.findAll({
-                where: {
-                    tenantId: {
-                        $in: tenants
-                    },
-                    type: type
+            if (tenants && Array.isArray(tenants)) {
+                if (tenants.some(e => e === '*')) {
+                    tenantConfigs = await tenantConfigModel.findAll();
+                } else {
+                    let query = {
+                        where: {
+                            tenantId: {$in: tenants}
+                        }
+                    };
+
+                    if (type !== 'all') {
+                        query.where.type = type;
+                    }
+
+                    tenantConfigs = await tenantConfigModel.findAll(query);
                 }
-            });
+            }
         }
 
-        let tenantIds = tenantConfigs.map((config) => config.tenantId);
-
-        /* Filter tenantIds with archiving by customer type */
-        let customerIds = tenantIds
+        const tenantIds = tenantConfigs.map((config) => config.tenantId);
+        const customerIds = tenantIds
             .filter(id => id.startsWith('c_'))
             .map(id => id.replace(/^c_/, ''));
 
-        /* Fetch customer information from customer service */
-        let customers = await req.opuscapita.serviceClient.get('customer', `/api/customers/?id=${customerIds.join(',')}`);
+        /** Fetch customer information from customer service */
+        const customers = await req.opuscapita.serviceClient.get('customer', `/api/customers/?id=${customerIds.join(',')}`);
 
-        /* Enrich the customer information with archiving enabled with the humand readable customer name */
-        let customerMapping = [];
+        /** Enrich the customer information with archiving enabled with the humand readable customer name */
+        const customerMapping = [];
         for (const id of customerIds) {
             const entry = customers[0].find(e => e.id === id);
             if (entry) {

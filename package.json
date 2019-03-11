@@ -20,7 +20,7 @@
   "dependencies": {
     "@opuscapita/bouncer": "^1.0.54",
     "@opuscapita/config": "^3.0.14",
-    "@opuscapita/db-init": "^2.0.19",
+    "@opuscapita/db-init": "^2.0.23",
     "@opuscapita/event-client": "^2.0.34",
     "@opuscapita/i18n": "^1.2.1",
     "@opuscapita/useridentity-middleware": "^3.0.14",
@@ -64,7 +64,7 @@
     "minimist": "^1.2.0",
     "mocha": "^5.0.1",
     "mocha-junit-reporter": "^1.18.0",
-    "nodemon": "^1.18.7",
+    "nodemon": "^1.18.8",
     "nyc": "^11.4.1",
     "prop-types": "^15.6.2",
     "raml-to-markdown": "^1.2.3",
