@@ -252,6 +252,8 @@ class GenericArchiver {
             }
         });
 
+        this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found #{count} finished transactions.`);
+
         if (count) {
             const aggregationQuery = {
                 size: 0,
