@@ -354,6 +354,8 @@ class GenericArchiver {
             const events = await this.getEventsByTransactionId(transactionId, tenantId);
 
             if (this.transactionHasArchivableContent(events)) {
+                this.logger.log(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has archivable content. Continueing.}`);
+
                 const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
                 const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
 
