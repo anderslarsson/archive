@@ -1,8 +1,11 @@
 'use strict';
 
+const {format, startOfDay, subDays} = require('date-fns');
+
 const Logger         = require('ocbesbn-logger'); // Logger
 const ArchiveConfig  = require('../../../../shared/ArchiveConfig');
 const logger         = new Logger();
+const configClient   = require('@opuscapita/config');
 
 /**
  * Job creation endpoint.
@@ -39,10 +42,22 @@ module.exports.create = async function create(req, res, app, db) {
 async function triggerDailyRotation(db, eventClient) {
     let results = [];
 
+    await configClient.init();
+    const lookback = await configClient.getProperty('config/archiver/generic/lookback');
+
     try {
         // Fetch all configured tenants
+        const minGoLiveDay = subDays(startOfDay(Date.now()), lookback);
+        console.log('::DEBUG::', minGoLiveDay);
+
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        const configs           = await tenantConfigModel.findAll({where: {type: 'generic'}});
+        const configs           = await tenantConfigModel.findAll({
+            where: {
+                type: 'generic',
+                goLive: {
+                    $gte: minGoLiveDay
+                }
+            }});
 
         // Enqueue a job for every tenant who has archive activated
         for (let config of configs) {

@@ -1,4 +1,5 @@
 'use strict';
+
 const {format, subDays} = require('date-fns');
 
 const dbInit        = require('@opuscapita/db-init'); // Database
