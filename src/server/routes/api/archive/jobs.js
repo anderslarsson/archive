@@ -62,7 +62,7 @@ async function triggerDailyRotation(db, eventClient) {
             where: {
                 type: 'generic',
                 goLive: {
-                    $gte: minGoLiveDay
+                    $lte: minGoLiveDay
                 }
             }});
 
