@@ -35,11 +35,12 @@ export default class Search extends Components.ContextComponent {
                 sortOrder: 'asc'
             },
             selectedValues: {
-                tenant: null,
-                index: null,
+                documentNumber: null,
                 from: null,
-                to: null,
-                text: null
+                index: null,
+                tenant: null,
+                text: null,
+                to: null
             },
             availableOptions: {
                 tenants: [],
@@ -197,6 +198,7 @@ export default class Search extends Components.ContextComponent {
                 order: this.state.search.sortOrder
             },
             query: {
+                documentNumber: selectedValues.documentNumber,
                 email: selectedValues.email,
                 year: selectedValues.index.split('-').pop(),
                 from: selectedValues.from && format(selectedValues.from, 'YYYY-MM-DD'),
@@ -394,14 +396,14 @@ export default class Search extends Components.ContextComponent {
                                 </div>
 
                                 <div className="row">
-                                    <div className="col-md-12">
+                                    <div className="col-md-6">
                                         <div className="form-group">
-                                            <div className="col-md-2">
+                                            <div className="col-md-4">
                                                 <label className="control-label">
                                                     {i18n.getMessage('Archive.forms.labels.email')}
                                                 </label>
                                             </div>
-                                            <div className="offset-md-2 col-md-3">
+                                            <div className="offset-md-2 col-md-6">
                                                 <input
                                                     type="text"
                                                     className="form-control"
@@ -409,6 +411,28 @@ export default class Search extends Components.ContextComponent {
                                                     onChange={(event) => {
                                                         let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
                                                             email: event.target.value
+                                                        });
+                                                        this.setState({selectedValues: selectedValuesUpdate});
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="form-group">
+                                            <div className="col-md-4">
+                                                <label className="control-label">
+                                                    {i18n.getMessage('Archive.forms.labels.documentNumber')}
+                                                </label>
+                                            </div>
+                                            <div className="offset-md-2 col-md-6">
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={this.state.selectedValues.documentNumber}
+                                                    onChange={(event) => {
+                                                        let selectedValuesUpdate = Object.assign({}, this.state.selectedValues, {
+                                                            documentNumber: event.target.value
                                                         });
                                                         this.setState({selectedValues: selectedValuesUpdate});
                                                     }}
@@ -502,6 +526,11 @@ export default class Search extends Components.ContextComponent {
                                     </a>
                                 );
                             }
+                        },
+                        {
+                            id: 'number',
+                            accessor: '_source.document.number',
+                            Header: i18n.getMessage('Archive.table.columns.documentNumber.title')
                         },
                         {
                             id: 'start',

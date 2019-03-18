@@ -72,6 +72,13 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                             <td>Transaction ID</td>
                                             <td>{doc.transactionId}</td>
                                         </tr>
+                                        {
+                                            doc.document && doc.document.number &&
+                                                <tr>
+                                                    <td>{t('Archive.invoice.page.labels.documentNumber')}</td>
+                                                    <td>{doc.document.number}</td>
+                                                </tr>
+                                        }
                                         <tr>
                                             <td>{t('Archive.invoice.page.labels.startDate')}</td>
                                             <td>{doc.start}</td>
@@ -96,6 +103,7 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                                     <td>{doc.document.amount}</td>
                                                 </tr>
                                         }
+
                                     </table>
 
                                 </div>

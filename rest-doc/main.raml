@@ -1,6 +1,6 @@
 #%RAML 1.0
-title: Your Service Documentation
-description: Your Service Description
+title: Archive Service Documentation
+description: Service for long term archiving transactional data 
 version: 1.0.0
 baseUri: http://localhost
 mediaType:
@@ -14,4 +14,4 @@ traits:
     acceptLanguage: !include traits/acceptLanguage.raml
     sendNotFound: !include traits/sendNotFound.raml
 
-/archive: !include resourceTypes/archiveInvoices.raml
+/archive/invoices: !include resourceTypes/archiveInvoices.raml

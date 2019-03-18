@@ -43,6 +43,7 @@
         },
         "document": {
             "msgType": "invoice",
+            "number": "231742",
             "files": {
                 "inboundAttachments": [
                     {

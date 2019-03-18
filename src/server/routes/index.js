@@ -37,7 +37,6 @@ module.exports.init = async function (app, db) {
 
     /** *** Invoice archive *** */
     app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
-    app.post('/api/archive/invoices/job', (req, res) => invoiceArchiveHandler.createArchiverJob(req, res, app, db));
 
     /** *** Generic archive *** */
     app.post('/api/archive/jobs/:type', (req, res) => archiveJobsHandler.create(req, res, app, db));

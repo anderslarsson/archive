@@ -134,7 +134,7 @@ class GenericMapper {
             };
         };
 
-        let buildMsgType = () => {
+        const buildMsgType = () => {
             return this.items.reduce((acc, elem) => {
                 if (elem.document && elem.document.msgType) {
                     return elem.document.msgType;
@@ -144,7 +144,7 @@ class GenericMapper {
             }, null);
         };
 
-        let buildMsgSubType = () => {
+        const buildMsgSubType = () => {
             return this.items.reduce((acc, elem) => {
                 if (elem.document && elem.document.msgTypeSub) {
                     return elem.document.msgTypeSub;
@@ -154,9 +154,19 @@ class GenericMapper {
             }, null);
         };
 
+        const buildDocumentNumber = () => {
+            return this.items.reduce((acc, elem) => {
+                if (elem.document && elem.document.number)
+                    return elem.document.number;
+                else
+                    return acc;
+            }, null);
+        };
+
         return {
             msgType: buildMsgType(),
             msgSubType: buildMsgSubType(),
+            number: buildDocumentNumber(),
             files: buildFiles()
         };
     }

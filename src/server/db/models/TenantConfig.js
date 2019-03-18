@@ -26,6 +26,10 @@ module.exports.init = function (db) {
                 allowNull: false,
                 defaultValue: 'invoice'
             },
+            goLive: {
+                type: Sequelize.DATE(),
+                allowNull: false
+            },
             /** Defines the number of *days* an archive entry should stay on the hot storage. */
             retentionPeriodHot: {
                 type: Sequelize.INTEGER,

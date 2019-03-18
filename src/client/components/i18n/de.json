@@ -5,6 +5,7 @@
   "Archive.forms.labels.tenant": "Firma/Käufer",
   "Archive.forms.labels.indices": "Jahr",
   "Archive.forms.labels.email": "E-Mail",
+  "Archive.forms.labels.documentNumber": "Dokumenten Nr.",
   "Archive.forms.labels.from": "Von",
   "Archive.forms.labels.to": "Bis",
   "Archive.forms.labels.textSearch": "Suche im Text",
@@ -21,6 +22,7 @@
 
   "Archive.table.columns.id.title": "Transaction Id",
   "Archive.table.columns.no.title": "Invoice No",
+  "Archive.table.columns.documentNumber.title": "Dokumenten Nr.",
   "Archive.table.columns.from.title": "Von",
   "Archive.table.columns.to.title": "An",
   "Archive.table.columns.start.title": "Beginn",
@@ -34,6 +36,7 @@
   "Archive.invoice.page.headings.receiverInformation": "Sender/Empfänger",
 
   "Archive.invoice.page.labels.lastStatus": "Status",
+  "Archive.invoice.page.labels.documentNumber": "Dokumenten Nr.",
   "Archive.invoice.page.labels.customerId": "Kunden-ID",
   "Archive.invoice.page.labels.endDate": "Transaktionsende",
   "Archive.invoice.page.labels.startDate": "Transaktionsbeginn",
