@@ -90,10 +90,10 @@ class GenericArchiver {
      * @returns {boolean} Success indicator
      */
     async doDailyArchiving(tenantId, date = Date.now()) {
-        const lookback = await config.getProperty('config/archiver/generic/lookback');
-        const day = format(subDays(date, lookback), 'YYYY.MM.DD');
-
         let success = false;
+
+        const lookback = await config.getProperty('config/archiver/generic/lookback');
+        const day      = format(subDays(date, lookback), 'YYYY.MM.DD');
 
         this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', day);
 
@@ -106,13 +106,13 @@ class GenericArchiver {
             const hasFailedTransactions = insertResult.failed.length > 0 || updateBlobResult.failed.length > 0;
 
             if (hasFailedTransactions)
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors.`, hasFailedTransactions); // TODO persist failures.
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors for tenant ${tenantId} and day ${day}.`, hasFailedTransactions); // TODO persist failures.
             else
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful`);
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${day}.`);
 
             success = true;
         } catch (e) {
-            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenantId ', tenantId, ' with exception.', e);
+            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${day}', tenantId, ' with exception.', e);
             success = false;
         }
 
@@ -253,7 +253,7 @@ class GenericArchiver {
             }
         });
 
-        this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions.`);
+        this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions for tenant ${tenantId} on day ${day}.`);
 
         if (count) {
             const aggregationQuery = {
@@ -357,7 +357,7 @@ class GenericArchiver {
             const events = await this.getEventsByTransactionId(transactionId, tenantId);
 
             if (this.transactionHasArchivableContent(events)) {
-                this.logger.log(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has archivable content. Continueing.}`);
+                this.logger.info(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has archivable content. Continueing.}`);
 
                 const filteredEvents = this.filterEventsByTenantAndAccessLevel(tenantId, events);
                 const archiveEntry   = this.eventsToArchive(tenantId, transactionId, filteredEvents);
@@ -366,7 +366,7 @@ class GenericArchiver {
                     result.push(archiveEntry);
                 }
             } else {
-                this.logger.log(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has no archivable content. Skipping.}`);
+                this.logger.info(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has no archivable content. Skipping.}`);
             }
         }
 

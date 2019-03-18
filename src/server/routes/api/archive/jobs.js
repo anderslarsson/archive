@@ -16,16 +16,23 @@ const configClient   = require('@opuscapita/config');
  * @param {string} req.params.type - Type of the job that should be created
  */
 module.exports.create = async function create(req, res, app, db) {
-    let result;
+    let success = false;
 
     try {
-        result = await triggerDailyRotation(db, req.opuscapita.eventClient);
+        const result = await triggerDailyRotation(db, req.opuscapita.eventClient);
+
+        if (result && result.fail && result.fail.length === 0) {
+            success = true;
+        } else {
+            logger.error('Failed to trigger daily rotation for tenants: ', result.fail);
+            success = false;
+        }
     } catch (e) {
-        logger.error(__filename, '#create: Failed to call triggerDailyRotation with exception.', e);
-        result = false;
+        logger.error(`${__filename}#create: Failed to call triggerDailyRotation with exception.`, e);
+        success = false;
     }
 
-    res.status(200).json({success: result});
+    res.status(200).json({success});
 };
 
 /**
@@ -36,11 +43,12 @@ module.exports.create = async function create(req, res, app, db) {
  * @param {object} db - Sequelize instance
  * @param {object} eventClient - EventClient instance
  * @return {Promise}
- * @fulfil {boolean} true
+ * @fulfil {object} Two element object with done and failed configs.
  * @reject {Error}
  */
 async function triggerDailyRotation(db, eventClient) {
-    let results = [];
+    let done = [];
+    let fail = [];
 
     await configClient.init();
     const lookback = await configClient.getProperty('config/archiver/generic/lookback');
@@ -48,7 +56,6 @@ async function triggerDailyRotation(db, eventClient) {
     try {
         // Fetch all configured tenants
         const minGoLiveDay = subDays(startOfDay(Date.now()), lookback);
-        console.log('::DEBUG::', minGoLiveDay);
 
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
         const configs           = await tenantConfigModel.findAll({
@@ -59,6 +66,12 @@ async function triggerDailyRotation(db, eventClient) {
                 }
             }});
 
+        if (Array.isArray(configs)) {
+            logger.info(`Queuing daily archive rotation for ${configs.length} tenants.`);
+        } else {
+            logger.error(`No tenant configuration found.`);
+        }
+
         // Enqueue a job for every tenant who has archive activated
         for (let config of configs) {
             try {
@@ -68,17 +81,20 @@ async function triggerDailyRotation(db, eventClient) {
                     tenantConfig: config
                 });
 
-                results.push(result);
+                if (result) {
+                    done.push(config);
+                } else {
+                    fail.push(config);
+                }
             } catch (e) {
                 logger.error('Could not emit archive event UPDATE_TENANT_YEARLY for tenant ID' + (config.supplierId || config.customerId));
-                results.push(false);
+                fail.push(config)
             }
         }
 
     } catch (e) {
         logger.error('Jobs#triggerDailyRotation: Failed to queue jobs with exception.' , e);
-        results = [];
     }
 
-    return true;
+    return { done, fail };
 }
