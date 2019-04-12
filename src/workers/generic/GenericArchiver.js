@@ -1,6 +1,7 @@
 'use strict';
 
-const dbInit        = require('@opuscapita/db-init'); // Database
+const {format: dateFormat} = require('date-fns');
+
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
@@ -12,13 +13,13 @@ const GenericMapper = require('./GenericMapper');
 
 class GenericArchiver {
 
-    constructor(eventClient, logger = null) {
+    constructor(eventClient, logger = null, db) {
         this.serviceClient = new ServiceClient();
 
         this.elasticsearch = elasticsearch;
         this.eventClient   = eventClient;
 
-        this.db = null;
+        this.db = db;
 
         this._logger       = logger;
         this._tntLogPrefix = 'bn_tx_logs-';
@@ -56,7 +57,6 @@ class GenericArchiver {
         try {
             await config.init({});
             await this.elasticsearch.init();
-            this.db = await dbInit.init();
         } catch (e) {
             this.logger.error(this.klassName, '#init: Failed to initialize with exception.' , e);
         }
@@ -84,7 +84,7 @@ class GenericArchiver {
      * @async
      * @function updateDailyArchive
      * @param {string} tenantId
-     * @param {string} dayToArchive - The day that should be archived formatted as 'YYYY.MM.DD'
+     * @param {string} dayToArchive - The day that should be archived formatted as 'YYYY-MM-DD'.
      * @returns {boolean} Success indicator
      */
     async doDailyArchiving(tenantId, dayToArchive) {
@@ -214,6 +214,9 @@ class GenericArchiver {
     /**
      * Fetch a list of transacation ids by the given tenantId and the day.
      *
+     * !!Attention: TnT logs use a localized format, JS will localize this format when used with
+     * new Date(). Thats why we convert it here and use ISO format everywhere else.
+     *
      * @function getTransactionIdsByDayAndTenantId
      * @param {string} tenantId
      * @param {string} day
@@ -223,7 +226,9 @@ class GenericArchiver {
      */
     async getUniqueTransactionIdsByDayAndTenantId(tenantId, day) {
         let result = [];
-        const index = `${this._tntLogPrefix}${day}`;
+
+        const tntDay = dateFormat(day, 'YYYY.MM.DD'); // TnT uses a special date format
+        const index = `${this._tntLogPrefix}${tntDay}`;
 
         let q = {
             bool: {
@@ -446,6 +451,11 @@ class GenericArchiver {
     transactionHasArchivableContent(events) {
         return events.some((e) => e && e.archivable);
     }
+
+    /**
+     * Update the database log.
+     *
+    * @param {date} 
 
     /**
      * Augment a given ES query by tenantId clause.

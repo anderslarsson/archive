@@ -74,7 +74,7 @@ async function triggerDailyRotation(db, eventClient, triggerDate) {
         throw e;
     }
 
-    const dayToArchive = format(subDays(triggerDate || Date.now(), lookback), 'YYYY.MM.DD');
+    const dayToArchive = format(subDays(triggerDate || Date.now(), lookback), 'YYYY-MM-DD');
 
     try {
         // Fetch all configured tenants
