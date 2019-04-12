@@ -39,11 +39,11 @@ module.exports.init = async function (app, db) {
     app.post('/api/archive/invoices', (req, res) => invoiceArchiveHandler.createDocument(req, res, app, db));
 
     /** *** Generic archive *** */
-    app.post('/api/archive/jobs/:type', (req, res) => archiveJobsHandler.create(req, res, app, db));
+    app.post('/api/archive/jobs/:type', (req, res) => handle(req, res, app, db, archiveJobsHandler.create));
 
     /** *** Indices *** */
     app.get('/api/indices', can.listInvoiceIndicesByTenantId, (req, res) => handle(req, res, app, db, indicesInvoiceHandler.get));
-    app.post('/api/indices/:index/open', can.accessIndex, (req, res) => indicesCmdHandler.openIndex(req, res));
+    app.post('/api/indices/:index/open', can.accessIndex, (req, res) => handle(req, res, app, db, indicesCmdHandler.openIndex));
     app.get('/api/indices/:index/documents/:id', can.accessIndex, (req, res) => documentsHandler.get(req, res));
 
     /** *** Searches *** */
@@ -59,11 +59,11 @@ module.exports.init = async function (app, db) {
 
 };
 
-function handle(req, res, app, db, handlerFn) {
+async function handle(req, res, app, db, handlerFn) {
     try {
-        handlerFn(req, res, app, db);
+        await handlerFn(req, res, app, db);
     } catch (e) {
-        res.json({
+        res.status(e.httpCode || 400).json({
             success: false,
             message: e.message || 'Unknown error'
         });

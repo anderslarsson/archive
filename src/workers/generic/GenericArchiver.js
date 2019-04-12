@@ -1,8 +1,7 @@
 'use strict';
 
-const {format, subDays} = require('date-fns');
+const {format: dateFormat} = require('date-fns');
 
-const dbInit        = require('@opuscapita/db-init'); // Database
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
 const ServiceClient = require('ocbesbn-service-client');
@@ -14,13 +13,13 @@ const GenericMapper = require('./GenericMapper');
 
 class GenericArchiver {
 
-    constructor(eventClient, logger = null) {
+    constructor(eventClient, logger = null, db) {
         this.serviceClient = new ServiceClient();
 
         this.elasticsearch = elasticsearch;
         this.eventClient   = eventClient;
 
-        this.db = null;
+        this.db = db;
 
         this._logger       = logger;
         this._tntLogPrefix = 'bn_tx_logs-';
@@ -58,7 +57,6 @@ class GenericArchiver {
         try {
             await config.init({});
             await this.elasticsearch.init();
-            this.db = await dbInit.init();
         } catch (e) {
             this.logger.error(this.klassName, '#init: Failed to initialize with exception.' , e);
         }
@@ -86,33 +84,44 @@ class GenericArchiver {
      * @async
      * @function updateDailyArchive
      * @param {string} tenantId
-     * @param {date} date - The day that should be archived
+     * @param {string} dayToArchive - The day that should be archived formatted as 'YYYY-MM-DD'.
      * @returns {boolean} Success indicator
      */
-    async doDailyArchiving(tenantId, date = Date.now()) {
+    async doDailyArchiving(tenantId, dayToArchive) {
         let success = false;
 
-        const lookback = await config.getProperty('config/archiver/generic/lookback');
-        const day      = format(subDays(date, lookback), 'YYYY.MM.DD');
+        this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', dayToArchive);
 
-        this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', day);
+        await this.updateLog({
+            dayToArchive,
+            tenantId
+        });
 
         try {
-            const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day); // Fetch all IDs of finished transactions for the given day
+            const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, dayToArchive); // Fetch all IDs of finished transactions for the given day
             const archiveDocs      = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds); // Create archive documents for every identified transaction from the step before
-            const insertResult     = await this.insertArchiveDocuments(tenantId, day, archiveDocs); // Create documents on Elasticsearch
+            const insertResult     = await this.insertArchiveDocuments(tenantId, dayToArchive, archiveDocs); // Create documents on Elasticsearch
             const updateBlobResult = await this.processAttachments(insertResult.done);
 
             const hasFailedTransactions = insertResult.failed.length > 0 || updateBlobResult.failed.length > 0;
 
             if (hasFailedTransactions)
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors for tenant ${tenantId} and day ${day}.`, hasFailedTransactions); // TODO persist failures.
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors for tenant ${tenantId} and day ${dayToArchive}.`, hasFailedTransactions); // TODO persist failures.
             else
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${day}.`);
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${dayToArchive}.`);
+
+            this.updateLog({
+                dayToArchive,
+                tenantId,
+                insertCountSuccess: insertResult.done.length,
+                insertCountFailed:  insertResult.failed.length,
+                status: hasFailedTransactions ? 'finished_with_errors' : 'finished'
+            });
 
             success = true;
         } catch (e) {
-            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${day}', tenantId, ' with exception.', e);
+            this.updateLog({dayToArchive, tenantId, status: 'failed'});
+            this.logger.error(this.klassName, `#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${dayToArchive} with exception.`, e);
             success = false;
         }
 
@@ -219,6 +228,9 @@ class GenericArchiver {
     /**
      * Fetch a list of transacation ids by the given tenantId and the day.
      *
+     * !!Attention: TnT logs use a localized format, JS will localize this format when used with
+     * new Date(). Thats why we convert it here and use ISO format everywhere else.
+     *
      * @function getTransactionIdsByDayAndTenantId
      * @param {string} tenantId
      * @param {string} day
@@ -228,7 +240,9 @@ class GenericArchiver {
      */
     async getUniqueTransactionIdsByDayAndTenantId(tenantId, day) {
         let result = [];
-        const index = `${this._tntLogPrefix}${day}`;
+
+        const tntDay = dateFormat(day, 'YYYY.MM.DD'); // TnT uses a special date format
+        const index = `${this._tntLogPrefix}${tntDay}`;
 
         let q = {
             bool: {
@@ -450,6 +464,26 @@ class GenericArchiver {
      */
     transactionHasArchivableContent(events) {
         return events.some((e) => e && e.archivable);
+    }
+
+    /**
+     * Update the database log.
+     *
+     * @async
+     * @param {GenericArchiverLog} update
+     * @return {Promise}
+     */
+    async updateLog(update) {
+        let result = null;
+
+        try {
+            const model = await this.db.modelManager.getModel('GenericArchiverLog');
+            result = await model.upsert(update);
+        } catch (e) {
+            this.logger.error(`${this.klassName}#updateLog: Exception caught.`, e);
+        }
+
+        return result;
     }
 
     /**
