@@ -92,6 +92,11 @@ class GenericArchiver {
 
         this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', dayToArchive);
 
+        await this.updateLog({
+            dayToArchive,
+            tenantId
+        });
+
         try {
             const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, dayToArchive); // Fetch all IDs of finished transactions for the given day
             const archiveDocs      = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds); // Create archive documents for every identified transaction from the step before
@@ -105,8 +110,17 @@ class GenericArchiver {
             else
                 this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${dayToArchive}.`);
 
+            this.updateLog({
+                dayToArchive,
+                tenantId,
+                insertCountSuccess: insertResult.done.length,
+                insertCountFailed:  insertResult.failed.length,
+                status: hasFailedTransactions ? 'finished_with_errors' : 'finished'
+            });
+
             success = true;
         } catch (e) {
+            this.updateLog({dayToArchive, tenantId, status: 'failed'});
             this.logger.error(this.klassName, `#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${dayToArchive} with exception.`, e);
             success = false;
         }
@@ -455,7 +469,22 @@ class GenericArchiver {
     /**
      * Update the database log.
      *
-    * @param {date} 
+     * @async
+     * @param {GenericArchiverLog} update
+     * @return {Promise}
+     */
+    async updateLog(update) {
+        let result = null;
+
+        try {
+            const model = await this.db.modelManager.getModel('GenericArchiverLog');
+            result = await model.upsert(update);
+        } catch (e) {
+            this.logger.error(`${this.klassName}#updateLog: Exception caught.`, e);
+        }
+
+        return result;
+    }
 
     /**
      * Augment a given ES query by tenantId clause.
