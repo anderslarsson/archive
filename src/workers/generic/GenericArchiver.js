@@ -1,7 +1,5 @@
 'use strict';
 
-const {format, subDays} = require('date-fns');
-
 const dbInit        = require('@opuscapita/db-init'); // Database
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
@@ -86,33 +84,30 @@ class GenericArchiver {
      * @async
      * @function updateDailyArchive
      * @param {string} tenantId
-     * @param {date} date - The day that should be archived
+     * @param {string} dayToArchive - The day that should be archived formatted as 'YYYY.MM.DD'
      * @returns {boolean} Success indicator
      */
-    async doDailyArchiving(tenantId, date = Date.now()) {
+    async doDailyArchiving(tenantId, dayToArchive) {
         let success = false;
 
-        const lookback = await config.getProperty('config/archiver/generic/lookback');
-        const day      = format(subDays(date, lookback), 'YYYY.MM.DD');
-
-        this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', day);
+        this.logger.info(this.klassName, '#doDailyArchiving: Starting daily archiving for tenantId ', tenantId, 'on day ', dayToArchive);
 
         try {
-            const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, day); // Fetch all IDs of finished transactions for the given day
+            const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, dayToArchive); // Fetch all IDs of finished transactions for the given day
             const archiveDocs      = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds); // Create archive documents for every identified transaction from the step before
-            const insertResult     = await this.insertArchiveDocuments(tenantId, day, archiveDocs); // Create documents on Elasticsearch
+            const insertResult     = await this.insertArchiveDocuments(tenantId, dayToArchive, archiveDocs); // Create documents on Elasticsearch
             const updateBlobResult = await this.processAttachments(insertResult.done);
 
             const hasFailedTransactions = insertResult.failed.length > 0 || updateBlobResult.failed.length > 0;
 
             if (hasFailedTransactions)
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors for tenant ${tenantId} and day ${day}.`, hasFailedTransactions); // TODO persist failures.
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished with errors for tenant ${tenantId} and day ${dayToArchive}.`, hasFailedTransactions); // TODO persist failures.
             else
-                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${day}.`);
+                this.logger.info(`${this.klassName}#doDailyArchiving: Finished successful for tenant ${tenantId} and day ${dayToArchive}.`);
 
             success = true;
         } catch (e) {
-            this.logger.error(this.klassName, '#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${day}', tenantId, ' with exception.', e);
+            this.logger.error(this.klassName, `#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${dayToArchive} with exception.`, e);
             success = false;
         }
 
