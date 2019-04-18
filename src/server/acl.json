@@ -58,7 +58,7 @@
         "resources": [
             {
                 "type": "rest",
-                "resourceId": "^/api/archive/invoices/job",
+                "resourceId": "^/api/archive/jobs/daily$",
                 "actions": ["create"]
             },
             {
