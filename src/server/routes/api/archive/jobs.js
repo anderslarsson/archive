@@ -1,11 +1,12 @@
 'use strict';
 
-const {format, startOfDay, subDays} = require('date-fns');
+const {isValid, format, startOfDay, subDays} = require('date-fns');
 
 const Logger         = require('ocbesbn-logger'); // Logger
-const ArchiveConfig  = require('../../../../shared/ArchiveConfig');
-const logger         = new Logger();
 const configClient   = require('@opuscapita/config');
+const ArchiveConfig  = require('../../../../shared/ArchiveConfig');
+
+const logger = new Logger();
 
 /**
  * Job creation endpoint.
@@ -14,12 +15,23 @@ const configClient   = require('@opuscapita/config');
  * @function create
  * @param {object] req - Express request object
  * @param {string} req.params.type - Type of the job that should be created
+ * @param {string} [req.body.date] - Date used as starting point for the archiving process, custom lookback will be substracted from this.
  */
 module.exports.create = async function create(req, res, app, db) {
-    let success = false;
+    let success     = false;
+    let triggerDate = null;
+
+    const {date} = req.body;
+
+    if (date) {
+        triggerDate = new Date(date);
+
+        if (!isValid(triggerDate))
+            throw new Error('Param date not valid.');
+    }
 
     try {
-        const result = await triggerDailyRotation(db, req.opuscapita.eventClient);
+        const result = await triggerDailyRotation(db, req.opuscapita.eventClient, triggerDate);
 
         if (result && result.fail && result.fail.length === 0) {
             success = true;
@@ -29,7 +41,7 @@ module.exports.create = async function create(req, res, app, db) {
         }
     } catch (e) {
         logger.error(`${__filename}#create: Failed to call triggerDailyRotation with exception.`, e);
-        success = false;
+        throw e;
     }
 
     res.status(200).json({success});
@@ -42,23 +54,34 @@ module.exports.create = async function create(req, res, app, db) {
  * @function triggerDailyRotation
  * @param {object} db - Sequelize instance
  * @param {object} eventClient - EventClient instance
+ * @param {date} triggerDate - Date used as starting point for the archiving process, custom lookback will be substracted from this.
  * @return {Promise}
  * @fulfil {object} Two element object with done and failed configs.
  * @reject {Error}
  */
-async function triggerDailyRotation(db, eventClient) {
+async function triggerDailyRotation(db, eventClient, triggerDate) {
     let done = [];
     let fail = [];
 
     await configClient.init();
+
     const lookback = await configClient.getProperty('config/archiver/generic/lookback');
+    if (!lookback) {
+        const message = 'Failed to fetch lookback value from consul.';
+        const e = new Error(message); e.httpCode = 500;
+
+        this.logger.error(message);
+        throw e;
+    }
+
+    const dayToArchive = format(subDays(triggerDate || Date.now(), lookback), 'YYYY-MM-DD');
 
     try {
         // Fetch all configured tenants
         const minGoLiveDay = subDays(startOfDay(Date.now()), lookback);
 
         const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        const configs           = await tenantConfigModel.findAll({
+        const configs = await tenantConfigModel.findAll({
             where: {
                 type: 'generic',
                 goLive: {
@@ -66,18 +89,18 @@ async function triggerDailyRotation(db, eventClient) {
                 }
             }});
 
-        if (Array.isArray(configs)) {
-            logger.info(`Queuing daily archive rotation for ${configs.length} tenants.`);
-        } else {
+        if (!Array.isArray(configs)) {
             logger.error(`No tenant configuration found.`);
         }
 
         // Enqueue a job for every tenant who has archive activated
         for (let config of configs) {
             try {
+                logger.info(`Queuing daily archive rotation for ${config.tenantId} tenants on day ${dayToArchive}.`);
+
                 let result = await eventClient.emit(ArchiveConfig.dailyArchiveJobPendingTopic, {
                     type: 'daily',
-                    date: Date.now(),
+                    date: dayToArchive,
                     tenantConfig: config
                 });
 

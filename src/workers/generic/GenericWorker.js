@@ -14,7 +14,7 @@ class GenericWorker {
      */
     constructor(db) {
         this._db              = db;
-        this._archiver        = new GenericArchiver(this.eventClient, this.logger);
+        this._archiver        = new GenericArchiver(this.eventClient, this.logger, this._db);
         this._mainLoopTimeout = null;
     }
 
