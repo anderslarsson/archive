@@ -4,6 +4,7 @@ services:
     image: opuscapita/archive:dev
     depends_on:
       - elasticsearch
+      - isodata
       - mysql
       - consul
       - registrator
@@ -74,6 +75,24 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+
+  isodata:
+    image: opuscapita/isodata:dev
+    ports:
+      - '3006:3006'
+    depends_on:
+      - consul
+      - mysql
+    labels:
+      SERVICE_NAME: isodata
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      PORT: '3006'
+      SERVICE_3006_CHECK_HTTP: /api/health/check
+      SERVICE_3006_CHECK_INTERVAL: 15s
+      SERVICE_3006_CHECK_TIMEOUT: 3s
+    command: 'npm run dev'
 
   user:
     image: opuscapita/user:dev
