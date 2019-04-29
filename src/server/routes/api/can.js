@@ -63,13 +63,13 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
         return res.status(404).json({success: false, message: 'Invalid index name.'});
     }
 
-    let tenants = [];
-    let tenantId = index.split('-')[1];
+     const tenantId = /^(?:archive_tenant_yearly-|archive_invoice_tenant_yearly-)((?:c_|s_)[\w-]*)(?:-\d{4})/gm.exec(index)[1];
 
     if (!tenantId || !(!tenantId.startsWith('c_') || !tenantId.startsWith('s_'))) {
         return res.status(404).json({success: false, message: 'Invalid index name.'});
     }
 
+    let tenants = [];
     try {
         tenants = (await req.opuscapita.getUserTenants());
         if (!hasTenantAccess(tenantId, tenants)) {
@@ -85,7 +85,7 @@ module.exports.accessIndex = async function canReadIndex(req, res, next) {
 function hasTenantAccess(tenantId, tenants = []) {
     let allowed = false;
 
-    let hasAll = tenants.find(t => t === '*');
+    const hasAll = tenants.find(t => t === '*');
     if (hasAll) {
         allowed = true;
     }
