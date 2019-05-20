@@ -203,7 +203,7 @@ function extractOwnerFromDocument(doc) {
  *
  * @function extractTypeFromDocument
  * @params {object} doc
- * @returns {String} tenantId
+ * @returns {String} type 
  */
 function extractTypeFromDocument(doc) {
     if (doc.customerId) {
