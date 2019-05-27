@@ -21,7 +21,7 @@ module.exports.create = async function create(req, res, app, db) {
     let success     = false;
     let triggerDate = null;
 
-    const {date} = req.body;
+    const {date, tenantId} = req.body;
 
     if (date) {
         triggerDate = new Date(date);
@@ -31,7 +31,7 @@ module.exports.create = async function create(req, res, app, db) {
     }
 
     try {
-        const result = await triggerDailyRotation(db, req.opuscapita.eventClient, triggerDate);
+        const result = await triggerDailyRotation(db, req.opuscapita.eventClient, {triggerDate, tenantId});
 
         if (result && result.fail && result.fail.length === 0) {
             success = true;
@@ -54,12 +54,14 @@ module.exports.create = async function create(req, res, app, db) {
  * @function triggerDailyRotation
  * @param {object} db - Sequelize instance
  * @param {object} eventClient - EventClient instance
- * @param {date} triggerDate - Date used as starting point for the archiving process, custom lookback will be substracted from this.
+ * @param {Object} opts
+ * @param {date} opts.string
+ * @param {string} opts.tenantId
  * @return {Promise}
  * @fulfil {object} Two element object with done and failed configs.
  * @reject {Error}
  */
-async function triggerDailyRotation(db, eventClient, triggerDate) {
+async function triggerDailyRotation(db, eventClient, {triggerDate, tenantId}) {
     let done = [];
     let fail = [];
 
@@ -80,14 +82,20 @@ async function triggerDailyRotation(db, eventClient, triggerDate) {
         // Fetch all configured tenants
         const minGoLiveDay = subDays(startOfDay(Date.now()), lookback);
 
-        const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
-        const configs = await tenantConfigModel.findAll({
+        const where = {
             where: {
                 type: 'generic',
                 goLive: {
                     $lte: minGoLiveDay
                 }
-            }});
+            }
+        };
+
+        if (tenantId)
+            where.where.tenantId = tenantId;
+
+        const tenantConfigModel = await db.modelManager.getModel('TenantConfig');
+        const configs = await tenantConfigModel.findAll(where);
 
         if (!Array.isArray(configs)) {
             logger.error(`No tenant configuration found.`);
