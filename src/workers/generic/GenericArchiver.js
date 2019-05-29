@@ -273,12 +273,12 @@ class GenericArchiver {
 
         this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions for tenant ${tenantId} on day ${day}.`);
 
-        if (count > 900)
+        if (Number.isInteger(count) && count > 900)
             this.logger.warn(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found more than 900 (${count}) finished transactions for tenant ${tenantId} on day ${day}.`);
         else
             this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions for tenant ${tenantId} on day ${day}.`);
 
-        if (count) {
+        if (Number.isInteger(count) && count > 0) {
             const aggregationQuery = {
                 size: 0,
                 _source: ['event.transactionId'],
@@ -314,9 +314,6 @@ class GenericArchiver {
                 result = buckets.map(({key}) => key);
             }
         }
-        else
-            this.logger.error(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Counting transactions did not return a value for tenant ${tenantId} on day ${day}.`);
-
 
         return result;
     }
