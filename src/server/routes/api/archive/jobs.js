@@ -106,7 +106,7 @@ async function triggerDailyRotation(db, eventClient, {triggerDate, tenantId}) {
             try {
                 logger.info(`Queuing daily archive rotation for ${config.tenantId} tenants on day ${dayToArchive}.`);
 
-                let result = await eventClient.emit(ArchiveConfig.dailyArchiveJobPendingTopic, {
+                const result = await eventClient.emit(ArchiveConfig.dailyArchiveJobPendingTopic, {
                     type: 'daily',
                     date: dayToArchive,
                     tenantConfig: config
