@@ -1,6 +1,7 @@
 'use strict';
 
 const {format: dateFormat} = require('date-fns');
+const retry = require('bluebird-retry');
 
 const config        = require('@opuscapita/config');
 const Logger        = require('ocbesbn-logger');
@@ -98,6 +99,9 @@ class GenericArchiver {
         });
 
         try {
+            // Wait on ES threadPool to be ready for new tasks
+            await this._waitForEs();
+
             const transactionIds   = await this.getUniqueTransactionIdsByDayAndTenantId(tenantId, dayToArchive); // Fetch all IDs of finished transactions for the given day
             const archiveDocs      = await this.mapTransactionsToArchiveDocument(tenantId, transactionIds); // Create archive documents for every identified transaction from the step before
             const insertResult     = await this.insertArchiveDocuments(tenantId, dayToArchive, archiveDocs); // Create documents on Elasticsearch
@@ -121,7 +125,7 @@ class GenericArchiver {
             success = true;
         } catch (e) {
             this.updateLog({dayToArchive, tenantId, status: 'failed'});
-            this.logger.error(this.klassName, `#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${dayToArchive} with exception.`, e);
+            this.logger.error(`${this.klassName}#doDailyArchiving: Failed to run daily archiving for tenant ${tenantId} and day ${dayToArchive} with exception.`, e);
             success = false;
         }
 
@@ -269,7 +273,12 @@ class GenericArchiver {
 
         this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions for tenant ${tenantId} on day ${day}.`);
 
-        if (count) {
+        if (Number.isInteger(count) && count > 900)
+            this.logger.warn(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found more than 900 (${count}) finished transactions for tenant ${tenantId} on day ${day}.`);
+        else
+            this.logger.log(`${this.klassName}#getUniqueTransactionIdsByDayAndTenantId: Found ${count} finished transactions for tenant ${tenantId} on day ${day}.`);
+
+        if (Number.isInteger(count) && count > 0) {
             const aggregationQuery = {
                 size: 0,
                 _source: ['event.transactionId'],
@@ -305,7 +314,6 @@ class GenericArchiver {
                 result = buckets.map(({key}) => key);
             }
         }
-
 
         return result;
     }
@@ -490,7 +498,7 @@ class GenericArchiver {
      * Augment a given ES query by tenantId clause.
      * The query has to contain a valid bool query to be augmented.
      *
-     * @function _addTenantIdClause
+     * @property _addTenantIdClause
      * @param {object} query - The ES query to augemnt
      * @return {object} Augmented query
      * @throws {Error} If the query is not in the right shape / does not already contain a bool filter.
@@ -514,6 +522,34 @@ class GenericArchiver {
         }
 
         return q;
+    }
+
+    /**
+     * Wait for elasticsearch search threadPool queue utilization being in 
+     * accepting state, meaning utlization is below 100% (1000 entries by default).
+     * Otherwise ES will fail with an exception when we try to add more entries
+     * to the queue.
+     *
+     * @property _waitForEs
+     * @return {Promise}
+     * @fulfil {boolean}
+     * @reject {Error}
+     */
+    async _waitForEs() {
+        return retry(async () => {
+            const esQueueUtilization = await this.elasticsearch.client.cat.threadPool({
+                threadPoolPatterns: 'search',
+                v: true,
+                format: 'json'
+            });
+
+            if (esQueueUtilization.some((pool) => parseInt(pool.queue, 10) >= 500)) {
+                return Promise.reject(new Error('Elastic not ready.'));
+            } else {
+                return Promise.resolve('Elasticsearch ready.');
+            }
+
+        }, {max_tries: -1}); //retry forever
     }
 
 }

@@ -25,6 +25,7 @@
     "@opuscapita/i18n": "^1.2.8",
     "@opuscapita/useridentity-middleware": "^3.0.14",
     "@opuscapita/web-init": "^3.0.82",
+    "bluebird-retry": "^0.11.0",
     "date-fns": "^1.29.0",
     "elasticsearch": "15.4.0",
     "moment": "^2.24.0",
