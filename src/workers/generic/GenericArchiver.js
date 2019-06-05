@@ -544,6 +544,7 @@ class GenericArchiver {
             });
 
             if (esQueueUtilization.some((pool) => parseInt(pool.queue, 10) >= 500)) {
+                this.logger.warn('GenericArchiver#_waitForEs: Elastic not ready.');
                 return Promise.reject(new Error('Elastic not ready.'));
             } else {
                 return Promise.resolve('Elasticsearch ready.');
