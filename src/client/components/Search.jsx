@@ -539,7 +539,9 @@ export default class Search extends Components.ContextComponent {
                         },
                         {
                             id: 'sourceFrom',
-                            accessor: '_source.receiver.protocolAttributes.from',
+                            accessor: doc => {
+                                return doc._source.receiver.protocolAttributes.from || doc._source.sender.protocolAttributes.from || 'n/a'
+                            },
                             Header: i18n.getMessage('Archive.table.columns.from.title')
                         },
                         {

@@ -27,6 +27,7 @@
     "@opuscapita/web-init": "^3.0.82",
     "bluebird-retry": "^0.11.0",
     "date-fns": "^1.29.0",
+    "deepmerge": "^3.2.0",
     "elasticsearch": "15.4.0",
     "moment": "^2.24.0",
     "ocbesbn-blob-client": "^2.0.8",
@@ -97,7 +98,7 @@
     "setup-consul": "sh setup-consul.sh",
     "start": "node src/server/index.js",
     "test": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha test --timeout 30000 --recursive --reporter mocha-junit-reporter --exit",
-    "test:local": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive --watch",
+    "test:local": "npm run clean ; npm run setup-consul; NODE_ENV=testing npx mocha --recursive --watch --inspect=0.0.0.0:9230",
     "worker:invoice": "npx nodemon --watch src/workers/ --inspect=0.0.0.0:9230 src/workers/invoice/run.js"
   }
 }

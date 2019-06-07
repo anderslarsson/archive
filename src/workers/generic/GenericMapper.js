@@ -1,5 +1,7 @@
 'use strict';
 
+const merge = require('deepmerge');
+
 const Logger = require('ocbesbn-logger');
 const {InvoiceArchiveConfig} = require('../../shared/invoice_archive_config');
 
@@ -231,7 +233,7 @@ class GenericMapper {
     }
 
     _buildReceiver() {
-        let receiver = this.items
+        const receiver = this.items
             .map((i) => i.receiver || null)
             .filter(r => r !== null)
             .filter(r => typeof r === 'object')
@@ -239,27 +241,27 @@ class GenericMapper {
                 if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
                     return r;
                 } else {
-                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
+                    return Object.assign(r, {protocolAttributes: {}}); // Enforce schema validity
                 }
             })
-            .reduce((acc, elem) => Object.assign(acc, elem) , {});
+            .reduce((acc, elem) => merge(acc, elem) , {});
 
         return this._isEmtpyObj(receiver) ? null : receiver;
     }
 
     _buildSender() {
-        let sender = this.items
+        const sender = this.items
             .map((i) => i.sender || null)
             .filter((s) => s !== null)
             .filter(r => typeof r === 'object')
-            .map(r => {
-                if (r.hasOwnProperty('protocolAttributes') && typeof r.protocolAttributes === 'object') {
-                    return r;
+            .map(s => {
+                if (s.hasOwnProperty('protocolAttributes') && typeof s.protocolAttributes === 'object') {
+                    return s;
                 } else {
-                    return Object.assign(r, {protocolAttributes: {}}); // Make it schema valid
+                    return Object.assign(s, {protocolAttributes: {}}); // Enforce schema validity
                 }
             })
-            .reduce((acc, elem) => Object.assign(acc, elem) , {});
+            .reduce((acc, elem) => merge(acc, elem) , {});
 
         return this._isEmtpyObj(sender) ? null : sender;
     }
