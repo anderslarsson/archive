@@ -347,9 +347,11 @@ class GenericArchiver {
                 if (result && result.created) {
                     done.push(doc);
                 } else {
+                    this.logger.error(`GenericArchiver#insertArchiveDocuments: Failed to index transaction ${doc.transactionId}. ES returned falsy.`, result);
                     failed.push(doc);
                 }
             } catch (e) {
+                this.logger.error(`GenericArchiver#insertArchiveDocuments: Failed to index transaction ${doc.transactionId} with exception.`, e);
                 failed.push(doc);
             }
         }
