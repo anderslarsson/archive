@@ -1,0 +1,1075 @@
+[
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": true,
+            "wmTransactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "timestamp": "2019-04-11T05:47:08.221Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Saved email attachment for eArchive.",
+            "eventText": "File is: 11042019.pdf Url used: %encodedURL% saveToBlob flag is: true . Path is /api/c_musterkunde-01/data/private/sirius/incoming/9C0DF78E6865485FB050A7202FA2B691siP1/11042019.pdf",
+            "stepType": "InternalDeliver",
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "componentId": "Oc_Common_Tnt.services:logPayloadToBlob"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "files": {
+                    "inboundAttachments": [
+                        {
+                            "archivable": true,
+                            "refType": "blob",
+                            "name": "11042019.pdf",
+                            "reference": "/c_musterkunde-01/data/private/sirius/incoming/9C0DF78E6865485FB050A7202FA2B691siP1/11042019.pdf"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:47:08.226Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Email attachment (PDF)",
+            "eventText": "Extracted attachment (11042019.pdf) and submitted to TN.",
+            "stepType": "Extract",
+            "relatedTransactionIds": [
+                "E2CB724059D549929291F38EEBE89CC2siP1"
+            ],
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "flowId": "emailreceiving-invoice",
+                "componentId": "Oc_Digitizing_EmailReceiving:processTNCanonicalEmailDoc"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "inbound": {
+                        "reference": "51k5i400d85euupn000am6g1/11042019.pdf",
+                        "name": "11042019.pdf",
+                        "refType": "sirius",
+                        "archivable": false
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T05:47:07.616Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:47:08.342Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Processing pdf attachment started",
+            "eventText": "Conversion from PDF to TIFF started\r\n",
+            "stepType": "Process",
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "flowId": "emailreceiving-invoice",
+                "componentId": "Oc_Digitizing_EmailReceiving:processAttachmentBizdoc",
+                "integrationId": "emailreceiving-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "protocolAttributes": {
+                    "type": "email",
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            },
+            "timing": {
+                "received": "2019-04-11T05:47:07.096Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:47:08.359Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "routeId": "ier1.exela/invoice/ier-exela-default",
+            "deliveryChannelId": "Oc_Intf_ReceiveConfig_Digitizing:DeliverTo_Exela_Queue_EmailReceivning_InvoiceAll",
+            "shortEventText": "RoutingID fetched.",
+            "eventText": "Conversion from PDF to TIFF started\r\n",
+            "stepType": "Process",
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "flowId": "emailreceiving-invoice",
+                "componentId": "Oc_Digitizing_EmailReceiving:processAttachmentBizdoc",
+                "integrationId": "emailreceiving-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "protocolAttributes": {
+                    "type": "email",
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            },
+            "timing": {
+                "received": "2019-04-11T05:47:07.096Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:47:08.434Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "routeId": "ier1.exela/invoice/ier-exela-default",
+            "deliveryChannelId": "Oc_Intf_ReceiveConfig_Digitizing:DeliverTo_Exela_Queue_EmailReceivning_InvoiceAll",
+            "shortEventText": "Conversion from PDF to TIFF started",
+            "eventText": "Conversion from PDF to TIFF started",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "flowId": "emailreceiving-invoice",
+                "componentId": "Oc_Digitizing_EmailReceiving:processAttachmentBizdoc",
+                "integrationId": "emailreceiving-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "protocolAttributes": {
+                    "type": "email",
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            },
+            "timing": {
+                "received": "2019-04-11T05:47:07.096Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:47:09.831Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "routeId": "ier1.exela/invoice/ier-exela-default",
+            "deliveryChannelId": "Oc_Intf_ReceiveConfig_Digitizing:DeliverTo_Exela_Queue_EmailReceivning_InvoiceAll",
+            "shortEventText": "Converted tiff",
+            "eventText": "Converted PDF to TIFF",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod1",
+                "systemType": "WM",
+                "flowId": "emailreceiving-invoice",
+                "componentId": "Oc_Digitizing_EmailReceiving:processAttachmentBizdoc",
+                "integrationId": "emailreceiving-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "protocolAttributes": {
+                    "type": "email",
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "receiver": {
+                "target": "c_musterkunde-01",
+                "protocolAttributes": {
+                    "type": "email",
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "intermediateAttachments": [
+                        {
+                            "archivable": false,
+                            "reference": "51k5i400d85ev0gq000am6gl/INV_musterkunde_9C0DF78E6865485FB050A7202FA2B691siP1.tiff",
+                            "refType": "sirius",
+                            "name": "INV_musterkunde_9C0DF78E6865485FB050A7202FA2B691siP1.tiff"
+                        }
+                    ]
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T05:47:07.096Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "86de738a-4ee6-4c5c-815f-f6daead1f5dc",
+            "timestamp": "2019-04-11T05:48:07.318Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Delivered zip-file",
+            "eventText": "The queuing task has been flagged as Success. Added in queue for batch towards 'Exela'.   batchBizdoc/InternalID 51k5i500d85f0ojf000a5iao",
+            "stepType": "InternalDeliver",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "componentId": "Oc_Digitizing_ReceivingChannel.batching:createBatchDocument",
+                "integrationId": "emailreceiving-invoice-batched-delivery"
+            },
+            "sender": {
+                "intermediator": "OpusCapita"
+            },
+            "receiver": {
+                "intermediator": "Exela"
+            },
+            "document": {
+                "entityType": "container",
+                "process": "billing"
+            },
+            "productExtension": {
+                "digitizing": {
+                    "timing": {
+                        "sendToScanning": "2019-04-11T05:48:07.317Z"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:09:21.226Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Received zip-file",
+            "eventText": "Received Files Group from scanning partner",
+            "stepType": "InternalReceive",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processInvoiceFilesGroupBizdoc",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "intermediator": "Exela"
+            },
+            "receiver": {
+                "intermediator": "OpusCapita",
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:09:21.236Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Extracted Invoice from Scanning Partner",
+            "stepType": "Receive",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processInvoiceFilesGroupBizdoc",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "intermediator": "Exela"
+            },
+            "receiver": {
+                "intermediator": "OpusCapita",
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:09:21.253Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Canonical",
+            "eventText": "Mapped scanning partner invoice to canonical. pusProcessEnvelope/bizdoc/InternalID: 51k5i500d85qh6eq000a8fk0",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processInvoiceFilesGroupBizdoc",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "sender": {
+                "intermediator": "Exela"
+            },
+            "receiver": {
+                "intermediator": "OpusCapita",
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "msgType": "Invoice",
+                "process": "billing",
+                "number": "F190246",
+                "files": {
+                    "canonical": {
+                        "content": "<?xml version=\"1.0\"?>\n<Invoice xmlns:btoc=\"dummy\" xmlns:ns=\"http://www.opuscapita.com/canonical/invoice/2.1\" xmlns:cac=\"urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2\" xmlns:cbc=\"urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2\" xmlns:cancac=\"urn:oasis:names:specification:ubl:schema:xsd:CanonicalAggregateComponents-2\" xmlns:cancbc=\"urn:oasis:names:specification:ubl:schema:xsd:CanonicalBasicComponents-2\"></Invoice>"
+                    }
+                }
+            },
+            "productExtension": {
+                "digitizing": {
+                    "timing": {
+                        "receivedFromScanning": "2019-04-11T09:09:21.248Z"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:09:21.460Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Processing Canonical Invoice BizDoc.",
+            "eventText": "Processing Canonical Invoice BizDoc.",
+            "stepType": "Process",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processCanonicalInvoiceBizdocEnvelope",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde",
+            "receiver": {
+                "target": "c_musterkunde"
+            },
+            "document": {
+                "process": "billing",
+                "number": "F190246"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:05.793Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "deliveryChannelId": "Oc_Intf_DeliveryConfig_Common:DeliverTo_OC_Common_UM_IPA_digitizing_InvoiceAll",
+            "shortEventText": "RoutingID fetched.",
+            "eventText": "Processing Canonical Invoice BizDoc.",
+            "stepType": "Route",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processCanonicalInvoiceBizdocEnvelope",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde",
+            "receiver": {
+                "target": "c_musterkunde"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "number": "F190246",
+                "issuedDate": "2019-04-02"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:52.989Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "deliveryChannelId": "Oc_Intf_DeliveryConfig_Common:DeliverTo_OC_Common_UM_IPA_digitizing_InvoiceAll",
+            "shortEventText": "Starting delivery channel.",
+            "eventText": "Processing Canonical Invoice BizDoc.",
+            "stepType": "Route",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_Main:processCanonicalInvoiceBizdocEnvelope",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde",
+            "receiver": {
+                "target": "c_musterkunde"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "number": "F190246",
+                "issuedDate": "2019-04-02"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:54.199Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "deliveryChannelId": "Oc_Intf_DeliveryConfig_Common:DeliverTo_OC_Common_UM_IPA_digitizing_InvoiceAll",
+            "shortEventText": "Digitizing Delivery channel Enveloping started",
+            "eventText": "Digitizing Delivery channel Enveloping started.",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:52.985Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:54.207Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "No business validation service selected/done",
+            "eventText": "No business validation service selected/done",
+            "stepType": "Validate",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:54.216Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Starting imaging service",
+            "eventText": "Receiver Profile id: 51k6p500cospmr9j00006bfiReceiver Corp name: tp.musterkundeServiceAS.No.1 Images Service: Oc_Digitizing_Util.inChannel.images:defaultImagesService",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:10:59.945Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Starting mapping service.",
+            "eventText": "Running service Oc_Internal_IPA.toIPA.digitizing.map:mapCanonicalToIPAdigitizing as mapping service.",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.143Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Target format",
+            "eventText": "Converted to Target format",
+            "stepType": "Convert",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "intermediateOutbound": {
+                        "archivable": false,
+                        "refType": "sirius",
+                        "name": null,
+                        "reference": "51k5i500d85qh7nd000a8fl5/xmldata"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "timestamp": "2019-04-11T09:11:00.152Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "No target validation service was selected/invoked",
+            "stepType": "Validate",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.161Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Starting enveloper",
+            "eventText": "Starting enveloper",
+            "stepType": "Merge",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping:serviceImplementation",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.216Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Starting Digitizing Delivery Channel Post Enveloper.",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping.sub:logEvent",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:59.941Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.240Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "No combining map service found. Using default: Oc_Common_Enveloping.defaultServices:combiningMap",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping.sub:logEvent",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:59.941Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.263Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "No serializationservice found. Using default: Oc_Common_Enveloping.defaultServices:serializationDefault",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping.sub:logEvent",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:59.941Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.777Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Backup done of output data",
+            "eventText": "transactionaldata/delivery/musterkunde/20190411/9C0DF78E6865485FB050A7202FA2B691siP1",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping.sub:logEvent",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:59.941Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "wmTransactionId": "1f2e9bc2-9afb-4f7e-a55b-1a6e02e05df2",
+            "timestamp": "2019-04-11T09:11:00.835Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Ending Digitizing Delivery Channel Post Enveloper.",
+            "stepType": "Prepare",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "flowId": "digitizing",
+                "componentId": "Oc_Digitizing_DeliveryChannel_Enveloping.sub:logEvent",
+                "integrationId": "digitizing-invoice"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            },
+            "timing": {
+                "received": "2019-04-11T09:10:59.941Z"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "timestamp": "2019-04-11T09:11:00.867Z",
+            "logAccess": "None",
+            "stepStatus": "Completed",
+            "processingFinished": false,
+            "severity": "Debug",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "deliveryChannelId": "Oc_Digitizing_DeliveryChannel_Enveloping",
+            "shortEventText": "Enveloping done",
+            "eventText": "Enveloping done.\r\nbizdoc/SenderID: 000000000000000000000000\r\nbizdoc/ReceiverID: 51k6p500cospmr9j00006bfi\r\n",
+            "stepType": "Process",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "componentId": "Oc_Digitizing_Main:processCanonicalInvoiceBizdocDone"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01",
+                "protocolAttributes": {
+                    "from": "inge.otto@musterkunde.de"
+                }
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing"
+            }
+        }
+    },
+    {
+        "event": {
+            "version": "1.0",
+            "transactionId": "9C0DF78E6865485FB050A7202FA2B691siP1",
+            "archivable": false,
+            "timestamp": "2019-04-11T09:11:00.908Z",
+            "logAccess": "Both",
+            "stepStatus": "Completed",
+            "processingFinished": true,
+            "severity": "Info",
+            "product": "invoiceReceiving",
+            "productSub": "digitizing",
+            "shortEventText": "Delivered batch",
+            "eventText": "Delivered batch doneBatchHandler.050 /bizdoc/DocType/TypeName:  OpusCapita Digitizing Canonical Invoice XML File name list (if any):20190411091100272\r\nBizdoc doc type:OpusCapita Digitizing Canonical Invoice XML\r\n",
+            "stepType": "DocumentDeliver",
+            "eventOrigin": {
+                "systemNode": "prod2",
+                "systemType": "WM",
+                "componentId": "Oc_Common_Enveloping.utils:doneBatchHandler"
+            },
+            "customerId": "musterkunde-01",
+            "receiver": {
+                "target": "c_musterkunde-01"
+            },
+            "document": {
+                "entityType": "document",
+                "process": "billing",
+                "files": {
+                    "outbound": {
+                        "name": "targetdata",
+                        "refType": "sirius",
+                        "archivable": false,
+                        "reference": "51k5i500d85qh7nd000a8fl5/targetdata"
+                    }
+                }
+            }
+        }
+    }
+]

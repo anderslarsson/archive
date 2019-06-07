@@ -325,8 +325,8 @@ async function insertInvoiceArchiveDocument(doc, isUpdate = false) {
 }
 
 function mapTransactionToEvent(doc) {
-    let mapper = new Mapper(doc.event.transactionId, [doc.event]);
-    let archiveDocument = mapper.do();
+    const mapper = new Mapper(doc.event.transactionId, [doc.event]);
+    const archiveDocument = mapper.do();
 
     return archiveDocument;
 };
