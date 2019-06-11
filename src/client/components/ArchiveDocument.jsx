@@ -118,7 +118,7 @@ export default class ArchiveDocument extends Components.ContextComponent {
                                             <table className="table">
                                                 <tr>
                                                     <td>{t('Archive.invoice.page.labels.from')}</td>
-                                                    <td>{doc.receiver.protocolAttributes.from}</td>
+                                                    <td>{doc.receiver.protocolAttributes.from || doc.sender.protocolAttributes.from}</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{t('Archive.invoice.page.labels.to')}</td>
