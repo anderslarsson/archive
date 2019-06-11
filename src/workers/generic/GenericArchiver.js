@@ -222,10 +222,14 @@ class GenericArchiver {
             }
         };
 
-        let events = await this.elasticsearch.search(query);
-        events = events.hits.hits.map(hit => hit._source.event);
+        const result = await this.elasticsearch.search(query);
 
-        return events;
+        if (result && result._shards && result._shards.failed > 0)
+            this.logger.error('GenericArchiver#getEventsByTransactionId: Elasticsearch failed to retrieve query from shards.', result._shards);
+
+        const hits = result.hits.hits.map(hit => hit._source.event);
+
+        return hits;
     }
 
 
@@ -378,6 +382,7 @@ class GenericArchiver {
         let result = [];
 
         for (const transactionId of transactionIds) {
+
             const events = await this.getEventsByTransactionId(transactionId, tenantId);
 
             if (this.transactionHasArchivableContent(events)) {
@@ -390,7 +395,7 @@ class GenericArchiver {
                     result.push(archiveEntry);
                 }
             } else {
-                this.logger.info(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} has no archivable content. Skipping.}`);
+                this.logger.info(`${this.klassName}:mapTransactionsToArchiveDocument: Transaction ${transactionId} consiting of ${events.length} events has no archivable content. Skipping.}`);
             }
         }
 
