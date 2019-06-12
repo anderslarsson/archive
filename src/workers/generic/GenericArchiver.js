@@ -224,8 +224,15 @@ class GenericArchiver {
 
         const result = await this.elasticsearch.search(query);
 
-        if (result && result._shards && result._shards.failed > 0)
-            this.logger.error('GenericArchiver#getEventsByTransactionId: Elasticsearch failed to retrieve query from shards.', result._shards);
+        if (result && result._shards && result._shards.failed > 0) {
+
+            // FIXME implement retry, this is not a valid result and the process should not be continued at this point!
+
+            this.logger.error(`GenericArchiver#getEventsByTransactionId: Elasticsearch failed to retrieve all shards results. ${result._shards.failed} of ${result._shards.total} failed.`);
+            for (const failure of result._shards.failures) {
+                this.logger.error('Shard failure: ', failure);
+            }
+        }
 
         const hits = result.hits.hits.map(hit => hit._source.event);
 
