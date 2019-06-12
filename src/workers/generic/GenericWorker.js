@@ -67,7 +67,7 @@ class GenericWorker {
         }
 
         try {
-            await this.eventClient.subscribe(ArchiveConfig.dailyArchiveJobPendingTopic, this.onDailyArchiveJobPending.bind(this));
+            await this.eventClient.subscribe(ArchiveConfig.dailyArchiveJobPendingTopic, this.onDailyArchiveJobPending.bind(this), {messageLimit: 1});
         } catch (e) {
             this.logger.error(this.klassName, '#init: Failed to subscribe to the message queue(s).', e);
             throw e;
